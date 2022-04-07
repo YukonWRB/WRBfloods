@@ -27,6 +27,9 @@ floodReport <-
            save_path = "choose",
            hydat_creds = "Renviron") {
     
+    source("R/Hydrometric_Flow.R")
+    source("R/Hydrometric_Level.R")
+    
     #####Selection of image path and save path#####
     if (is.null(image_path) == FALSE) {
       if (image_path == "choose") {
@@ -36,7 +39,7 @@ floodReport <-
     }
     if (save_path == "choose") {
       print("Select the path to the folder where you want this report saved.")
-      save_path <- utils::choose.dir(caption="Select Report Save Folder")
+      save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
     }
     
     
@@ -75,15 +78,20 @@ floodReport <-
         is.null(custom_report_stations) == FALSE) {
       if (custom_report_stations == "choose") {
         file <- utils::choose.files( caption="Select Custom Station List")
-        file <- readxl::read_excel(file, col_names = FALSE)
-        names <- file[,1]
-        stations <- file[,2]
+        stations <- readxl::read_excel(file, col_names = FALSE)
       }
-      if (custom_report_stations != "choose") {
-        file <- readxl::read_excel(custom_report_stations, col_names = FALSE)
-        names <- file[,1]
-        stations <- file[,2]
+      
+      if (custom_report_stations != "choose" & class(custom_report_stations)=="data.frame") {
+        stations <- readxl::read_excel(custom_report_stations, col_names = FALSE)
       }
+      
+      if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
+        stn <- as.data.frame(tidyhydat::hy_stations(custom_report_stations))
+        stations <- stn[c(2,1)]
+      }
+      
+      rmarkdown::render( input="R/Report Template.Rmd",           output_file = paste0("Custom Report ", Sys.Date()),
+                         output_dir = save_path)
     } #End of custom report
     
     if (is.null(report_name) == TRUE &
@@ -93,5 +101,3 @@ floodReport <-
     }
     
   } #End of function.
-
-#package readtext can be used to extract text from Word, .txt documents.

@@ -31,7 +31,7 @@ Water level data is listed below in order of historical relative importance to f
 In the future, the order of listing could depend instead on which stations is highest in relation to historical levels.
 
 ```{r plot and explain data, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6.5}
-for (i in stations){
+for (i in stations[2]){
   #gather data using hydrometric_level.R
   station <- tidyhydat::hy_stations(i)
   levelData <- level_data(
@@ -47,20 +47,19 @@ for (i in stations){
   yesterFlow <- levelData[[3]]$Value[levelData[[3]]$Date==(Sys.Date()-1)]
   
   #Communicate the change
-  cat("  \n The current level is ", round(todayFlow,1), " which corresponds to the", todayPerc, " percentile of historic levels for this station.  Since yesterday, the level has ", ifelse(todayFlow<yesterFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterFlow), 1))`. 
+  cat("  \n The current level is ", round(todayFlow,1), " which corresponds to the ", todayPerc, " percentile of historic levels for this station.  Since yesterday, the level has ", ifelse(todayFlow<yesterFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterFlow), 1), ".")
 
   #plot the data
   levelPlot <- level_plot(
-    station_number = params$station_number,
+    station_number = i,
     complete_year = levelData[[2]],
   	plot_years_df = levelData[[3]],
   	dummy_year_df = levelData[[4]],
-    png_path = params$png_path
   )
   levelPlot
   
 
-  cat("  \n This station is located in" , station$PROV_TERR_STATE_LOC, " at coordinates: ", station$LONGITUDE, station$LATITUDE, ".  Data collection began in ", startYear, "and the historic data are ", percent(sum(complete.cases(levelData[[1]]))/nrow(levelData[[1]])), " complete".)
+  cat("  \n This station is located in ", station$PROV_TERR_STATE_LOC, " at longitude ", round(station$LONGITUDE, 2), ", latitude ", round(station$LATITUDE,2), ". Data collection began in ", startYear, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData[[1]]))/nrow(levelData[[1]])), " complete.")
 }
 ```
 
