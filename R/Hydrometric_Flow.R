@@ -13,16 +13,23 @@
 # install.packages("scales")
 
 
+#' Title
+#'
+#' @param station_number 
+#' @param extract_realtime 
+#' @param select_years 
+#' @param csv_path 
+#'
+#' @return A data.frame of timeseries data.
+#' @export
+#'
+
 flow_data <- function(
-	
 	station_number,
 	extract_realtime = FALSE, 
 	select_years = 2020, 
 	csv_path = NA # or provide path to folder as text string
-	
-)
-	
-{
+){
 	
 	if(extract_realtime == T) {
 		token_out <- tidyhydat.ws::token_ws()
@@ -153,6 +160,29 @@ flow_data <- function(
 
 
 
+#' Plot flow data for a WSC station
+#'
+#' @param station_number 
+#' @param complete_year 
+#' @param plot_years_df 
+#' @param dummy_year_df 
+#' @param png_path 
+#' @param historic 
+#' @param log_scale 
+#' @param percentile_plot 
+#' @param colour_ramp 
+#' @param line_colour_1 
+#' @param line_colour_2 
+#' @param legend_position 
+#' @param line_size 
+#' @param point_size 
+#' @param y_min 
+#' @param y_max 
+#'
+#' @return A plot of flow volumnes for a WSC station.
+#' @export 
+#'
+
 flow_plot <- function(
 	
 	station_number,
@@ -194,8 +224,7 @@ flow_plot <- function(
 	station <- tidyhydat::hy_stations(station_number)
 	
 	plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
-		ggplot2::labs(title = paste0(station$STATION_NAME, " (", station$STATION_NUMBER, ")"), 
-									x = "Month", y = expression(paste("Discharge (m"^3, " s"^-1,")"))) +
+		ggplot2::labs(x = "Month", y = expression(paste("Discharge (m"^3, " s"^-1,")"))) +
 		ggplot2::scale_x_date(date_breaks = "1 months",
 													labels = scales::date_format("%b")) +
 		tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""),

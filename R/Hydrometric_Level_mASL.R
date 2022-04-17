@@ -2,27 +2,27 @@
 # 
 # Development credits at bottom of file
 
-# install.packages("magrittr")
-# install.packages("tidyhydat")
-# install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
-# install.packages("dplyr")
-# install.packages("lubridate")
-# install.packages("fasstr")
-# install.packages("tidyquant")
-# install.packages("ggplot2")
-# install.packages("scales")
 
+
+#' Level data
+#' 
+#' For the purposes of this package, this function is simply a utility which facilitates the plotting of WSC data.
+#'
+#' @param station_number The WSC station number for which you want data
+#' @param extract_realtime Realtime data, TRUE or FALSE? TRUE requires login credentials for use with tidyhydat.ws.
+#' @param select_years The year(s) for which you want data
+#' @param csv_path Not used in this situation.
+#'
+#' @return A data.frame containing the timeseries requested.
+#' @export
+#'
 
 level_data <- function(
-	
 	station_number,
 	extract_realtime = FALSE, 
 	select_years = c(1950:2020), 
 	csv_path = NA # or provide path to folder as text string
-	
-)
-	
-{
+){
 	
 	if(extract_realtime == T) {
 		token_out <- tidyhydat.ws::token_ws()
@@ -154,6 +154,31 @@ level_data <- function(
 
 
 
+#' Plot WSC hydrometric data.
+#' 
+#' For the purposes of this package, this function is simply a utility which facilitates the plotting of WSC data.
+#'
+#' @param station_number The station for which you want to plot data.
+#' @param complete_year The year for which you want to plot.
+#' @param plot_years_df Don't worry about this
+#' @param dummy_year_df Also don't worry about this.
+#' @param png_path Use this if you want to save the graph to a .png
+#' @param historic No idea what this does
+#' @param log_scale Log or regular scale?
+#' @param percentile_plot Percentile or not?
+#' @param colour_ramp What color do you feel like looking at?
+#' @param line_colour_1 Self explanatory.
+#' @param line_colour_2 Self explanatory.
+#' @param legend_position Self explanatory.
+#' @param line_size Self explanatory.
+#' @param point_size Self explanatory.
+#' @param y_min Self explanatory. Leave as NA to self-adjust.
+#' @param y_max Self explanatory. Leave as NA to self-adjust.
+#'
+#' @return A plot for the station requested.
+#' @export
+#'
+
 level_plot <- function(
 	
 	station_number,
@@ -195,8 +220,7 @@ level_plot <- function(
 	station <- tidyhydat::hy_stations(station_number)
 	
 	plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
-		ggplot2::labs(title = paste0(station$STATION_NAME, " (", station$STATION_NUMBER, ")"), 
-									x = "Month", y = expression(paste("Level (masl)"))) +
+		ggplot2::labs(x = "Month", y = expression(paste("Level (masl)"))) +
 		ggplot2::scale_x_date(date_breaks = "1 months",
 													labels = scales::date_format("%b")) +
 		tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""),

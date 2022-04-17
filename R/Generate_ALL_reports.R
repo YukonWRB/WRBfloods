@@ -54,7 +54,7 @@ floodReport <-
         stations <-c ("09EB001", "09EA003", "09EA006", "09EA004", "09CD001", "09DD003", "09EB003", "09EB004", "09EA005")
           rmarkdown::render(
             input = "R/Report templates/Report_template.Rmd",
-            output_file = paste0("Dawson Report ", Sys.Date()),
+            output_file = paste0("Dawson Flood Report ", Sys.Date()),
             output_dir = save_path,
             params = list(
               stations = stations,
@@ -67,7 +67,7 @@ floodReport <-
         stations <- c("09AB001", "09AB004", "09AA004", "09AE002")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
-          output_file = paste0("Whitehorse Report ", Sys.Date()),
+          output_file = paste0("Whitehorse Flood Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -78,13 +78,20 @@ floodReport <-
     }
     
     ### Generate a custom report ###
-    if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
-      rmarkdown::render(
-        input = "R/Report templates/Report_template.Rmd",
-        output_file = paste0("Custom report ", Sys.Date()),
-        output_dir = save_path
+    if (is.null(custom_report_stations)==FALSE){
+      if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
+        stations <- custom_report_stations
+        rmarkdown::render(
+          input = "R/Report templates/Report_template.Rmd",
+          output_file = paste0("Custom Flood Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = paste0("Stations ", custom_report_stations)
+          )
         )
-    } #End of custom report
+      } #End of custom report
+    }
     
     if (is.null(report_name) == TRUE &
         is.null(custom_report_stations) == TRUE) {

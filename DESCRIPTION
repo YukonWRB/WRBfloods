@@ -2,10 +2,24 @@ Package: WRBfloods
 Title: WRB's flood report functions
 Version: 0.0.0.9000
 Authors@R: 
-    person("Ghislain", "de Laplante", , "ghislaindel@gmail.com", role = c("aut", "cre"),
+    person("Ghislain", "de Laplante", , "ghislain.delaplante@yukon.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5093-9185"))
 Description: This package exists to facilitate the generation of flood reports by the Yukon Water Resources Branch.
-Imports: readxl, rmarkdown, utils, tidyhydat, tidyhydat.ws
+Imports: 
+    readxl,
+    rmarkdown,
+    utils,
+    tidyhydat,
+    tidyhydat.ws,
+    tidyquant,
+    ggplot2,
+    dplyr,
+    lubridate,
+    fasstr,
+    scales,
+    magrittr,
+    spatstat.utils,
+    stats
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
