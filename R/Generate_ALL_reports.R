@@ -19,6 +19,9 @@
 
 #TODO: include level and flow where both are present.
 #TODO: include return intervals
+#TODO: fix error message if station input does not exist
+#TODO: fix Whitehorse level data (sort it out on the back end)
+#TODO: fix the weird break after flow graphs, that somehow doesn't appear if the graph's not there! (double check the fix worked)
 
 floodReport <-
   function(report_name = NULL,
@@ -58,20 +61,20 @@ floodReport <-
             output_dir = save_path,
             params = list(
               stations = stations,
-              report_name = report_name)
+              report_name = "Dawson Flood Report")
           )
       } #End of Dawson report
       
       ### Generate a report for Whitehorse###
       if (report_name == "Whitehorse") {
-        stations <- c("09AB001", "09AB004", "09AA004", "09AE002")
+        stations <- c("09AB001", "09AB004", "09AA004", "09AE002", "AB09ENA")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
           output_file = paste0("Whitehorse Flood Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = report_name
+            report_name = "Whitehorse Flood Report"
           )
         )
       } #End of Whitehorse report
@@ -87,7 +90,7 @@ floodReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = paste0("Stations ", custom_report_stations)
+            report_name = paste0("Custom Report for Stations ", custom_report_stations)
           )
         )
       } #End of custom report
@@ -96,7 +99,7 @@ floodReport <-
     if (is.null(report_name) == TRUE &
         is.null(custom_report_stations) == TRUE) {
       #to catch an error where no parameter was entered in both of these
-      print("You must specify either a report_name or provide a file for custom_report_station.")
+      print("You must specify either a report_name or provide a character vector for custom_report_station.")
     }
     
   } #End of function.
