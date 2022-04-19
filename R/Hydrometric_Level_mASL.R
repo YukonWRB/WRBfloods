@@ -255,9 +255,7 @@ level_plot <- function(
 		plot <- plot +
 			ggplot2::geom_point(ggplot2::aes(colour = factor(Year_Real)), shape = 19, size = point_size, na.rm = T) + 
 			ggplot2::geom_line(ggplot2::aes(colour = factor(Year_Real)), size = line_size, na.rm = T) +
-			ggplot2::scale_colour_manual(name = "", 
-																	 values = colour_ramp(legend_length),
-																	 na.translate = FALSE) # eliminates 'NA' from legend
+			ggplot2::scale_colour_manual(name = "", values = colour_ramp(legend_length), na.translate = FALSE) # eliminates 'NA' from legend
 	}
 	
 	if (percentile_plot == FALSE && legend_length == 1) {
@@ -294,7 +292,6 @@ level_plot <- function(
 		if (!is.na(png_path)){
 			ggplot2::ggsave(plot, filename = sprintf("%s/%s_flowplot_%s.png", png_path, station_number, Sys.Date()))
 		}
-		
 		return(plot)
 		
 	}

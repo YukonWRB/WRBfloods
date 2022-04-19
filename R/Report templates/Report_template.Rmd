@@ -48,7 +48,7 @@ for(i in stations) {
   
   tryCatch ( {
     station_info <- tidyhydat::hy_stations(i)
-    cat(" \n## ", tidyhydat::hy_stations(i)$STATION_NAME," (Station ", i, ")  \n")
+    cat(" \n## ", station_info$STATION_NAME," (Station ", i, ")  \n")
 
     tryCatch ({
       #Get the level data
@@ -70,6 +70,22 @@ for(i in stations) {
                               complete_year = levelData[[2]],
                               plot_years_df = levelData[[3]],
                               dummy_year_df = levelData[[4]])
+      
+      #Add return intervals to the plot if there is such a thing
+      data(return_periods)
+      if (i %in% return_periods$ID==TRUE){
+        levelConvert <- as.numeric(tidyhydat::hy_stn_datum_conv(i)[1,4])
+        stn <- dplyr::filter(return_periods, ID == i) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
+
+        test <- levelPlot + ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "green") +
+                            ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color="darkgreen") +
+                            ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="red") +
+                            ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="solid", color="green") +
+                            ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="solid", color="red")
+      }
+
+      
+      
       print(levelPlot)
       
       cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \n")
@@ -80,7 +96,8 @@ for(i in stations) {
     
     cat("  \n")
     
-    tryCatch ({
+    if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE){ #Lakes don't have flow measurements!
+      tryCatch ({
       #Get the flow data
       flowData <- flow_data(
         station_number = i,
@@ -102,16 +119,19 @@ for(i in stations) {
       
       cat("  \n The current flow rate is ", round(todayFlow,2)," cubic meters per second which corresponds to the ", todayFlowPerc, " percentile of historic flow volume for this station. Since yesterday, the level has ", ifelse(todayFlow<yesterdayFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterdayFlow), 3)," cubic meters per second.")
     },
-    error = function(e) {
+      error = function(e) {
       cat("### Flow")
-      cat("  \n Station ", i, " does not appear to have realtime flow (discharge) data right now - that's normal if it's a lake, otherwise the level-flow correlation might be questionable.")})
+      cat("  \n Station ", i, " does not appear to have realtime flow (discharge) data right now.")})
+    } #End of if statement that is "LAKE" dependent
     
-  cat("
+    #line break to separate things out
+  cat(" 
       <br>
       
       <br>
-      ")
+      ") 
   
+  #Level and flow plots are done by this point, now summarize station information.
   cat("\n This station is located in ", station_info$PROV_TERR_STATE_LOC, " at longitude ", round(station_info$LONGITUDE, 2), ", latitude ", round(station_info$LATITUDE,2), ". Level data collection began in ", startYearLevel, " and flow data collection began in ", startYearFlow, ". The historic level data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData[[1]]))/nrow(levelData[[1]])), " complete and the historic flow data are ", spatstat.utils::percentage(sum(stats::complete.cases(flowData[[1]]))/nrow(flowData[[1]])), " complete.  \n")
     
   cat("\\pagebreak\n")
@@ -123,17 +143,17 @@ for(i in stations) {
 }
 ```
 
-# Weather Forecast and Products
+# Weather Forecasts and Products
 
 ```{r}
-#TODO This section will generate weather products for a select group of stations if stations in the vicinity are selected. For example, Marsh Lake would get a forecast for Whitehorse and weather products for southern lakes.
+#This section will generate weather products depending on the station locations(s). For example, Marsh Lake would get a forecast for Whitehorse and weather products for southern lakes.
 
 ```
 
 # Still Images
 
 ```{r}
-#TODO This section will contain auto-generated images, selected based on the stations(s) selected. This section might exist only for the pre-made reports and not the custom reports, tbd.
+#This section will contain auto-generated images, selected based on the stations(s) selected. This section might exist only for the pre-made reports and not the custom reports, tbd.
 ```
 
 ## Other images

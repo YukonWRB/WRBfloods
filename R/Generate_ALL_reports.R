@@ -20,8 +20,7 @@
 #TODO: include level and flow where both are present.
 #TODO: include return intervals
 #TODO: fix error message if station input does not exist
-#TODO: fix Whitehorse level data (sort it out on the back end)
-#TODO: fix the weird break after flow graphs, that somehow doesn't appear if the graph's not there! (double check the fix worked)
+#TODO: fix Whitehorse level data (sort it out on the back end I guess?) This could take the form of a check for values that are bumped up by the datum somehow
 
 floodReport <-
   function(report_name = NULL,
