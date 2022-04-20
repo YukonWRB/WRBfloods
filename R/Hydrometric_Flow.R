@@ -227,8 +227,7 @@ flow_plot <- function(
 		ggplot2::labs(x = "Month", y = expression(paste("Discharge (m"^3, " s"^-1,")"))) +
 		ggplot2::scale_x_date(date_breaks = "1 months",
 													labels = scales::date_format("%b")) +
-		tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""),
-																		 paste(complete_year, "-12-31", sep = ""))) +
+	 tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""), paste(complete_year, "-12-31", sep = ""))) +
 		ggplot2::theme_classic() +
 		ggplot2::theme(legend.position = legend_position,
 									 legend.text = ggplot2::element_text(size = 8))
