@@ -8,31 +8,26 @@
 # Water Resources, Government of the Northwest Territories
 #
 
-#' Level data
+#' Daily level data
 #' 
-#' For the purposes of this package, this function is simply a utility which facilitates the plotting of WSC data.
-#'
 #' @param station_number The WSC station number for which you want data
 #' @param extract_realtime Realtime data, TRUE or FALSE? TRUE requires login credentials for use with tidyhydat.ws.
 #' @param select_years The year(s) for which you want data
-#' @param csv_path Not used in this situation.
-#'
+
 #' @return A data.frame containing the timeseries requested.
 #' @export
 #'
 
-level_data <- function(
+daily_level_data <- function(
     station_number,
     extract_realtime = FALSE, 
     select_years = c(1950:2020), 
-    csv_path = NA # or provide path to folder as text string
 ){
   
   if(extract_realtime == T) {
     token_out <- tidyhydat.ws::token_ws()
   }
   
-  #station <- tidyhydat::hy_stations(station_number)
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
   
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)
@@ -43,26 +38,17 @@ level_data <- function(
   
   if(extract_realtime == T) {
     if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
-      level_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, 
-                                                   parameters = 46, 
-                                                   start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730),
-                                                                       paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), 
-                                                                       paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")),
-                                                   end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), 
-                                                                     paste(max(select_years), "12", "31", sep = "-"),
-                                                                     paste(Sys.Date())), 
-                                                   token = token_out)
+      level_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, parameters = 46, start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), token = token_out)
       
       level_real_time <- level_real_time %>%
         dplyr::group_by(STATION_NUMBER, lubridate::year(Date), lubridate::yday(Date)) %>%
-        dplyr::summarize(Date = mean(lubridate::date(Date)),
+        dplyr::summarize(Date = mean(lubridate::date(Date)), #retain single data (mean) point per day
                          Level = mean(Value),
                          .groups = "drop")
       level_real_time <- level_real_time[,-c(2,3)]
       level_real_time$Level <- level_real_time$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL
       
       # Need to add NaN for blank days first
-      
       level_df <- dplyr::bind_rows(level_historic, level_real_time)
       
     } else {
@@ -74,20 +60,14 @@ level_data <- function(
   } 
   
   # Add rows of missing dates
-  level_df <- fasstr::fill_missing_dates(data = level_df, dates = "Date", value = "Level")
+  level_df <- fasstr::fill_missing_dates(data = level_df, dates = "Date")
   
   # Remove Feb. 29 data
-  
   level_df <- level_df[!(format(level_df$Date,"%m") == "02" & format(level_df$Date, "%d") == "29"), , drop = FALSE]
   
-  # option to save the data at this point
-  if(!is.na(csv_path)) {
-    write.csv(level_df, sprintf("%s/%s_leveldf_%s.csv", csv_path, station_number, Sys.Date()))
-  } 
   
   # Create dayofyear column with seq(1:365) so that leap years and non leap years are equal
   # Calculate percentiles (IQR, max/min)
-  
   level_df <- level_df %>%
     dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
                                      ifelse(lubridate::month(Date) <= 2,
@@ -106,7 +86,6 @@ level_data <- function(
     dplyr::ungroup()
   
   # Find most recent complete year on dataset to use as IQR and max/min year
-  
   complete_year <- level_df %>%
     dplyr::group_by(lubridate::year(Date)) %>%
     dplyr::summarize(n = length(Level),
@@ -118,7 +97,6 @@ level_data <- function(
   complete_year <- max(complete_year$Year)
   
   # Create a 'dummy_year' data frame that will contain IQR, max/min for the most recent complete year
-  
   dummy_year <- level_df %>%
     subset(lubridate::year(Date) == complete_year) %>%
     dplyr::select(-Level) %>%
@@ -127,13 +105,10 @@ level_data <- function(
                   prctile = NA) 
   
   # Create a blank data frame that will be filled with the for loop
-  
   plot_years <- data.frame()
   
   # For loop to populate plot_years with data from each year in select_years
-  
   for(i in select_years) {
-    
     single_year <- level_df %>%
       subset(lubridate::year(Date) == i) %>%
       dplyr::mutate(Year = complete_year,
@@ -156,6 +131,130 @@ level_data <- function(
   
 }
 
+#' Hourly level data
+#'
+#' @param station_number The WSC station number for which you want data
+#' @param extract_realtime Realtime data, TRUE or FALSE? TRUE requires login credentials for use with tidyhydat.ws.
+#' @param select_years The year(s) for which you want data
+
+#' @return A data.frame containing the timeseries requested.
+#' @export
+#'
+
+hourly_level_data <- function(
+    station_number,
+    extract_realtime = FALSE, 
+    select_years = c(1950:2020), 
+){
+  
+  if(extract_realtime == T) {
+    token_out <- tidyhydat.ws::token_ws()
+  }
+  
+  leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
+  
+  level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)
+                     [,-c(3,5)])
+  colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
+  level_historic$Level <- level_historic$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
+  
+  
+  if(extract_realtime == T) {
+    if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
+      level_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, parameters = 46, start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), token = token_out)
+      
+      
+      level_real_time <- level_real_time %>%
+        dplyr::group_by(STATION_NUMBER, lubridate::year(Date), lubridate::yday(Date), lubridate::hour(Date)) %>% 
+        dplyr::summarize(Date = mean(lubridate::date(Date)),
+                         Hour = mean(lubridate::hour(Date)), #retain single data (mean) point per hour
+                         Level = mean(Value),
+                         .groups = "drop")
+      level_real_time <- level_real_time[,-c(2,3)]
+      level_real_time$Level <- level_real_time$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL
+      
+      # Need to add NaN for blank days first
+      level_df <- dplyr::bind_rows(level_historic, level_real_time)
+      
+    } else {
+      level_df <- level_historic
+    } 
+    
+  } else {
+    level_df <- level_historic
+  } 
+  
+  # Add rows of missing dates
+  level_df <- fasstr::fill_missing_dates(data = level_df, dates = "Date")
+  
+  # Remove Feb. 29 data
+  level_df <- level_df[!(format(level_df$Date,"%m") == "02" & format(level_df$Date, "%d") == "29"), , drop = FALSE]
+  
+  
+  # Create dayofyear column with seq(1:365) so that leap years and non leap years are equal
+  # Calculate percentiles (IQR, max/min)
+  level_df <- level_df %>%
+    dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
+                                     ifelse(lubridate::month(Date) <= 2,
+                                            lubridate::yday(Date),
+                                            lubridate::yday(Date) - 1),
+                                     lubridate::yday(Date))) %>%
+    dplyr::group_by(dayofyear) %>%
+    dplyr::mutate(prctile = (ecdf(Level)(Level)) * 100,
+                  Max = max(Level, na.rm = TRUE),
+                  Min = min(Level, na.rm = TRUE),
+                  QP90 = quantile(Level, 0.90, na.rm = TRUE),
+                  QP75 = quantile(Level, 0.75, na.rm = TRUE),
+                  QP50 = quantile(Level, 0.50, na.rm = TRUE),
+                  QP25 = quantile(Level, 0.25, na.rm = TRUE),
+                  QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+  
+  # Find most recent complete year of dataset to use as IQR and max/min year
+  complete_year <- level_df %>%
+    dplyr::group_by(lubridate::year(Date)) %>%
+    dplyr::summarize(n = length(Level),
+                     .groups ="drop")
+  colnames(complete_year)[1] <- "Year"
+  length_complete_year <- max(complete_year$n)
+  complete_year <- complete_year %>%
+    subset(n == length_complete_year)
+  complete_year <- max(complete_year$Year)
+  
+  # Create a 'dummy_year' data frame that will contain IQR, max/min for the most recent complete year
+  dummy_year <- level_df %>%
+    subset(lubridate::year(Date) == complete_year) %>%
+    dplyr::select(-Level) %>%
+    dplyr::mutate(Level = as.numeric(NA ),
+                  Year_Real = NA,
+                  prctile = NA) 
+  
+  # Create a blank data frame that will be filled with the for loop
+  plot_years <- data.frame()
+  
+  # For loop to populate plot_years with data from each year in select_years
+  for(i in select_years) {
+    single_year <- level_df %>%
+      subset(lubridate::year(Date) == i) %>%
+      dplyr::mutate(Year = complete_year,
+                    Month = lubridate::month(Date),
+                    Day = lubridate::day(Date), 
+                    Year_Real = i) %>%
+      dplyr::mutate(Date_2 = as.Date(paste(Year, Month, Day, sep = "-"))) %>%
+      dplyr::select(-Date, -Month, -Day, -Year) %>%
+      dplyr::rename(Date = Date_2,
+                    Value = Level)
+    
+    single_year <- single_year[,c(1, 13, 3:11, 2, 12)]
+    plot_years <- dplyr::bind_rows(plot_years, single_year)
+    
+  }
+  
+  tidyData <- list(level_df, complete_year, plot_years, dummy_year)
+  
+  return(tidyData)
+  
+}
 
 #' Plot WSC hydrometric data.
 #' 
@@ -170,11 +269,11 @@ level_data <- function(
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
 #'
-#' @return A plot for the station requested with return intervals, if they exist in the data.
+#' @return A plot for the station requested with return intervals, if they exist in the data file return_periods.
 #' @export
 #'
 
-level_plot <- function(
+daily_level_plot <- function(
   station_number,
   complete_year,
   plot_years_df,

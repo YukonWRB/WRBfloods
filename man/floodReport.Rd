@@ -28,6 +28,12 @@ floodReport(
 \item{hydat_creds}{The login credentials you wish to use for hydat. Defaults to your .Renviron file (so you can set and forget on a particular machine) but can also be specified as a character vector of two (as in c("username", "password")).}
 
 \item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of all station IDs. Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
+
+\item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
+
+\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.}
+
+\item{zoom_scale}{The number of days to plot for zoomed in level plots. Defaults to 40, but not used unless level_zoom is set to TRUE.}
 }
 \value{
 A flood report containing flow and water level information in Microsoft Word format.
