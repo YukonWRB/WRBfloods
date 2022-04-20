@@ -16,7 +16,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat)
 library(tidyhydat.ws)
-source("../Hydrometric_Level_mASL.R")
+source("../Levels_with_returns.R")
 source("../Hydrometric_Flow.R")
 ```
 
@@ -70,29 +70,13 @@ for(i in stations) {
                               complete_year = levelData[[2]],
                               plot_years_df = levelData[[3]],
                               dummy_year_df = levelData[[4]])
-      
-      #Add return intervals to the plot if there is such a thing
-      data(return_periods)
-      if (i %in% return_periods$ID==TRUE){
-        levelConvert <- as.numeric(tidyhydat::hy_stn_datum_conv(i)[1,4])
-        stn <- dplyr::filter(return_periods, ID == i) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
-
-        test <- levelPlot + ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "green") +
-                            ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color="darkgreen") +
-                            ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="red") +
-                            ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="solid", color="green") +
-                            ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="solid", color="red")
-      }
-
-      
-      
       print(levelPlot)
       
       cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \n")
     },
     error=function(e) {
       cat("### Level")
-      cat("  \n Station ", i, " does not appear to have realtime level data right now.  \n")})
+      cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")})
     
     cat("  \n")
     
@@ -121,7 +105,7 @@ for(i in stations) {
     },
       error = function(e) {
       cat("### Flow")
-      cat("  \n Station ", i, " does not appear to have realtime flow (discharge) data right now.")})
+      cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now.")})
     } #End of if statement that is "LAKE" dependent
     
     #line break to separate things out
