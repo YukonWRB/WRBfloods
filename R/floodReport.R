@@ -11,7 +11,7 @@
 #' @param report_type What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
 #' 
 #' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.
-#' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 40, but not used unless level_zoom is set to TRUE.
+#' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
 #' 
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.
 #' 
@@ -57,7 +57,7 @@ floodReport <-
       
       ### Generate a report for Dawson###
       if (report_name == "Dawson") {
-        stations <-c ("09EA005", "09EA006", "09EA003", "09EA004", "09CD001", "09DD003", "09EB003", "09EB004", "09EB001")
+        stations <-c ("09EA005", "09EA004", "09EA006", "09EA003", "09CD001", "09DD003", "09EB004", "09EB003", "09EB001")
           rmarkdown::render(
             input = "R/Report templates/Report_template.Rmd",
             output_file = paste0("Dawson Flood Report ", Sys.Date()),

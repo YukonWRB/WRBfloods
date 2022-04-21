@@ -7,7 +7,8 @@
 daily_level_data(
   station_number,
   extract_realtime = FALSE,
-  select_years = c(1950:2020)
+  select_years = c(1950:2020),
+  level_zoom = FALSE
 )
 }
 \arguments{
@@ -16,9 +17,11 @@ daily_level_data(
 \item{extract_realtime}{Realtime data, TRUE or FALSE? TRUE requires login credentials for use with tidyhydat.ws.}
 
 \item{select_years}{The year(s) for which you want data}
+
+\item{level_zoom}{TRUE/FALSE, should high-res data be kept for zoomed-in plots?}
 }
 \value{
-A data.frame containing the timeseries requested.
+A list containing one element (a list of 4 with level data and historical data) if level_zoom is FALSE, or a list of 2 if level_zoom is TRUE (addition of high-res level data)
 }
 \description{
 Daily level data

@@ -23,7 +23,7 @@ floodReport(
 
 \item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.}
 
-\item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 40, but not used unless level_zoom is set to TRUE.}
+\item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
 \item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.}
 

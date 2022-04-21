@@ -63,27 +63,38 @@ for(i in stations) {
           levelData <- daily_level_data(
             station_number = i,
             extract_realtime = TRUE,
-            select_years = lubridate::year(Sys.Date()))
+            select_years = lubridate::year(Sys.Date()),
+            level_zoom = TRUE)
           
           #Level data processing
-          startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-          todayLevel <- levelData[[3]]$Value[levelData[[3]]$Date==Sys.Date()]
-          todayLevelPerc <- round(levelData[[3]]$prctile[levelData[[3]]$Date==Sys.Date()],2)
-          yesterdayLevel <- levelData[[3]]$Value[levelData[[3]]$Date==(Sys.Date()-1)]
+          startYearLevel <- min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
+          todayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==Sys.Date()]
+          todayLevelPerc <- round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date==Sys.Date()],2)
+          yesterdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-1)]
           
           cat("  \n### Level  \n")
           
           #Level data plotting
           levelPlot <- daily_level_plot(station_number = i,
-                                        complete_year = levelData[[2]],
-                                        plot_years_df = levelData[[3]],
-                                        dummy_year_df = levelData[[4]])
+                                        complete_year = levelData$tidyData[[2]],
+                                        plot_years_df = levelData$tidyData[[3]],
+                                        dummy_year_df = levelData$tidyData[[4]])
           print(levelPlot)
+          cat("  \n")
           
           #Plot zoomed-in level data
+          if (level_zoom == TRUE){
+            cat("  \n### Level (", zoom_days, " days)")
+            zoomPlot <- zoom_level_plot(station_number = i,
+                                        complete_year = levelData$tidyData[[2]],
+                                        plot_years_df = levelData$tidyData[[3]],
+                                        dummy_year_df = levelData$tidyData[[4]],
+                                        zoom_data = levelData$recent_level,
+                                        zoom_days = zoom_days)
+            print(zoomPlot)
+          }
           
-          
-          cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \nLevel data collection began in ", startYearLevel, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData[[1]]))/nrow(levelData[[1]])), " complete.  \n")
+          cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \nLevel data collection began in ", startYearLevel, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData$tidyData[[1]]))/nrow(levelData$tidyData[[1]])), " complete.  \n")
         },
         error=function(e) {
           cat("  \n### Level")
@@ -139,7 +150,7 @@ for(i in stations) {
 
 # Weather Forecasts and Products
 
-```{r}
+```{r echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 #This section will generate weather products depending on the station locations(s). For example, Marsh Lake would get a forecast for Whitehorse and weather products for southern lakes.
 
 ```
@@ -148,12 +159,12 @@ for(i in stations) {
 
 # Still Images
 
-```{r}
+```{r echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 #This section will contain auto-generated images, selected based on the stations(s) selected. This section might exist only for the pre-made reports and not the custom reports, tbd.
 ```
 
 ## Other images
 
-```{r}
+```{recho=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 
 ```
