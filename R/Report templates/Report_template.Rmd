@@ -13,7 +13,7 @@ params:
   image_path: image_path
   report_type: report_type
   level_zoom: level_zoom
-  zoom_scale: zoom_scale
+  zoom_days: zoom_days
 ---
 
 ```{r setup, include=FALSE}
@@ -54,47 +54,47 @@ for(i in stations) {
   station_info <- tidyhydat::hy_stations(i)
   if(is.na(station_info$STATION_NUMBER[1])==FALSE){
     tryCatch ( {
-      cat(" \n## ", station_info$STATION_NAME," (Station ", i, ")  \n")
+      cat("  \n## ", station_info$STATION_NAME," (Station ", i,")  \n")
+      cat("\n This station is located in ", station_info$PROV_TERR_STATE_LOC, " at longitude ", round(station_info$LONGITUDE, 2), ", latitude ", round(station_info$LATITUDE,2), ".  \n")
       
-      if (report_type %in% c("Both", "Level")){
-              tryCatch ({
-        #Get the level data
-        levelData <- daily_level_data(
-          station_number = i,
-          extract_realtime = TRUE,
-          select_years = lubridate::year(Sys.Date()))
-        
-        #Level data processing
-        startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- levelData[[3]]$Value[levelData[[3]]$Date==Sys.Date()]
-        todayLevelPerc <- round(levelData[[3]]$prctile[levelData[[3]]$Date==Sys.Date()],2)
-        yesterdayLevel <- levelData[[3]]$Value[levelData[[3]]$Date==(Sys.Date()-1)]
-        
-        cat("### Level")
-        cat("\n")
-        
-        #Level data plotting
-        levelPlot <- daily_level_plot(station_number = i,
-                                complete_year = levelData[[2]],
-                                plot_years_df = levelData[[3]],
-                                dummy_year_df = levelData[[4]])
-        print(levelPlot)
-        
-        #Plot zoomed-in level data
-        
-        
-        cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \n")
-      },
-      error=function(e) {
-        cat("### Level")
-        cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")})
-      } # End of if level of both selected statement
+      if (report_type %in% c("Both", "Level", "both", "level")){
+        tryCatch ({
+          #Get the level data
+          levelData <- daily_level_data(
+            station_number = i,
+            extract_realtime = TRUE,
+            select_years = lubridate::year(Sys.Date()))
+          
+          #Level data processing
+          startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
+          todayLevel <- levelData[[3]]$Value[levelData[[3]]$Date==Sys.Date()]
+          todayLevelPerc <- round(levelData[[3]]$prctile[levelData[[3]]$Date==Sys.Date()],2)
+          yesterdayLevel <- levelData[[3]]$Value[levelData[[3]]$Date==(Sys.Date()-1)]
+          
+          cat("  \n### Level  \n")
+          
+          #Level data plotting
+          levelPlot <- daily_level_plot(station_number = i,
+                                        complete_year = levelData[[2]],
+                                        plot_years_df = levelData[[3]],
+                                        dummy_year_df = levelData[[4]])
+          print(levelPlot)
+          
+          #Plot zoomed-in level data
+          
+          
+          cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \nLevel data collection began in ", startYearLevel, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData[[1]]))/nrow(levelData[[1]])), " complete.  \n")
+        },
+        error=function(e) {
+          cat("  \n### Level")
+          cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")})
+      } # End of if "level" or "both" selected statement
 
       
       cat("  \n")
       
       if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE){ #Lakes don't have flow measurements!
-        if (report_type %in% c("Both", "Flow")){
+        if (report_type %in% c("Both", "Flow", "both", "flow")){
           tryCatch ({
             #Get the flow data
             flowData <- flow_data(
@@ -106,7 +106,7 @@ for(i in stations) {
             todayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==Sys.Date()]
             todayFlowPerc <- round(flowData[[3]]$prctile[flowData[[3]]$Date==Sys.Date()],2)
             yesterdayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-1)]
-            cat("### Flow")
+            cat("  \n### Flow")
             cat("\n")
             #Flow data plotting
             flowPlot <- flow_plot(station_number = i,
@@ -115,20 +115,13 @@ for(i in stations) {
                                   dummy_year_df = flowData[[4]])
             print(flowPlot)
             
-            cat("  \n The current flow rate is ", round(todayFlow,2)," cubic meters per second which corresponds to the ", todayFlowPerc, " percentile of historic flow volume for this station. Since yesterday, the level has ", ifelse(todayFlow<yesterdayFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterdayFlow), 3)," cubic meters per second.")
+            cat("\n The current flow rate is ", round(todayFlow,2), " cubic meters per second which corresponds to the ", todayFlowPerc, " percentile of historic flow volume for this station. Since yesterday, the level has ", ifelse(todayFlow<yesterdayFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterdayFlow), 3)," cubic meters per second.  \nFlow data collection began in ", startYearFlow, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(flowData[[1]]))/nrow(flowData[[1]])), " complete.")
             },
           error = function(e) {
-            cat("### Flow")
+            cat("  \n### Flow")
             cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")})
         } #End of if flow or both selected
       } #End of if statement that is "LAKE" dependent
-
-      
-      #line break to separate things out
-      cat("  \n  <br>  \n  ") 
-      
-      #Level and flow plots are done by this point, now summarize station information.
-      cat("\n This station is located in ", station_info$PROV_TERR_STATE_LOC, " at longitude ", round(station_info$LONGITUDE, 2), ", latitude ", round(station_info$LATITUDE,2), ". Level data collection began in ", startYearLevel, " and flow data collection began in ", startYearFlow, ". The historic level data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData[[1]]))/nrow(levelData[[1]])), " complete and the historic flow data are ", spatstat.utils::percentage(sum(stats::complete.cases(flowData[[1]]))/nrow(flowData[[1]])), " complete.  \n")
       
       cat("\n\\newpage\n")
     }, 

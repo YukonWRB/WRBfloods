@@ -11,26 +11,25 @@
 #' @param report_type What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
 #' 
 #' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.
-#' @param zoom_scale The number of days to plot for zoomed in level plots. Defaults to 40, but not used unless level_zoom is set to TRUE.
+#' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 40, but not used unless level_zoom is set to TRUE.
 #' 
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.
 #' 
-#' @param save_path The path to the directory (folder) where the report should be saved. Default ("choose" )
+#' @param save_path The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.
 #' 
 #' @return A flood report containing flow and water level information in Microsoft Word format.
 #'
 #' @export
 #'
 
-#TODO: fix error message if station input does not exist
-#TODO: fix Whitehorse level data (sort it out on the back end I guess?) This could take the form of a check for values that are bumped up by the datum somehow
+#TODO: fix Whitehorse level data (sort it out on the back end I guess?) This could take the form of a check for values that are bumped up by the datum somehow, or making the operation only apply if average level is > a certain value
 
 floodReport <-
   function(report_name = NULL,
            custom_report_stations = NULL,
            report_type = "Both",
            level_zoom = FALSE,
-           zoom_scale = 30,
+           zoom_days = 30,
            image_path = NULL,
            save_path = "choose") {
     
@@ -69,7 +68,7 @@ floodReport <-
               image_path = image_path,
               report_type = report_type,
               level_zoom = level_zoom,
-              zoom_scale = zoom_scale)
+              zoom_days = zoom_days)
           )
       } #End of Dawson report
       
@@ -86,7 +85,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_scale = zoom_scale)
+            zoom_days = zoom_days)
         )
       } #End of Whitehorse report
       
@@ -103,7 +102,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_scale = zoom_scale)
+            zoom_days = zoom_days)
         )
       } #End of Carmacks report
       
@@ -120,7 +119,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_scale = zoom_scale)
+            zoom_days = zoom_days)
         )
       } #End of Pelly report
       
@@ -137,7 +136,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_scale = zoom_scale)
+            zoom_days = zoom_days)
         )
       } #End of Old Crow report
     }
@@ -156,7 +155,7 @@ floodReport <-
                                  image_path = image_path,
                                  report_type = report_type,
                                  level_zoom = level_zoom,
-                                 zoom_scale = zoom_scale)
+                                 zoom_days = zoom_days)
           )
         )
       } #End of custom report
