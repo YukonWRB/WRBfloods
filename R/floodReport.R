@@ -33,6 +33,8 @@ floodReport <-
            image_path = NULL,
            save_path = "choose") {
     
+    #load in data dependencies (functions can be sourced from the rmd)
+    data(return_periods)
     
     #####Selection of image path and save path#####
     if (is.null(image_path) == FALSE) {
@@ -151,13 +153,12 @@ floodReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = paste0("Custom Report for Stations ", custom_report_stations,
-                                 image_path = image_path,
-                                 report_type = report_type,
-                                 level_zoom = level_zoom,
-                                 zoom_days = zoom_days)
+            report_name = paste0("Custom Report for Stations ", custom_report_stations),
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            zoom_days = zoom_days)
           )
-        )
       } #End of custom report
     }
     
