@@ -28,7 +28,7 @@ floodReport <-
   function(report_name = NULL,
            custom_report_stations = NULL,
            report_type = "Both",
-           level_zoom = FALSE,
+           level_zoom = TRUE,
            zoom_days = 30,
            image_path = NULL,
            save_path = "choose") {
@@ -76,7 +76,7 @@ floodReport <-
       
       ### Generate a report for Whitehorse###
       if (report_name == "Whitehorse") {
-        stations <- c("09AB001", "09AB004", "09AA004", "09AE002", "AB09ENA")
+        stations <- c("09AB001", "09AB004", "09AA004", "09AE002")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
           output_file = paste0("Whitehorse Flood Report ", Sys.Date()),
