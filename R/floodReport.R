@@ -30,6 +30,7 @@ floodReport <-
            report_type = "Both",
            level_zoom = TRUE,
            zoom_days = 30,
+           meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {
     
@@ -70,7 +71,8 @@ floodReport <-
               image_path = image_path,
               report_type = report_type,
               level_zoom = level_zoom,
-              zoom_days = zoom_days)
+              zoom_days = zoom_days,
+              meteogram = meteogram)
           )
       } #End of Dawson report
       
@@ -87,7 +89,8 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_days = zoom_days)
+            zoom_days = zoom_days,
+            meteogram = meteogram)
         )
       } #End of Whitehorse report
       
@@ -104,7 +107,8 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_days = zoom_days)
+            zoom_days = zoom_days,
+            meteogram = meteogram)
         )
       } #End of Carmacks report
       
@@ -121,7 +125,8 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_days = zoom_days)
+            zoom_days = zoom_days,
+            meteogram = meteogram)
         )
       } #End of Pelly report
       
@@ -138,7 +143,8 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_days = zoom_days)
+            zoom_days = zoom_days,
+            meteogram = meteogram)
         )
       } #End of Old Crow report
     }
@@ -157,7 +163,8 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
-            zoom_days = zoom_days)
+            zoom_days = zoom_days,
+            meteogram = meteogram)
           )
       } #End of custom report
     }
