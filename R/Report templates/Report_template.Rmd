@@ -22,6 +22,7 @@ library(tidyhydat)
 library(tidyhydat.ws)
 source("../Levels_with_returns_mASL.R")
 source("../Hydrometric_Flow.R")
+data(return_periods)
 ```
 
 \newpage
@@ -46,7 +47,7 @@ Water level elevations are in reference to the Canadian Geodetic Vertical Datum 
 
 \newpage
 
-```{r Generate reports, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
+```{r Generate plots and basic stats, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 
 for(i in stations) {
   
@@ -72,6 +73,7 @@ for(i in stations) {
           yesterdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-1)]
           
           cat("  \n### Level  \n")
+          cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \nLevel data collection began in ", startYearLevel, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData$tidyData[[1]]))/nrow(levelData$tidyData[[1]])), " complete.  \n")
           
           #Level data plotting
           levelPlot <- daily_level_plot(station_number = i,
@@ -83,7 +85,7 @@ for(i in stations) {
           
           #Plot zoomed-in level data
           if (level_zoom == TRUE){
-            cat("  \n### Level (", zoom_days, " days)")
+            cat("  \n### Level (last", zoom_days, " days)")
             zoomPlot <- zoom_level_plot(station_number = i,
                                         complete_year = levelData$tidyData[[2]],
                                         plot_years_df = levelData$tidyData[[3]],
@@ -91,9 +93,9 @@ for(i in stations) {
                                         zoom_data = levelData$recent_level,
                                         zoom_days = zoom_days)
             print(zoomPlot)
+            cat("  \n")
           }
-          
-          cat("  \n The current level is ", round(todayLevel,2)," meters above sea level which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \nLevel data collection began in ", startYearLevel, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData$tidyData[[1]]))/nrow(levelData$tidyData[[1]])), " complete.  \n")
+
         },
         error=function(e) {
           cat("  \n### Level")
@@ -117,15 +119,14 @@ for(i in stations) {
             todayFlowPerc <- round(flowData[[3]]$prctile[flowData[[3]]$Date==Sys.Date()],2)
             yesterdayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-1)]
             cat("  \n### Flow")
-            cat("\n")
+            cat("\n The current flow rate is ", round(todayFlow,2), " cubic meters per second which corresponds to the ", todayFlowPerc, " percentile of historic flow volume for this station. Since yesterday, the level has ", ifelse(todayFlow<yesterdayFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterdayFlow), 3)," cubic meters per second.  \nFlow data collection began in ", startYearFlow, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(flowData[[1]]))/nrow(flowData[[1]])), " complete.")
             #Flow data plotting
             flowPlot <- flow_plot(station_number = i,
                                   complete_year = flowData[[2]],
                                   plot_years_df = flowData[[3]],
                                   dummy_year_df = flowData[[4]])
             print(flowPlot)
-            
-            cat("\n The current flow rate is ", round(todayFlow,2), " cubic meters per second which corresponds to the ", todayFlowPerc, " percentile of historic flow volume for this station. Since yesterday, the level has ", ifelse(todayFlow<yesterdayFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterdayFlow), 3)," cubic meters per second.  \nFlow data collection began in ", startYearFlow, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(flowData[[1]]))/nrow(flowData[[1]])), " complete.")
+            cat("  \n")
             },
           error = function(e) {
             cat("  \n### Flow")
@@ -147,10 +148,20 @@ for(i in stations) {
 } #End of For loop
 ```
 
-# Weather Forecasts and Products
+# Territory-Wide Weather Forecasts and Products
 
-```{r echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
-#This section will generate weather products depending on the station locations(s). For example, Marsh Lake would get a forecast for Whitehorse and weather products for southern lakes.
+The following images represent precipitation in and around Yukon, starting with the most recent image. Each image integrates precipitation over the 24 hour period prior to the image's valid date and time (Yukon time zone or UTC-7). 
+
+```{r Fetch weather products, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+
+wxfiles <- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24", pattern="*.png")
+
+
+
+knitr::include_graphics(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/",wxfiles[length(wxfiles)]))
+knitr::include_graphics(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/",wxfiles[length(wxfiles)-1]))
+knitr::include_graphics(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/",wxfiles[length(wxfiles)-2]))
+knitr::include_graphics(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/",wxfiles[length(wxfiles)-3]))
 
 ```
 
