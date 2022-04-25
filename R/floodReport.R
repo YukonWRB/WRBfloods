@@ -36,6 +36,8 @@ floodReport <-
     
     #load in data dependencies (functions can be sourced from the rmd)
     data(return_periods)
+    data(spatial_stns)
+    
     
     #####Selection of image path and save path#####
     if (is.null(image_path) == FALSE) {
@@ -59,7 +61,7 @@ floodReport <-
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {
       
       ### Generate a report for Dawson###
-      if (report_name == c("Dawson", "dawson", "Dawson City", "Dawson city")) {
+      if (report_name %in% c("Dawson", "dawson", "Dawson City", "Dawson city")) {
         stations <-c ("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001")
           rmarkdown::render(
             input = "R/Report templates/Report_template.Rmd",
@@ -75,24 +77,6 @@ floodReport <-
               meteogram = meteogram)
           )
       } #End of Dawson report
-      
-      ### Generate a report for Whitehorse###
-      if (report_name %in% c("Whitehorse", "whitehorse")) {
-        stations <- c("09AB001", "09AB004", "09AA004", "09AE002")
-        rmarkdown::render(
-          input = "R/Report templates/Report_template.Rmd",
-          output_file = paste0("Whitehorse Flood Report ", Sys.Date()),
-          output_dir = save_path,
-          params = list(
-            stations = stations,
-            report_name = "Whitehorse Flood Report",
-            image_path = image_path,
-            report_type = report_type,
-            level_zoom = level_zoom,
-            zoom_days = zoom_days,
-            meteogram = meteogram)
-        )
-      } #End of Whitehorse report
       
       ### Generate a report for Carmacks###
       if (report_name %in% c("Carmacks", "carmacks")) {
@@ -139,7 +123,7 @@ floodReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Pelly/Ross River Flood Report",
+            report_name = "Pelly.Ross River Flood Report",
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -171,7 +155,7 @@ floodReport <-
       stations <-c ("10AA001", "10AA006", "10AA004", "10AA005", "10AB001", "10AB001", "10AD002")
       rmarkdown::render(
         input = "R/Report templates/Report_template.Rmd",
-        output_file = paste0("Liard/Watson Flood Report ", Sys.Date()),
+        output_file = paste0("Liard.Watson Flood Report ", Sys.Date()),
         output_dir = save_path,
         params = list(
           stations = stations,
@@ -189,7 +173,7 @@ floodReport <-
         stations <-c ("")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
-          output_file = paste0("Mayo/Stewart Flood Report ", Sys.Date()),
+          output_file = paste0("Mayo.Stewart Flood Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -225,7 +209,7 @@ floodReport <-
         stations <-c ("09AB010", "09AC001", "09AC007", "09AB001", "09AB004")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
-          output_file = paste0("Whitehorse/Laberge Flood Report ", Sys.Date()),
+          output_file = paste0("Whitehorse.Laberge Flood Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,

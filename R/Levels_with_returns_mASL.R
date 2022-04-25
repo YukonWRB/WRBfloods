@@ -35,12 +35,9 @@ daily_level_data <- function(
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)
                      [,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
-  
-  if (mean(level_historic$Level, na.rm=TRUE) >50){ #This deals with Whitehorse data,
-    level_historic$Level <- level_historic$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
-  }
 
-  
+  level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the basic level is <50.
+
   
   if(extract_realtime == T) {
     if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
