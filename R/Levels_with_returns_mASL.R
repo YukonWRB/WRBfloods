@@ -35,7 +35,11 @@ daily_level_data <- function(
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)
                      [,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
-  level_historic$Level <- level_historic$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
+  
+  if (mean(level_historic$Level, na.rm=TRUE) >50){ #This deals with Whitehorse data,
+    level_historic$Level <- level_historic$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
+  }
+
   
   
   if(extract_realtime == T) {

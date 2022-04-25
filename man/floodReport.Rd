@@ -8,8 +8,9 @@ floodReport(
   report_name = NULL,
   custom_report_stations = NULL,
   report_type = "Both",
-  level_zoom = FALSE,
+  level_zoom = TRUE,
   zoom_days = 30,
+  meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"
 )

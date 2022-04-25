@@ -59,8 +59,8 @@ floodReport <-
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {
       
       ### Generate a report for Dawson###
-      if (report_name == "Dawson") {
-        stations <-c ("09EA005", "09EA004", "09EA006", "09EA003", "09CD001", "09DD003", "09EB004", "09EB003", "09EB001")
+      if (report_name == c("Dawson", "dawson", "Dawson City", "Dawson city")) {
+        stations <-c ("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001")
           rmarkdown::render(
             input = "R/Report templates/Report_template.Rmd",
             output_file = paste0("Dawson Flood Report ", Sys.Date()),
@@ -77,7 +77,7 @@ floodReport <-
       } #End of Dawson report
       
       ### Generate a report for Whitehorse###
-      if (report_name == "Whitehorse") {
+      if (report_name %in% c("Whitehorse", "whitehorse")) {
         stations <- c("09AB001", "09AB004", "09AA004", "09AE002")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
@@ -95,8 +95,8 @@ floodReport <-
       } #End of Whitehorse report
       
       ### Generate a report for Carmacks###
-      if (report_name == "Carmacks") {
-        stations <-c ("")
+      if (report_name %in% c("Carmacks", "carmacks")) {
+        stations <-c ("09AH001", "09AH004", "09AG001", "09AH005", "09AB010", "09AC001", "09AE002")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
           output_file = paste0("Carmacks Flood Report ", Sys.Date()),
@@ -112,16 +112,34 @@ floodReport <-
         )
       } #End of Carmacks report
       
-      ### Generate a report for Pelly Crossing###
-      if (report_name == "Pelly") {
-        stations <-c ("")
+      ### Generate a report for Teslin###
+      if (report_name %in% c("Teslin", "teslin")) {
+        stations <-c ("09AE002", "09AE006", "09AE003")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
-          output_file = paste0("Pelly Flood Report ", Sys.Date()),
+          output_file = paste0("Teslin Flood Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Pelly Flood Report",
+            report_name = "Teslin Flood Report",
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            zoom_days = zoom_days,
+            meteogram = meteogram)
+        )
+      } #End of Carmacks report
+      
+      ### Generate a report for Pelly Crossing###
+      if (report_name %in% c("Pelly", "pelly", "Pelly Crossing", "Pelly crossing", "Ross", "ross", "Ross River", "ross river", "Ross river")) {
+        stations <-c ("")
+        rmarkdown::render(
+          input = "R/Report templates/Report_template.Rmd",
+          output_file = paste0("Pelly/Ross Flood Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Pelly/Ross River Flood Report",
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -131,8 +149,8 @@ floodReport <-
       } #End of Pelly report
       
       ### Generate a report for Old Crow###
-      if (report_name == "Old Crow") {
-        stations <-c ("")
+      if (report_name %in% c("Old Crow", "Old crow", "old crow")) {
+        stations <-c ("09FD002", "09FD003", "09FC001", "09FA001", "09FB003", "09FB002")
         rmarkdown::render(
           input = "R/Report templates/Report_template.Rmd",
           output_file = paste0("Old Crow Flood Report ", Sys.Date()),
@@ -147,8 +165,80 @@ floodReport <-
             meteogram = meteogram)
         )
       } #End of Old Crow report
-    }
     
+    ### Generate a report for Liard/Watson###
+    if (report_name %in% c("Liard", "Watson", "Watson Lake", "Watson lake", "watson lake", "Liard River", "Liard river", "liard river")) {
+      stations <-c ("10AA001", "10AA006", "10AA004", "10AA005", "10AB001", "10AB001", "10AD002")
+      rmarkdown::render(
+        input = "R/Report templates/Report_template.Rmd",
+        output_file = paste0("Liard/Watson Flood Report ", Sys.Date()),
+        output_dir = save_path,
+        params = list(
+          stations = stations,
+          report_name = "Liard River and Watson Lake Area Flood Report",
+          image_path = image_path,
+          report_type = report_type,
+          level_zoom = level_zoom,
+          zoom_days = zoom_days,
+          meteogram = meteogram)
+      )
+    } #End of Liard/Watson report
+
+      ### Generate a report for Mayo/Stewart###
+      if (report_name %in% c("Mayo", "mayo", "Stewart", "stewart", "Stewart River", "Stewart river", "stewart river", "Stewart Crossing", "Stewart crossing", "stewart crossing")) {
+        stations <-c ("")
+        rmarkdown::render(
+          input = "R/Report templates/Report_template.Rmd",
+          output_file = paste0("Mayo/Stewart Flood Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Mayo and Stewart River Flood Report",
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            zoom_days = zoom_days,
+            meteogram = meteogram)
+        )
+      } #End of Mayo/Stewart report
+      
+      ### Generate a report for Southern Lakes###
+      if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")) {
+        stations <-c ("09AB001", "09AB004", "09AA017", "09AA004", "09AA012", "09AA013", "09AA001")
+        rmarkdown::render(
+          input = "R/Report templates/Report_template.Rmd",
+          output_file = paste0("Southern Lakes Flood Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Southern Lakes Flood Report",
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            zoom_days = zoom_days,
+            meteogram = meteogram)
+        )
+      } #End of Southern Lakes report
+    
+      ### Generate a report for Whitehorse/Laberge###
+      if (report_name %in% c("Whitehorse", "whitehorse", "Laberge", "Lake Laberge", "Lake laberge", "lake laberge", "Whitehorse/Laberge", "Whitehorse/Lake Laberge", "Whitehorse/lake Laberge", "whitehorse/lake laberge")) {
+        stations <-c ("09AB010", "09AC001", "09AC007", "09AB001", "09AB004")
+        rmarkdown::render(
+          input = "R/Report templates/Report_template.Rmd",
+          output_file = paste0("Whitehorse/Laberge Flood Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Whitehorse/Laberge Flood Report",
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            zoom_days = zoom_days,
+            meteogram = meteogram)
+        )
+      } #End of Whitehorse/Laberge report
+    }
+      
     ### Generate a custom report ###
     if (is.null(custom_report_stations)==FALSE){
       if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
