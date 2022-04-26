@@ -14,15 +14,16 @@ Imports:
     tidyhydat.ws,
     tidyquant,
     ggplot2,
-    dplyr,
+    dplyr
+    plyr,
+    stringr,
+    purrr,
     lubridate,
     fasstr,
     scales,
     magrittr,
     spatstat.utils,
     stats,
-    stringr,
-    purrr,
     imager
 License: MIT + file LICENSE
 Encoding: UTF-8
