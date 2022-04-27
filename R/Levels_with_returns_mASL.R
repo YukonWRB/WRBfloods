@@ -25,11 +25,6 @@ daily_level_data <- function(
     select_years = c(1950:2020),
     level_zoom = FALSE
 ){
-  
-  if(extract_realtime == T) {
-    token_out <- tidyhydat.ws::token_ws()
-  }
-  
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
   
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)
@@ -39,10 +34,11 @@ daily_level_data <- function(
   datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]))
   
   if(datum_na == FALSE) {
-    level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the basic level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
+    level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
   }
 
   if(extract_realtime == T) {
+    token_out <- tidyhydat.ws::token_ws()
     if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
       level_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, parameters = 46, start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), token = token_out)
       
@@ -53,7 +49,7 @@ daily_level_data <- function(
         recent_level$DateOnly <- lubridate::date(recent_level$Date)
         recent_level <- recent_level[,-c(3,5:10)]
         if (datum_na == FALSE){
-          recent_level$Value <- recent_level$Value + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL
+          recent_level$Value <- recent_level$Value + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL if there is a datum - otherwise do nothing
         }
       }
       
@@ -64,7 +60,7 @@ daily_level_data <- function(
                          .groups = "drop")
       level_real_time <- level_real_time[,-c(2,3)]
       if (datum_na == FALSE){
-        level_real_time$Level <- level_real_time$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL
+        level_real_time$Level <- level_real_time$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL if there is a datum
       }
       
       # Need to add NaN for blank days first
@@ -93,6 +89,7 @@ daily_level_data <- function(
                                             lubridate::yday(Date),
                                             lubridate::yday(Date) - 1),
                                      lubridate::yday(Date))) %>%
+    
     dplyr::group_by(dayofyear) %>%
     dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100,
                   Max = max(Level, na.rm = TRUE),
@@ -123,10 +120,8 @@ daily_level_data <- function(
                   Year_Real = NA,
                   prctile = NA) 
   
-  # Create a blank data frame that will be filled with the for loop
-  plot_years <- data.frame()
-  
   # For loop to populate plot_years with data from each year in select_years
+  plot_years <- data.frame()
   for(i in select_years) {
     single_year <- level_df %>%
       subset(lubridate::year(Date) == i) %>%
@@ -189,8 +184,6 @@ daily_level_plot <- function(
   all_data <- all_data[,c(1, 2, 12, 11, 3, 4, 6:10, 5)]
 
   # Generate the plot
-  station <- tidyhydat::hy_stations(station_number)
-  
   plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
@@ -265,8 +258,6 @@ zoom_level_plot <- function(
   zoom_data <- zoom_data[zoom_data$DateOnly %in% datesPlus,]
   all_data <- all_data[all_data$Date %in% datesPlus,]
   all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
-  
-
 
   minZoom <- min(zoom_data$Value)
   maxZoom <- max(zoom_data$Value)
