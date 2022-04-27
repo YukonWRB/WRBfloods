@@ -27,6 +27,85 @@ data("return_periods")
 data("spatial_stns")
 ```
 
+```{r Get station data, echo=FALSE, results='asis', message=FALSE}
+levelData <- list()
+
+for(i in stations) {
+  #Get the level data
+  levelData[[i]] <- daily_level_data(
+    station_number = i,
+    extract_realtime = TRUE,
+    select_years = lubridate::year(Sys.Date()),
+    level_zoom = TRUE
+  )
+  
+  #Level data processing
+  startYearLevel <-
+    min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
+  todayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == Sys.Date()]
+  todayLevelPerc <-
+    round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date == Sys.Date()], 2)
+  yesterdayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     1)]
+  twodayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     2)]
+  threedayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     3)]
+  fourdayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     4)]
+  fivedayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     5)]
+  sixdayLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     6)]
+  weekLevel <-
+    levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() -
+                                                                     7)]
+  
+  tbl <- data.frame(
+      `Station name` = stringr::str_to_title(station_info$STATION_NAME),
+      ID = i,
+      `Start year` = startYearLevel,
+      `Today percent historic` = todayLevelPerc,
+      Today = todayLevel,
+      Yesterday = yesterdayLevel,
+      `24 hr change` = todayLevel - yesterdayLevel,
+      `Two days ago` = twodayLevel,
+      `Three days ago` = threedayLevel,
+      `72 hr change` = todayLevel - threedayLevel,
+      `Four days ago` = fourdayLevel,
+      `Five days ago` = fivedayLevel,
+      `Six days ago` = sixdayLevel,
+      `One week ago` = weekLevel,
+      `One week change` = todayLevel - weekLevel,
+      `Datum elevation` = as.numeric(tidyhydat::hy_stn_datum_conv(i)[1, 4])
+    )
+  
+  info[[i]] <- tbl #add each station information to a list, later made into a table
+  
+}
+
+
+flowData <- list()
+
+```
+
+```{r Levels table, echo=FALSE, results='asis', message=FALSE}
+
+levelsTable <- dplyr::bind_rows(info)[c(1,3:5,7, 10, 15,16)]
+names(levelsTable) <- gsub("\\.", " ", names(levelsTable))
+names(levelsTable) <- gsub("X", "", names(levelsTable))
+
+knitr::kable(levelsTable, caption="Summary of water levels and level changes in meters:", digits=3)
+```
+
+
 # Current Status and Observations
 
 [Enter update here]
@@ -60,48 +139,10 @@ for(i in stations) {
   if(is.na(station_info$STATION_NUMBER[1])==FALSE){
     tryCatch ( {
       cat("  \n## ", station_info$STATION_NAME," (Station ", i,")  \n")
-      cat("\n This station is located in ", station_info$PROV_TERR_STATE_LOC, " at longitude ", round(station_info$LONGITUDE, 2), ", latitude ", round(station_info$LATITUDE,2), ".  \n")
       
       if (report_type %in% c("Both", "Level", "both", "level")){
         tryCatch ({
           datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(i)[1,4])) #different text if no datum
-          #Get the level data
-          levelData <- daily_level_data(
-            station_number = i,
-            extract_realtime = TRUE,
-            select_years = lubridate::year(Sys.Date()),
-            level_zoom = TRUE)
-          
-          #Level data processing
-          startYearLevel <- min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
-          todayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==Sys.Date()]
-          todayLevelPerc <- round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date==Sys.Date()],2)
-          yesterdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-1)]
-          twodayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-2)]
-          threedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-3)]
-          fourdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-4)]
-          fivedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-5)]
-          sixdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-6)]
-          weekLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date==(Sys.Date()-7)]
-          
-          tbl <- data.frame(`Station name`=stringr::str_to_title(station_info$STATION_NAME), 
-                            ID=i, 
-                            `Start year`=startYearLevel, 
-                            `Today percent historic`=todayLevelPerc, 
-                            Today=todayLevel,
-                            Yesterday=yesterdayLevel,
-                            `24 hr change`= todayLevel-yesterdayLevel,
-                            `Two days ago`=twodayLevel, 
-                            `Three days ago`=threedayLevel,
-                            `72 hr change`=todayLevel-threedayLevel,
-                            `Four days ago`=fourdayLevel, 
-                            `Five days ago`=fivedayLevel, 
-                            `Six days ago`=sixdayLevel, 
-                            `One week ago`=weekLevel,
-                            `One week change`=todayLevel-weekLevel,
-                            `Datum elevation`=as.numeric(tidyhydat::hy_stn_datum_conv(i)[1,4]))
-          
-          info[[i]] <- tbl #add each station information to a list, later made into a table
           
           cat("  \n### Level  \n")
           cat("  \n The current level is ", round(todayLevel,2),(if(datum_na==FALSE) {"meters above sea level"} else {"meters relative to station zero"})," which corresponds to the ", todayLevelPerc, " percentile of historic levels for this station. Since yesterday, the level has ", ifelse(todayLevel<yesterdayLevel, "decreased", "increased"), " by ", round(abs(todayLevel-yesterdayLevel), 3)," meters.  \nLevel data collection began in ", startYearLevel, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(levelData$tidyData[[1]]))/nrow(levelData$tidyData[[1]])), " complete.  \n")
@@ -179,15 +220,6 @@ for(i in stations) {
 } #End of For loop
 
 cat("  \n")
-```
-
-```{r levels table, echo=FALSE, results='asis', message=FALSE}
-
-levelsTable <- dplyr::bind_rows(info)[c(1,3:5,7, 10, 15,16)]
-names(levelsTable) <- gsub("\\.", " ", names(levelsTable))
-names(levelsTable) <- gsub("X", "", names(levelsTable))
-
-knitr::kable(levelsTable, caption="Summary of water levels and level changes in meters:", digits=3)
 ```
 
 \newpage
