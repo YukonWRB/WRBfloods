@@ -100,8 +100,8 @@ daily_level_data <- function(
                   QP50 = quantile(Level, 0.50, na.rm = TRUE),
                   QP25 = quantile(Level, 0.25, na.rm = TRUE),
                   QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
-    dplyr::ungroup()
-   #fasstr::fill_missing_dates(dates = "Date")
+    dplyr::ungroup() #%>%
+    #fasstr::fill_missing_dates(dates = "Date") #this fixes the missing dates problem but then the graphs don't work. gah.
   
   # Find most recent complete year on dataset to use as IQR and max/min year
   complete_year <- level_df %>%
