@@ -176,10 +176,9 @@ imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny
 
 ```
 
-```{r Meteograms, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8.2, fig.width=7.5, results='asis'}
+```{r Meteograms, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8.8, fig.width=7.5, results='asis'}
 if (meteogram==TRUE){
-  cat("  \n# Location-specific forecast(s)")
-  cat("  \nThe following meteograms were selected from 10 possible forecast locations across the territory to include only those within a 200km radius of the Water Survey of Canada station(s) listed earlier in this report.  \n")
+  cat("  \n# Relevant forecast(s)")
   
   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   imager::load.image("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/2022042200_054@007_E1_yxy_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png") %>% plot(axes=FALSE)
