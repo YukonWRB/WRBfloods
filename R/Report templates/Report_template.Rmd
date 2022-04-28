@@ -34,6 +34,28 @@ if (report_type %in% c("Both", "Level", "both", "level")){
   levelInfo <- list()
   
   for(i in stations) {
+    levelData <- data.frame()
+    
+    #tryCatch special here: the error function was not creating any output, so the error data.frames are created here. If successful, it is overwritten in the for loop, otherwise the error output is already created for each i
+    tbl <- data.frame(
+      `Station name` = if(is.na(station_info$STATION_NUMBER[1])==FALSE){paste0("Station ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), " has no current level")} else{paste0("Station ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), " does not exist")},
+      ID = i,
+      `Start year` = NA,
+      `Today percent historic` = NA,
+      Today = NA,
+      Yesterday = NA,
+      `24 hr change` = NA,
+      `Two days ago` = NA,
+      `Three days ago` = NA,
+      `72 hr change` = NA,
+      `Four days ago` = NA,
+      `Five days ago` = NA,
+      `Six days ago` = NA,
+      `One week ago` = NA,
+      `One week change` = NA,
+      `Datum elevation` = NA
+    )
+    
     tryCatch ({
       #Get the level data
       levelData <- daily_level_data(
@@ -42,7 +64,6 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         select_years = lubridate::year(Sys.Date()),
         level_zoom = TRUE
       )
-      levelDataList[[i]] <- levelData
       
       #Level data processing
       startYearLevel <-
@@ -76,28 +97,12 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         `Datum elevation` = as.numeric(tidyhydat::hy_stn_datum_conv(i)[1, 4])
       )
       levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
-    }, error=function(e) {
-      tbl <- data.frame(
-        `Station name` = paste0("Station ", i, " not found"),
-        ID = i,
-        `Start year` = NA,
-        `Today percent historic` = NA,
-        Today = NA,
-        Yesterday = NA,
-        `24 hr change` = NA,
-        `Two days ago` = NA,
-        `Three days ago` = NA,
-        `72 hr change` = NA,
-        `Four days ago` = NA,
-        `Five days ago` = NA,
-        `Six days ago` = NA,
-        `One week ago` = NA,
-        `One week change` = NA,
-        `Datum elevation` = NA
-      )
-      levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
-    } #End of error function
+    }, error=function(e) {}
     ) #End of tryCatch for station existence
+    levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
+    levelDataList[[i]] <- levelData
+    
+    
   } #End of LEVEL for loop
 }# End of if "level" or "both" selected statement
 
@@ -108,6 +113,25 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
   flowInfo <- list()
   
   for(i in stations) {
+    tbl <- data.frame(
+      `Station name` = if(is.na(station_info$STATION_NUMBER[1])==FALSE){paste0("Station ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), " has no current flow")} else{paste0("Station ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), " does not exist")},
+      ID = i,
+      `Start year` = NA,
+      `Today percent historic` = NA,
+      Today = NA,
+      Yesterday = NA,
+      `24 hr change` = NA,
+      `Two days ago` = NA,
+      `Three days ago` = NA,
+      `72 hr change` = NA,
+      `Four days ago` = NA,
+      `Five days ago` = NA,
+      `Six days ago` = NA,
+      `One week ago` = NA,
+      `One week change` = NA
+    )
+    flowData <- data.frame()
+    
     tryCatch ({
       #Get the Flow data
       flowData <- flow_data(
@@ -115,7 +139,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         extract_realtime = TRUE,
         select_years = lubridate::year(Sys.Date())
       )
-      flowDataList[[i]] <- flowData
       
       #Flow data processing
       startYearFlow <- min(lubridate::year(flowData[[1]]$Date), na.rm = T)
@@ -146,28 +169,11 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         `One week ago` = weekFlow,
         `One week change` = todayFlow - weekFlow
       )
-      flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
-    }, error = function(e) {
-      tbl <- data.frame(
-        `Station name` = paste0("Station ", i, " not found"),
-        ID = i,
-        `Start year` = NA,
-        `Today percent historic` = NA,
-        Today = NA,
-        Yesterday = NA,
-        `24 hr change` = NA,
-        `Two days ago` = NA,
-        `Three days ago` = NA,
-        `72 hr change` = NA,
-        `Four days ago` = NA,
-        `Five days ago` = NA,
-        `Six days ago` = NA,
-        `One week ago` = NA,
-        `One week change` = NA
-      )
-      flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
-    } #End of error function
+    }, error = function(e) {}
     ) #End of tryCatch for station existence
+    flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
+    flowDataList[[i]] <- flowData
+    
   } #End of FLOW for loop
 }# End of if "flow" or "both" selected statement
 
@@ -262,18 +268,9 @@ for(i in stations) {
       if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE){ #Lakes don't have flow measurements!
         if (report_type %in% c("Both", "Flow", "both", "flow")){
           tryCatch ({
-            #Get the flow data
-            flowData <- flow_data(
-              station_number = i,
-              extract_realtime = TRUE,
-              select_years = lubridate::year(Sys.Date()))
-            #Flow data processing
-            startYearFlow <- min(lubridate::year(flowData[[1]]$Date), na.rm = T)
-            todayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==Sys.Date()]
-            todayFlowPerc <- round(flowData[[3]]$prctile[flowData[[3]]$Date==Sys.Date()],2)
-            yesterdayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-1)]
+
             cat("  \n### Flow  \n")
-            cat("\n The current flow rate is ", round(todayFlow,2), " cubic meters per second which corresponds to the ", todayFlowPerc, " percentile of historic flow volume for this station. Since yesterday, the level has ", ifelse(todayFlow<yesterdayFlow, "decreased", "increased"), " by ", round(abs(todayFlow-yesterdayFlow), 3)," cubic meters per second.  \nFlow data collection began in ", startYearFlow, " and the historic data are ", spatstat.utils::percentage(sum(stats::complete.cases(flowData[[1]]))/nrow(flowData[[1]])), " complete.")
+
             #Flow data plotting
             flowPlot <- flow_plot(station_number = i,
                                   complete_year = flowDataList[[n]][[2]],
