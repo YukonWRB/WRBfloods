@@ -76,7 +76,7 @@ flow_data <- function(
 	} 
 	
 	# Add rows of missing dates
-	level_df <- fasstr::fill_missing_dates(data = level_df, dates = "Date", value = "Level")
+	level_df <- fasstr::fill_missing_dates(data = level_df, dates = "Date")
 	
 	# Remove Feb. 29 data
 	

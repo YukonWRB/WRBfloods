@@ -195,10 +195,10 @@ daily_level_plot <- function(
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
-    ggplot2::scale_fill_manual(name = "", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
+    ggplot2::scale_fill_manual(name = "Historical Range", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
     ggplot2::geom_point(ggplot2::aes(colour = line_colour), shape=19, size=point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = line_colour), size = line_size, na.rm = T) +
-    ggplot2::scale_colour_manual(name = "", labels=paste0(lubridate::year(Sys.Date())," levels"), values=line_colour, na.translate = FALSE)  
+    ggplot2::scale_colour_manual(name = "Current Levels", labels=paste0(lubridate::year(Sys.Date())," levels"), values=line_colour, na.translate = FALSE)  
   
     #Add return periods if they exist for this station
     #data(return_periods)
@@ -250,6 +250,9 @@ zoom_level_plot <- function(
 )
   
 {
+  #check if datum exists
+  datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]))
+  
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>%
     dplyr::select(-dayofyear, -Level)
@@ -279,10 +282,10 @@ zoom_level_plot <- function(
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
-    ggplot2::scale_fill_manual(name = "", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
+    ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
     ggplot2::geom_point(data=zoom_data, colour = line_colour, shape=19, size=point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = line_colour), size = line_size, na.rm = T) +
-    ggplot2::scale_colour_manual(name = "", labels=paste0(lubridate::year(Sys.Date())," levels"), values=line_colour, na.translate = FALSE)  
+    ggplot2::scale_colour_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values=line_colour, na.translate = FALSE)  
   
   #Add return periods if they exist for this station
   #data(return_periods)
