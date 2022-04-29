@@ -83,26 +83,32 @@ daily_level_data <- function(
   
   # Create dayofyear column with seq(1:365) so that leap years and non leap years are equal
   # Calculate percentiles (IQR, max/min)
-  #TODO: fix the problem here that is happening with 09EA006 at ecdf. Seems that some dayofyear groups have no data points, and ecdf needs at least one data point?
   level_df <- level_df %>%
     dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
                                      ifelse(lubridate::month(Date) <= 2,
                                             lubridate::yday(Date),
                                             lubridate::yday(Date) - 1),
                                      lubridate::yday(Date))) %>%
-    #dplyr::filter(!is.na(Level)) %>% #this does the trick but the missing rows are a problem later
+    dplyr::filter(!is.na(Level)) %>% 
     dplyr::group_by(dayofyear) %>%
-    dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100,
-                  Max = max(Level, na.rm = TRUE),
+    dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100) %>%
+    fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now
+    dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
+                                     ifelse(lubridate::month(Date) <= 2,
+                                            lubridate::yday(Date),
+                                            lubridate::yday(Date) - 1),
+                                     lubridate::yday(Date))) %>%
+    dplyr::group_by(dayofyear) %>%
+    dplyr::mutate(Max = max(Level, na.rm = TRUE),
                   Min = min(Level, na.rm = TRUE),
                   QP90 = quantile(Level, 0.90, na.rm = TRUE),
                   QP75 = quantile(Level, 0.75, na.rm = TRUE),
                   QP50 = quantile(Level, 0.50, na.rm = TRUE),
                   QP25 = quantile(Level, 0.25, na.rm = TRUE),
                   QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
-    dplyr::ungroup() #%>%
-    #fasstr::fill_missing_dates(dates = "Date") #this fixes the missing dates problem but then the graphs don't work. gah.
-  
+    dplyr::ungroup() %>%
+    hablar::rationalize()
+
   # Find most recent complete year on dataset to use as IQR and max/min year
   complete_year <- level_df %>%
     dplyr::group_by(lubridate::year(Date)) %>%
