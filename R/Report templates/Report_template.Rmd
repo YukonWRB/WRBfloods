@@ -286,7 +286,6 @@ for(i in stations) {
             cat("  \n")
             },
           error = function(e) {
-            cat("  \n### Flow")
             cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")})
         } #End of if flow or both selected
       } #End of if statement that is "LAKE" dependent

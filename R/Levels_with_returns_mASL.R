@@ -80,7 +80,6 @@ daily_level_data <- function(
   # Remove Feb. 29 data
   level_df <- level_df[!(format(level_df$Date,"%m") == "02" & format(level_df$Date, "%d") == "29"), , drop = FALSE]
   
-  
   # Create dayofyear column with seq(1:365) so that leap years and non leap years are equal
   # Calculate percentiles (IQR, max/min)
   level_df <- level_df %>%
@@ -110,7 +109,7 @@ daily_level_data <- function(
     hablar::rationalize()
 
   # Find most recent complete year on dataset to use as IQR and max/min year
-  complete_year <- level_df %>%
+  complete_year <- level_df[!(format(level_df$Date,"%m") == "02" & format(level_df$Date, "%d") == "29"), , drop = FALSE] %>%
     dplyr::group_by(lubridate::year(Date)) %>%
     dplyr::summarize(n = length(Level),
                      .groups ="drop")
@@ -154,6 +153,7 @@ daily_level_data <- function(
 }
 
 
+
 #' Plot WSC hydrometric data.
 #' 
 #' Function to plot water levels while including return intervals, where those exist and are specified in this package's data file named return_periods.
@@ -167,7 +167,7 @@ daily_level_data <- function(
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
 #'
-#' @return A plot for the station requested with return intervals, if they exist in the data file return_periods.
+#' @return A plot for the station requested with return intervals, if it exists in the data file return_periods.
 #' @export
 #'
 
@@ -198,13 +198,12 @@ daily_level_plot <- function(
     tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""), paste(complete_year, "-12-31", sep = ""))) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
-    
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
-    ggplot2::scale_fill_manual(name = "Historical Range", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
-    ggplot2::geom_point(ggplot2::aes(colour = line_colour), shape=19, size=point_size, na.rm = T) +
+    ggplot2::geom_point(ggplot2::aes(colour = line_colour), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = line_colour), size = line_size, na.rm = T) +
-    ggplot2::scale_colour_manual(name = "Current Levels", labels=paste0(lubridate::year(Sys.Date())," levels"), values=line_colour, na.translate = FALSE)  
+    ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
+    ggplot2::scale_colour_manual(name = "Current Levels (daily mean)", labels = paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)  
   
     #Add return periods if they exist for this station
     #data(return_periods)
@@ -289,9 +288,9 @@ zoom_level_plot <- function(
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
-    ggplot2::geom_point(data=zoom_data, colour = line_colour, shape=19, size=point_size, na.rm = T) +
+    ggplot2::geom_point(data=zoom_data, colour = line_colour, shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = line_colour), size = line_size, na.rm = T) +
-    ggplot2::scale_colour_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values=line_colour, na.translate = FALSE)  
+    ggplot2::scale_colour_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)  
   
   #Add return periods if they exist for this station
   #data(return_periods)
