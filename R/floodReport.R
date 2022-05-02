@@ -2,7 +2,9 @@
 #' 
 #' This function will allow for the generation of preset flood reports with minimal user inputs, and can generate reports based on a custom list of stations.  A Word document will be generated in which edits and additional images/information can be incorporated.
 #' 
-#' Note that you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”. Refer to the R and GitHub for the WRB word document for more information.
+#' SPECIAL NOTES:
+#' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+#' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
 
 #'
 #' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
@@ -23,6 +25,7 @@
 #' @export
 #'
 
+#TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
 
 floodReport <-
   function(report_name = NULL,

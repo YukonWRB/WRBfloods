@@ -185,26 +185,31 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
 <br>
 
-# Summary of levels and level changes in meters
+
 
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
-levelTable <- dplyr::bind_rows(levelInfo)[c(1,3:5,7, 10, 15,16)]
-names(levelTable) <- gsub("\\.", " ", names(levelTable))
-names(levelTable) <- gsub("X", "", names(levelTable))
-
-knitr::kable(levelTable, digits=3)
+if (report_type %in% c("Both", "Level", "both", "level")){
+  cat("  \n# Summary of levels and level changes in meters  \n")
+  levelTable <- dplyr::bind_rows(levelInfo)[c(1,3:5,7, 10, 15,16)]
+  names(levelTable) <- gsub("\\.", " ", names(levelTable))
+  names(levelTable) <- gsub("X", "", names(levelTable))
+  
+  knitr::kable(levelTable, digits=3)
+}
 ```
 
-# Summary of flows and flow changes in m^3^/s
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
-flowTable <- dplyr::bind_rows(flowInfo)[c(1,3:5,7, 10, 15)]
-names(flowTable) <- gsub("\\.", " ", names(flowTable))
-names(flowTable) <- gsub("X", "", names(flowTable))
-
-knitr::kable(flowTable, digits=3)
+if (report_type %in% c("Both", "Flow", "both", "flow")){
+  cat( "  \n# Summary of flows and flow changes in m^3^/s  \n")
+  flowTable <- dplyr::bind_rows(flowInfo)[c(1,3:5,7, 10, 15)]
+  names(flowTable) <- gsub("\\.", " ", names(flowTable))
+  names(flowTable) <- gsub("X", "", names(flowTable))
+  
+  knitr::kable(flowTable, digits=3)
+}
 ```
 
 \newpage
@@ -250,8 +255,7 @@ for(i in stations) {
           print(levelPlot)
           cat("  \n")
           
-          #Plot zoomed-in level data
-          if (level_zoom == TRUE){
+          if (level_zoom == TRUE){ #Plot zoomed-in level data
             cat("  \n### Level (last", zoom_days, " days) \n")
             zoomPlot <- zoom_level_plot(station_number = i,
                                         complete_year = levelDataList[[n]][[1]][[2]],
@@ -268,7 +272,6 @@ for(i in stations) {
           cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")})
       } # End of if "level" or "both" selected statement
 
-      
       cat("  \n")
       
       if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE){ #Lakes don't have flow measurements!
@@ -286,11 +289,11 @@ for(i in stations) {
             cat("  \n")
             },
           error = function(e) {
-            cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")})
+            cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")
+            cat("\n\\newpage\n")})
         } #End of if flow or both selected
       } #End of if statement that is "LAKE" dependent
       
-      cat("\n\\newpage\n")
     }, 
     
     error= function(e) {})
@@ -366,10 +369,24 @@ if (meteogram==TRUE){
 
 \newpage
 
-# Fixed Camera Images
+
 
 ```{r echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 #This section will contain auto-generated images, selected based on the stations(s) selected.
+
+images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))
+
+
+cat("# Fixed Camera Images")
+
+for (i in stations){
+  temp <- paste0(tempfile(),".jpg")
+R.utils::downloadFile("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/09CD001_20220124T180115Z.jpg", temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
+imager::load.image(paste0(temp)) %>% plot(axes=FALSE)
+}
+
+
+unlink(temp)
 
 ```
 
