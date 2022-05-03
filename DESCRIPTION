@@ -14,7 +14,7 @@ Imports:
     tidyhydat.ws,
     tidyquant,
     ggplot2,
-    dplyr
+    dplyr,
     plyr,
     stringr,
     purrr,
@@ -25,7 +25,10 @@ Imports:
     spatstat.utils,
     stats,
     imager,
-    sf
+    sf,
+    XML,
+    httr,
+    R.utils
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

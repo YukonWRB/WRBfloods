@@ -2,7 +2,7 @@
 % Please edit documentation in R/floodReport.R
 \name{floodReport}
 \alias{floodReport}
-\title{Flood reporting utility}
+\title{Level and Flow condition reporting utility}
 \usage{
 floodReport(
   report_name = NULL,
@@ -16,7 +16,7 @@ floodReport(
 )
 }
 \arguments{
-\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse", "Carmacks", "Pelly", or "Old Crow". Leave as NULL (default) if specifying stations under custom_report_stations.}
+\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.}
 
 \item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
 
@@ -37,5 +37,7 @@ A flood report containing flow and water level information in Microsoft Word for
 This function will allow for the generation of preset flood reports with minimal user inputs, and can generate reports based on a custom list of stations.  A Word document will be generated in which edits and additional images/information can be incorporated.
 }
 \details{
-Note that you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”. Refer to the R and GitHub for the WRB word document for more information.
+SPECIAL NOTES:
+To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
 }

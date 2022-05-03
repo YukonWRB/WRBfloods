@@ -269,7 +269,8 @@ for(i in stations) {
         },
         error=function(e) {
           cat("  \n### Level")
-          cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")})
+          cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")
+          cat("  \n\\newpage\n")})
       } # End of if "level" or "both" selected statement
 
       cat("  \n")
@@ -286,23 +287,21 @@ for(i in stations) {
                                   plot_years_df = flowDataList[[n]][[3]],
                                   dummy_year_df = flowDataList[[n]][[4]])
             print(flowPlot)
-            cat("  \n")
+            cat("  \n\\newpage\n")
             },
           error = function(e) {
             cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")
-            cat("\n\\newpage\n")})
+            cat("  \n\\newpage\n")})
         } #End of if flow or both selected
       } #End of if statement that is "LAKE" dependent
-      
     }, 
-    
     error= function(e) {})
     
   } else {#End of if loop
    cat("\n\\newpage\n") 
    cat("## ", tidyhydat::hy_stations(i)$STATION_NAME, " Station ", i)
    cat("  \n Station ", i, " could not be found in the WSC tidyhydat database.\n")
-   cat("\n\\newpage\n")
+   cat("  \n\\newpage\n")
 
   }
 } #End of For loop
@@ -369,32 +368,42 @@ if (meteogram==TRUE){
 
 \newpage
 
-
-
-```{r echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
+```{r Fixed camera images, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, fig.height=4, fig.width=7, results='asis'}
 #This section will contain auto-generated images, selected based on the stations(s) selected.
 
-images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))
+images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))[[1]]
+images <- images[c(-1,-2),-1] #first two rows are not files and first column is nothing
+images <- images[grep(paste(stations, collapse="|"), images$Name), ] #subset only the images that match stations requested 
 
-
-cat("# Fixed Camera Images")
-
-for (i in stations){
-  temp <- paste0(tempfile(),".jpg")
-R.utils::downloadFile("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/09CD001_20220124T180115Z.jpg", temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
-imager::load.image(paste0(temp)) %>% plot(axes=FALSE)
+if (nrow(images)>=1){
+  images <- dplyr::arrange(images, desc(images$`Last modified`)) %>% dplyr::mutate(Station = substr(Name, 1,7))
+  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+  
+  cat("# Fixed Camera Images")
+  for (i in unique(images$Station)){
+    cat("  \n## ", stringr::str_to_title(hy_stations(i)$STATION_NAME))
+    
+    last_image <- dplyr::filter(images, Station==i)[1,1]
+    
+    temp <- paste0(tempfile(),".jpg")
+    R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
+    imager::load.image(paste0(temp)) %>% plot(axes=FALSE)
+    unlink(temp)
+  }
 }
 
 
-unlink(temp)
-
 ```
 
-```{r echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
+```{r User select images, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 #This section will contain images in a folder specified by the user, if applicable
 if (is.null(image_path)!=TRUE){
-  cat("  \n# Photos")
-
+  cat("  \n# Other Images")
+  custom_images <- list.files(path-image_path)
+  for (i in custom_images){
+    imager::load.image(i) %>% plot(axes=FALSE)
+    cat("  \n")
+  }
 }
 
 ```
