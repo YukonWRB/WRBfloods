@@ -256,6 +256,7 @@ for(i in stations) {
           cat("  \n")
           
           if (level_zoom == TRUE){ #Plot zoomed-in level data
+            
             cat("  \n### Level (last", zoom_days, " days) \n")
             zoomPlot <- zoom_level_plot(station_number = i,
                                         complete_year = levelDataList[[n]][[1]][[2]],
@@ -263,19 +264,19 @@ for(i in stations) {
                                         dummy_year_df = levelDataList[[n]][[1]][[4]],
                                         zoom_data = levelDataList[[n]][[2]],
                                         zoom_days = zoom_days)
-            print(zoomPlot)
-            cat("  \n")
+            tryCatch({
+              print(zoomPlot)
+              cat("  \n")
+            },
+            error=function(e) {cat("  \n There are no recent levels in the WSC database or the time-series could not be processed. \n")})
+
           }
         },
-        error=function(e) {
-          cat("  \n### Level")
-          cat("  \n Station ", i, " does not appear to have real-time level data right now.  \n")
-          cat("  \n\\newpage\n")})
+        error=function(e) {})
       } # End of if "level" or "both" selected statement
 
-      cat("  \n")
       
-      if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE){ #Lakes don't have flow measurements!
+      if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
         if (report_type %in% c("Both", "Flow", "both", "flow")){
           tryCatch ({
 
@@ -287,21 +288,21 @@ for(i in stations) {
                                   plot_years_df = flowDataList[[n]][[3]],
                                   dummy_year_df = flowDataList[[n]][[4]])
             print(flowPlot)
-            cat("  \n\\newpage\n")
+            cat("  \n\n\\newpage\n\n")
             },
           error = function(e) {
             cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")
-            cat("  \n\\newpage\n")})
+            cat("  \n\\newpage\n\n")})
         } #End of if flow or both selected
       } #End of if statement that is "LAKE" dependent
     }, 
     error= function(e) {})
     
   } else {#End of if loop
-   cat("\n\\newpage\n") 
+   cat("  \n\\newpage\n\n") 
    cat("## ", tidyhydat::hy_stations(i)$STATION_NAME, " Station ", i)
    cat("  \n Station ", i, " could not be found in the WSC tidyhydat database.\n")
-   cat("  \n\\newpage\n")
+   cat("  \n\\newpage\n\n")
 
   }
 } #End of For loop
@@ -368,7 +369,7 @@ if (meteogram==TRUE){
 
 \newpage
 
-```{r Fixed camera images, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, fig.height=4, fig.width=7, results='asis'}
+```{r Fixed camera images, eval=TRUE, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, fig.height=4, fig.width=7, results='asis'}
 #This section will contain auto-generated images, selected based on the stations(s) selected.
 
 images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))[[1]]
@@ -377,16 +378,15 @@ images <- images[grep(paste(stations, collapse="|"), images$Name), ] #subset onl
 
 if (nrow(images)>=1){
   images <- dplyr::arrange(images, desc(images$`Last modified`)) %>% dplyr::mutate(Station = substr(Name, 1,7))
-  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   
+  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   cat("# Fixed Camera Images")
   for (i in unique(images$Station)){
-    cat("  \n## ", stringr::str_to_title(hy_stations(i)$STATION_NAME))
-    
-    last_image <- dplyr::filter(images, Station==i)[1,1]
+    last_image <- dplyr::filter(images, Station==i)[1,]
+    cat("  \n### ", stringr::str_to_title(hy_stations(i)$STATION_NAME), "(", trimws(last_image[,2]), ")")
     
     temp <- paste0(tempfile(),".jpg")
-    R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
+    R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image[,1]), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
     imager::load.image(paste0(temp)) %>% plot(axes=FALSE)
     unlink(temp)
   }
@@ -398,7 +398,7 @@ if (nrow(images)>=1){
 ```{r User select images, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, results='asis'}
 #This section will contain images in a folder specified by the user, if applicable
 if (is.null(image_path)!=TRUE){
-  cat("  \n# Other Images")
+  cat("  \n# Other Images  \n")
   custom_images <- list.files(path-image_path)
   for (i in custom_images){
     imager::load.image(i) %>% plot(axes=FALSE)
