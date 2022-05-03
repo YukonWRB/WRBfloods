@@ -28,7 +28,8 @@ Imports:
     sf,
     XML,
     httr,
-    R.utils
+    R.utils,
+    hablar
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

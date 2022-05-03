@@ -19,10 +19,6 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat)
 library(tidyhydat.ws)
-source("../Levels_with_returns_mASL.R")
-source("../Hydrometric_Flow.R")
-data("return_periods")
-data("spatial_stns")
 ```
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
