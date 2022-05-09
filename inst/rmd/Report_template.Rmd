@@ -176,12 +176,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
 ```{r Get Precip data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 
-#.shp needs to be downloaded for stations in region 10, 9, or 8 depending on which stations are in the report requested (even better if generalized to other regions). last two digits before extension are the region.
-
-#Use 6 hour products: First one is the 0100cutoff, subsequent should use the 0700cutoff. Time part of datetime object will be 00, 06, 12, 18.
-
 #Get the links from the web, turn it into a usable table
-htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/")
+htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/") #6 hour products for first day
 nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
   rvest::html_attr("href")
 dbf6 <- as.data.frame(as.character(nodes))
@@ -191,7 +187,7 @@ dbf6 <- dbf6 %>%
                 cutoff = substr(link, 25, 28), #find the cutoff time
                 datetime = substr(link, 50,59)) #find the valid date/time
 
-htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/")
+htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/") #24 hour products for subsequent days
 nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
   rvest::html_attr("href")
 dbf24 <- as.data.frame(as.character(nodes))
@@ -200,16 +196,12 @@ dbf24 <- dbf24 %>%
   dplyr::mutate(watershed = substr(link, 65,66), #Create watershed column 
                 cutoff = substr(link, 25, 28), #find the cutoff time
                 datetime = substr(link, 50,59)) #find the valid date/time
-  
-
 
 
 watersheds <- unique(substr(stations, 1,2)) #determine in which watershed(s) we want to look
-regions <- list() #make empty list to fill iteratively for each watershed
-first6 <- list()
-second6 <- list()
-third6 <- list()
-fourth6 <- list()
+
+first6 <- list() #lists created here to populate in for loop
+subsequent <- list()
 
 for (i in watersheds){
   
@@ -223,84 +215,31 @@ for (i in watersheds){
   first6[[i]] <- foreign::read.dbf(temp)
   unlink(temp)
   
-  subsequent6 <- dplyr::filter(dbf6, watershed==i, cutoff=="0700") %>% dplyr::arrange(desc(datetime)) #uses cutoff 0700 from here on because we might as well use the more accurate data
+  #THEN get the next 27 6 hour periods
+  for (j in 1:27) {
+    subsequent6 <- dplyr::filter(dbf6, watershed==i, cutoff=="0700") %>% dplyr::arrange(desc(datetime)) #uses cutoff 0700 from here on because we might as well use the more accurate data
+    
+    temp <- tempfile(fileext=".dbf")
+    R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/CMC_HRDPA_WATERSHED-006-0700cutoff_SFC_0_ps2.5km_", subsequent6$datetime[j], "_000_", i, ".dbf"), temp)
+    subsequent[[i]][[j]] <- foreign::read.dbf(temp)
+    unlink(temp)
+  }
   
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/CMC_HRDPA_WATERSHED-006-0700cutoff_SFC_0_ps2.5km_", subsequent6$datetime[1], "_000_", i, ".dbf"), temp)
-  second6[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
-  
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/CMC_HRDPA_WATERSHED-006-0700cutoff_SFC_0_ps2.5km_", subsequent6$datetime[2], "_000_", i, ".dbf"), temp)
-  third6[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)  
-  
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/CMC_HRDPA_WATERSHED-006-0700cutoff_SFC_0_ps2.5km_", subsequent6$datetime[3], "_000_", i, ".dbf"), temp)
-  fourth6[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)  
 }
 
-first6 <- subset(data.table::rbindlist(first6), Station %in% stations)
-second6 <- subset(data.table::rbindlist(second6), Station %in% stations)
-third6 <- subset(data.table::rbindlist(third6), Station %in% stations)
-fourth6 <- subset(data.table::rbindlist(fourth6), Station %in% stations)
+first6 <- subset(data.table::rbindlist(first6), Station %in% stations) #combine the stations to one data.frame
 
-first24 <- list(first6=first6, second6=second6, third6=third6, fourth6=fourth6)
+all6hr <- list(first6) #make a list and insert the first element
 
-
-#THEN use 24 hour HRDPA to get the rest of the week.
-
-for (i in watersheds){
-  
-  #this here needs to be set according to the datetime of the 24 hour periods.
-  subsequent24 <- dplyr::filter(dbf24, watershed==i, cutoff=="0700") %>% dplyr::arrange(desc(datetime))
-  
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[1], 1,8), "12_000_", i, ".dbf"), temp)
-  first24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
-  
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[2], 1,8), "12_000_", i, ".dbf"), temp)
-  second24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
-  
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[3], 1,8), "12_000_", i, ".dbf"), temp)
-  third24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)  
-  
-  temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[4], 1,8), "12_000_", i, ".dbf"), temp)
-  fourth24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
-  
-    temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[5], 1,8), "12_000_", i, ".dbf"), temp)
-  fifth24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
-  
-    temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[6], 1,8), "12_000_", i, ".dbf"), temp)
-  sixth24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
-  
-    temp <- tempfile(fileext=".dbf")
-  R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/CMC_HRDPA_WATERSHED-024-0700cutoff_SFC_0_ps2.5km_", substr(subsequent24$datetime[7], 1,8), "12_000_", i, ".dbf"), temp)
-  seventh24[[i]] <- foreign::read.dbf(temp)
-  unlink(temp)
+for (i in 2:28){ #populate the rest of the list so we can bind_rows to those data.frames later
+  all6hr[[i]] <- data.frame()
 }
 
-first24 <- subset(data.table::rbindlist(first24), Station %in% stations)
-second24 <- subset(data.table::rbindlist(second24), Station %in% stations)
-third24 <- subset(data.table::rbindlist(third24), Station %in% stations)
-fourth24 <- subset(data.table::rbindlist(fourth24), Station %in% stations)
-fifth24 <- subset(data.table::rbindlist(fifth24), Station %in% stations)
-sixtt24 <- subset(data.table::rbindlist(sixth24), Station %in% stations)
-seventh24 <- subset(data.table::rbindlist(seventh24), Station %in% stations)
-
-sevendays <- list(first24=first24, second24=second24, third24=third24, fourth24=fourth24, fitfth25=fifth24, sixth24=sixth24, seventh24=seventh24)
+for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 28.
+  for (j in 2:28){
+    all6hr[[j]] <- subset(dplyr::bind_rows(all6hr[[j]], subsequent[[i]][[j-1]]), Station %in% stations)
+  }
+}
 
 ```
 
@@ -334,18 +273,36 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 }
 ```
 
+
 # Accumulated precipitation above selected stations
 
 ```{r Precip table, echo=FALSE, results='asis', message=FALSE}
 
-precip12hr <- first24$first6$PR_mm + first24$second6$PR_mm
-precip24hr <- precip12hr + first24$third6$PR_mm + first24$fourth6$PR_mm
-precip48hr
-precip72hr
-precip96hr
-precip1wk
+precip12hr <- all6hr[[1]]$PR_mm + all6hr[[2]]$PR_mm
 
-precipTable <- data.frame(first24$first6$Station, stringr::str_to_title(first24$first6$StationNam), precip12hr, precip24hr, precip48hr, precip72hr, precip96hr, precip1wk)
+precip24hr <- precip12hr + all6hr[[3]]$PR_mm + all6hr[[4]]$PR_mm
+
+precip48hr <- 0
+for (i in 1:8){
+  precip48hr <- all6hr[[i]]$PR_mm + precip48hr
+}
+
+precip72hr <- 0
+for (i in 1:12){
+  precip48hr <- all6hr[[i]]$PR_mm + precip72hr
+}
+
+precip96hr <- 0
+for(i in 1:16){
+  precip96hr <- all6hr[[i]]$PR_mm + precip96hr
+}
+
+precip1wk <- 0
+  for (i in 1:28){
+   precip1wk <- all6hr[[i]]$PR_mm + precip1wk
+}
+
+precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]$StationNam), precip12hr, precip24hr, precip48hr, precip72hr, precip96hr, precip1wk)
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "24 hours", "48 hours", "72 hours", "96 hours", "One week")
   
   knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime, " UTC"))
