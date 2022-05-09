@@ -40,6 +40,8 @@ floodReport <-
     #load in data dependencies (functions can be sourced from the rmd)
     data(return_periods)
     data(spatial_stns)
+    source("R/Hydrometric_Flow.R", local=TRUE)
+    source("R/Levels_with_returns_masl.R", local=TRUE)
     
     
     #####Selection of image path and save path#####

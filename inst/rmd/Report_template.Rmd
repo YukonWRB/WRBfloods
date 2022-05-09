@@ -19,7 +19,6 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat)
 library(tidyhydat.ws)
-source("..\Hydrometric_Flow.R")
 ```
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
@@ -274,8 +273,9 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 }
 ```
 
+<br>
 
-# Accumulated precipitation above selected stations
+# Accumulated Precipitation Above Stations
 
 ```{r Precip table, echo=FALSE, results='asis', message=FALSE}
 
@@ -290,7 +290,7 @@ for (i in 1:8){
 
 precip72hr <- 0
 for (i in 1:12){
-  precip48hr <- all6hr[[i]]$PR_mm + precip72hr
+  precip72hr <- all6hr[[i]]$PR_mm + precip72hr
 }
 
 precip96hr <- 0
