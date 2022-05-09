@@ -19,6 +19,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat)
 library(tidyhydat.ws)
+source("..\Hydrometric_Flow.R")
 ```
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
