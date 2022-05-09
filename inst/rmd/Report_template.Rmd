@@ -207,6 +207,7 @@ for (i in watersheds){
   
   #FIRST use 6 hour data for the first 24 hour period
   first <- dplyr::filter(dbf6, watershed==i, cutoff=="0100") %>% dplyr::arrange(desc(datetime)) #uses cutoff 0100 to get as recent data as possible.
+  
   validdatetime <- as.Date(first$datetime[1], format="%Y%m%d%H") #the date/time up to which precip is integrated
   validdatetime <- as.POSIXct(first$datetime[1], format="%Y%m%d%H", tz="UTC")
   
@@ -306,7 +307,7 @@ precip1wk <- 0
 precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]$StationNam), precip12hr, precip24hr, precip48hr, precip72hr, precip96hr, precip1wk)
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "24 hours", "48 hours", "72 hours", "96 hours", "One week")
   
-  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime, " UTC"))
+  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time for selected stations."))
 ```
 
 \newpage
@@ -485,6 +486,7 @@ if (nrow(images)>=1){
     R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image[,1]), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
     imager::load.image(paste0(temp)) %>% plot(axes=FALSE)
     unlink(temp)
+    cat("  \n")
   }
 }
 
