@@ -63,9 +63,27 @@ floodReport <-
     
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {
       
+      ### Generate a report for the whole territory###
+      if (report_name %in% c("Territory", "Communities")) {
+        stations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD001", "09FD003", "09BC001", "09BC002", "09AE002", "09AE001", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
+        rmarkdown::render(
+          input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
+          output_file = paste0("Dawson Condition Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Territory-Wide Condtions Report",
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            zoom_days = zoom_days,
+            meteogram = meteogram)
+        )
+      }
+      
       ### Generate a report for Dawson###
       if (report_name %in% c("Dawson", "dawson", "Dawson City", "Dawson city")) {
-        stations <-c ("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001")
+        stations <- c("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001")
           rmarkdown::render(
             input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
             output_file = paste0("Dawson Condition Report ", Sys.Date()),
@@ -236,7 +254,7 @@ floodReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = paste0("Condition Report for Station(s) ", custom_report_stations),
+            report_name = paste0("Condition Report for Station(s) ", toString(custom_report_stations)),
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
