@@ -283,17 +283,17 @@ zoom_level_plot <- function(
   plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
     ggplot2::ylim(minHist, maxHist) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
-    ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b-%d")) +
-    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days), Sys.Date()+1)) +
+    ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b %d")) +
+    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days), Sys.Date())) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
-    ggplot2::geom_point(data=zoom_data, colour = line_colour, shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(data=zoom_data, colour = line_colour, size = line_size, na.rm = T) +
-    ggplot2::scale_colour_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)
+    ggplot2::geom_point(data=zoom_data, ggplot2::aes(colour = line_colour), shape=19, size = point_size, na.rm = T) +
+    ggplot2::geom_line(data=zoom_data, ggplot2::aes(colour = line_colour), size = line_size, na.rm = T) +
+    ggplot2::scale_color_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)
   
   #Add return periods if they exist for this station
   if (station_number %in% data$return_periods$ID==TRUE){
