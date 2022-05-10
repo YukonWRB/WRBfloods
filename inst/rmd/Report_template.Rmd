@@ -208,7 +208,6 @@ for (i in watersheds){
   #FIRST use 6 hour data for the first 24 hour period
   first <- dplyr::filter(dbf6, watershed==i, cutoff=="0100") %>% dplyr::arrange(desc(datetime)) #uses cutoff 0100 to get as recent data as possible.
   
-  validdatetime <- as.Date(first$datetime[1], format="%Y%m%d%H") #the date/time up to which precip is integrated
   validdatetime <- as.POSIXct(first$datetime[1], format="%Y%m%d%H", tz="UTC")
   
   temp <- tempfile(fileext=".dbf")
@@ -436,7 +435,7 @@ if (meteogram==TRUE){
     sf::st_set_crs(4326) %>%
     sf::st_transform(3579)
   
-  meteoStns <- sf::st_as_sf(dplyr::filter(spatial_stns[,c(1,3,7,8)], Type == "Meteogram"), coords=c("Longitude", "Latitude"), crs=4326) %>%
+  meteoStns <- sf::st_as_sf(dplyr::filter(data$spatial_stns[,c(1,3,7,8)], Type == "Meteogram"), coords=c("Longitude", "Latitude"), crs=4326) %>%
     sf::st_set_crs(4326) %>%
     sf::st_transform(3579)
   
@@ -480,7 +479,8 @@ if (nrow(images)>=1){
   cat("# Fixed Camera Images")
   for (i in unique(images$Station)){
     last_image <- dplyr::filter(images, Station==i)[1,]
-    cat("  \n### ", stringr::str_to_title(hy_stations(i)$STATION_NAME), "(", trimws(last_image[,2]), ")  \n")
+    cat("  \n### ", stringr::str_to_title(hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), ") Yukon Time  \n")
+    
     
     temp <- paste0(tempfile(),".jpg")
     R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image[,1]), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
@@ -489,7 +489,6 @@ if (nrow(images)>=1){
     cat("  \n")
   }
 }
-
 
 ```
 

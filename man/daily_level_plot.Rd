@@ -33,8 +33,8 @@ daily_level_plot(
 \item{point_size}{Self explanatory.}
 }
 \value{
-A plot for the station requested with return intervals, if it exists in the data file return_periods.
+A plot for the station requested with return intervals, if it exists in the data file data$return_periods.
 }
 \description{
-Function to plot water levels while including return intervals, where those exist and are specified in this package's data file named return_periods.
+Function to plot water levels while including return intervals, where those exist and are specified in this package's data file named data$return_periods.
 }

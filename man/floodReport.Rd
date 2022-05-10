@@ -26,6 +26,8 @@ floodReport(
 
 \item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
+\item{meteogram}{Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.}
+
 \item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.}
 
 \item{save_path}{The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.}

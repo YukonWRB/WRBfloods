@@ -16,6 +16,8 @@
 #' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.
 #' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
 #' 
+#' @param meteogram Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.
+#' 
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.
 #' 
 #' @param save_path The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.
@@ -36,12 +38,6 @@ floodReport <-
            meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {
-    
-    #load in data dependencies (functions can be sourced from the rmd)
-    data(return_periods)
-    data(spatial_stns)
-    source("R/Hydrometric_Flow.R", local=TRUE)
-    source("R/Levels_with_returns_masl.R", local=TRUE)
     
     
     #####Selection of image path and save path#####
