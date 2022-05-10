@@ -156,7 +156,7 @@ daily_level_data <- function(
 
 #' Plot WSC hydrometric data.
 #' 
-#' Function to plot water levels while including return intervals, where those exist and are specified in this package's data file named return_periods.
+#' Function to plot water levels while including return intervals, where those exist and are specified in this package's data file named data$return_periods.
 #'
 #' @param station_number The station for which you want to plot data.
 #' @param complete_year The year for which you want to plot.
@@ -167,7 +167,7 @@ daily_level_data <- function(
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
 #'
-#' @return A plot for the station requested with return intervals, if it exists in the data file return_periods.
+#' @return A plot for the station requested with return intervals, if it exists in the data file data$return_periods.
 #' @export
 #'
 
@@ -206,10 +206,9 @@ daily_level_plot <- function(
     ggplot2::scale_colour_manual(name = "Current Levels (daily mean)", labels = paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)  
   
     #Add return periods if they exist for this station
-    #data(return_periods)
-    if (station_number %in% return_periods$ID==TRUE){
+    if (station_number %in% data$return_periods$ID==TRUE){
       levelConvert <- as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
-      stn <- dplyr::filter(return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
+      stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
       plot <- plot + 
         ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
@@ -264,10 +263,14 @@ zoom_level_plot <- function(
   all_data <- all_data[,c(1, 2, 12, 11, 3, 4, 6:10, 5)]
   
   #subset the data according to days to plot and find the most recent range
-  datesPlus <- seq.Date(Sys.Date()-zoom_days-5, Sys.Date(), "days")
+  datesPlus <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
+  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% datesPlus,]
-  all_data <- all_data[all_data$Date %in% datesPlus,]
+  all_data <- all_data[all_data$Date %in% ribbon_dates,]
   all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
+  
+  last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)), 
+                    time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
   minZoom <- min(zoom_data$Value)
   maxZoom <- max(zoom_data$Value)
@@ -281,7 +284,7 @@ zoom_level_plot <- function(
     ggplot2::ylim(minHist, maxHist) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b-%d")) +
-    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days), Sys.Date())) +
+    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days), Sys.Date()+1)) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
     
@@ -289,14 +292,13 @@ zoom_level_plot <- function(
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65")) +
     ggplot2::geom_point(data=zoom_data, colour = line_colour, shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = line_colour), size = line_size, na.rm = T) +
-    ggplot2::scale_colour_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)  
+    ggplot2::geom_line(data=zoom_data, colour = line_colour, size = line_size, na.rm = T) +
+    ggplot2::scale_colour_manual(name = "Current Levels (5 min)", labels=paste0(lubridate::year(Sys.Date())," levels"), values = line_colour, na.translate = FALSE)
   
   #Add return periods if they exist for this station
-  #data(return_periods)
-  if (station_number %in% return_periods$ID==TRUE){
+  if (station_number %in% data$return_periods$ID==TRUE){
     levelConvert <- as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
-    stn <- dplyr::filter(return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
+    stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
     plot <- plot + 
       ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
