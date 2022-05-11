@@ -5,20 +5,23 @@
 #' SPECIAL NOTES:
 #' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 #' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
-
+#' You also must manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
 #' 
 #' @param custom_report_stations A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!
 #' 
+#' @param extra_years Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985".
+#' 
 #' @param report_type What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
 #' 
-#' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.
+#' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.
+#' 
 #' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
 #' 
 #' @param meteogram Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.
 #' 
-#' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.
+#' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
 #' 
 #' @param save_path The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.
 #' 
@@ -32,6 +35,7 @@
 floodReport <-
   function(report_name = NULL,
            custom_report_stations = NULL,
+           extra_years = NULL,
            report_type = "Both",
            level_zoom = TRUE,
            zoom_days = 30,
@@ -39,7 +43,7 @@ floodReport <-
            image_path = NULL,
            save_path = "choose") {
     
-    
+
     #####Selection of image path and save path#####
     if (is.null(image_path) == FALSE) {
       if (image_path == "choose") {
@@ -62,15 +66,17 @@ floodReport <-
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {
       
       ### Generate a report for the whole territory###
-      if (report_name %in% c("Territory", "Communities")) {
+      if (report_name %in% c("Territory", "territory", "Communities", "communities", "Yukon", "Yukon Wide", "Yukon wide", "yukon wide")) {
         stations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD001", "09FD003", "09BC001", "09BC002", "09AE002", "09AE001", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
+        extra_years <-  c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1962,1992,2021", "09BC002:2013,1972", "09FD003:2007", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
         rmarkdown::render(
           input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
-          output_file = paste0("Dawson Condition Report ", Sys.Date()),
+          output_file = paste0("Yukon Wide Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
             report_name = "Territory-Wide Condtions Report",
+            extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -89,6 +95,7 @@ floodReport <-
             params = list(
               stations = stations,
               report_name = "Dawson Condition Report",
+              extra_years = c("09EA003:2013,1972","09EB001:2013,1964"),
               image_path = image_path,
               report_type = report_type,
               level_zoom = level_zoom,
@@ -107,6 +114,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Carmacks Condition Report",
+            extra_years = c("09AH001:2021,1992","09AH004:2021"),
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -125,6 +133,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Teslin Condition Report",
+            extra_years = "09EA002:1962,1992,2021",
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -143,6 +152,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Pelly/Ross River Condition Report",
+            extra_years = "09BC002:2013,1972",
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -161,6 +171,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Old Crow Condition Report",
+            extra_years = "09FD003:2007",
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -179,6 +190,7 @@ floodReport <-
         params = list(
           stations = stations,
           report_name = "Liard River and Watson Lake Area Condition Report",
+          extra_years = "10AA001:2007,2012,2013",
           image_path = image_path,
           report_type = report_type,
           level_zoom = level_zoom,
@@ -197,6 +209,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Mayo and Stewart River Condition Report",
+            extra_years = "09DC006:1992,1983,2013",
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -215,6 +228,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Southern Lakes Condition Report",
+            extra_years = c("09AB004:2007,2021", "09AB010:2007,2021"),
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
@@ -233,6 +247,7 @@ floodReport <-
           params = list(
             stations = stations,
             report_name = "Whitehorse/Lake Laberge Condition Report",
+            extra_years = c("09AB004:2007,2021", "09AB010:2007,2021"),
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,

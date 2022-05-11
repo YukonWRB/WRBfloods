@@ -7,6 +7,7 @@
 floodReport(
   report_name = NULL,
   custom_report_stations = NULL,
+  extra_years = NULL,
   report_type = "Both",
   level_zoom = TRUE,
   zoom_days = 30,
@@ -20,15 +21,17 @@ floodReport(
 
 \item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
 
+\item{extra_years}{Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985".}
+
 \item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
 
-\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to FALSE.}
+\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.}
 
 \item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
 \item{meteogram}{Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.}
 
-\item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, these should not be included here.}
+\item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.}
 
 \item{save_path}{The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.}
 }
@@ -42,4 +45,5 @@ This function will allow for the generation of preset flood reports with minimal
 SPECIAL NOTES:
 To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
+You also must manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 }
