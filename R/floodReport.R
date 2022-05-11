@@ -270,6 +270,11 @@ floodReport <-
     if (is.null(custom_report_stations)==FALSE){
       if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
         stations <- custom_report_stations
+        if (is.null(extra_years)==FALSE) {
+          extra_years <- extra_years
+        } else {
+          extra_years <- NULL
+        }
         rmarkdown::render(
           input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
           output_file = paste0("Custom Condition Report ", Sys.Date()),
