@@ -32,7 +32,8 @@ Imports:
     rvest,
     R.utils,
     hablar,
-    foreign
+    foreign,
+    forcats
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
