@@ -11,10 +11,10 @@ zoom_level_plot(
   dummy_year_df,
   zoom_data,
   zoom_days = 30,
-  line_colour = "blue",
+  colours = c("blue", "green4", "darkorchid3", "orange1", "aquamarine4", "cyan2"),
   legend_position = "right",
-  line_size = 0.5,
-  point_size = 1.5
+  line_size = 1,
+  point_size = 1
 )
 }
 \arguments{
@@ -30,13 +30,13 @@ zoom_level_plot(
 
 \item{zoom_days}{The number of days to plot, counting back from the current date.}
 
-\item{line_colour}{Self explanatory.}
-
 \item{legend_position}{Self explanatory.}
 
 \item{line_size}{Self explanatory.}
 
 \item{point_size}{Self explanatory.}
+
+\item{colour}{Colour of the lines/points.}
 }
 \value{
 A plot for the station requested and for the duration requested.

@@ -9,22 +9,22 @@ daily_level_plot(
   complete_year,
   plot_years_df,
   dummy_year_df,
-  line_colour = "blue",
+  colours = c("blue", "green4", "darkorchid3", "orange1", "aquamarine4", "cyan2"),
   legend_position = "right",
-  line_size = 0.5,
-  point_size = 1.5
+  line_size = 1,
+  point_size = 1
 )
 }
 \arguments{
 \item{station_number}{The station for which you want to plot data.}
 
-\item{complete_year}{The year for which you want to plot.}
+\item{complete_year}{The current year, normally output from daily_level_Data.}
 
-\item{plot_years_df}{Don't worry about this}
+\item{plot_years_df}{data.frame containing plotting data for all years selected, normally output from daily_level_data}
 
-\item{dummy_year_df}{Also don't worry about this.}
+\item{dummy_year_df}{Output from daily_level}
 
-\item{line_colour}{Self explanatory.}
+\item{colours}{Colour for the lines and points}
 
 \item{legend_position}{Self explanatory.}
 

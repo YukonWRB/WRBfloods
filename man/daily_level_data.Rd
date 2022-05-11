@@ -6,15 +6,12 @@
 \usage{
 daily_level_data(
   station_number,
-  extract_realtime = FALSE,
   select_years = c(1950:2020),
   level_zoom = FALSE
 )
 }
 \arguments{
 \item{station_number}{The WSC station number for which you want data}
-
-\item{extract_realtime}{Realtime data, TRUE or FALSE? TRUE requires login credentials for use with tidyhydat.ws.}
 
 \item{select_years}{The year(s) for which you want data}
 
