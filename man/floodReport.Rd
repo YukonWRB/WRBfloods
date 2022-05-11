@@ -8,6 +8,7 @@ floodReport(
   report_name = NULL,
   custom_report_stations = NULL,
   extra_years = NULL,
+  preset_extra_years = FALSE,
   report_type = "Both",
   level_zoom = TRUE,
   zoom_days = 30,
@@ -21,7 +22,9 @@ floodReport(
 
 \item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
 
-\item{extra_years}{Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985".}
+\item{extra_years}{Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years}
+
+\item{preset_extra_years}{TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.}
 
 \item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
 
