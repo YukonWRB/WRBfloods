@@ -23,10 +23,12 @@ library(tidyhydat.ws)
 ```
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+levelDataList <- list() #these are not with the if statements that use them because their existence is necessary no matter what later on.
+levelInfo <- list()
+flowDataList <- list()
+flowInfo <- list()
 
 if (report_type %in% c("Both", "Level", "both", "level")){
-  levelDataList <- list()
-  levelInfo <- list()
   
     #parse out the extra years if requested
     if (is.null(extra_years)==FALSE){
@@ -117,9 +119,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
 
 
 if (report_type %in% c("Both", "Flow", "both", "flow")){
-  flowDataList <- list()
-  flowInfo <- list()
-  
+
   for(i in stations) {
     station_info <- tidyhydat::hy_stations(i)
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
