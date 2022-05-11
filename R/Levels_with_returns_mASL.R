@@ -273,7 +273,7 @@ zoom_level_plot <- function(
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   
   #remove the current year from all_data as it's in zoom_data
-  all_data <- all_data[all_data$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()))
+  all_data <- all_data[all_data$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()) | is.na(Year_Real)==TRUE)
   minHist <- min(all_data$Min)
   maxHist <- max(all_data$Max)
   
@@ -285,9 +285,10 @@ zoom_level_plot <- function(
   all_data$Year_Real <- as.numeric(all_data$Year_Real)
   all_data <- dplyr::bind_rows(all_data, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
   
+  #TODO: This is necessary to avoid legend entries where there is no data. Fix it please!
   # Drop na rows on a per-group basis
   test <- all_data %>%
-    dplyr::group_by(Year_Real) %>% 
+    dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Value)))
   
   legend_length <- length(unique(all_data$Year_Real))
