@@ -83,15 +83,15 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       #Level data processing
       startYearLevel <-
         min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
-      todayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == Sys.Date()]
-      todayLevelPerc <- round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date == Sys.Date()], 1)
-      yesterdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 1)]
-      twodayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 2)]
-      threedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 3)]
-      fourdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 4)]
-      fivedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 5)]
-      sixdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 6)]
-      weekLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 7)]
+      todayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      todayLevelPerc <- round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())], 1)
+      yesterdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 1) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      twodayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 2) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      threedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 3) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      fourdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 4) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      fivedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 5) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      sixdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 6) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      weekLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 7) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
       
       tbl <- data.frame(
         `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),

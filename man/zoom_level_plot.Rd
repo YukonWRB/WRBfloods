@@ -30,13 +30,13 @@ zoom_level_plot(
 
 \item{zoom_days}{The number of days to plot, counting back from the current date.}
 
+\item{colours}{Colour of the lines/points.}
+
 \item{legend_position}{Self explanatory.}
 
 \item{line_size}{Self explanatory.}
 
 \item{point_size}{Self explanatory.}
-
-\item{colour}{Colour of the lines/points.}
 }
 \value{
 A plot for the station requested and for the duration requested.
