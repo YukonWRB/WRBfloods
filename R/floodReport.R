@@ -68,7 +68,7 @@ floodReport <-
       ### Generate a report for the whole territory###
       if (report_name %in% c("Territory", "territory", "Communities", "communities", "Yukon", "Yukon Wide", "Yukon wide", "yukon wide")) {
         stations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD001", "09FD003", "09BC001", "09BC002", "09AE002", "09AE001", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
-        extra_years <-  c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1962,1992,2021", "09BC002:2013,1972", "09FD003:2007", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
+        extra_years <-  c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1962,1992,2021", "09BC002:2013,1992,1972", "09FD003:2007,2015", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
         rmarkdown::render(
           input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
           output_file = paste0("Yukon Wide Condition Report ", Sys.Date()),
@@ -148,7 +148,7 @@ floodReport <-
       ### Generate a report for Pelly/Ross###
       if (report_name %in% c("Pelly", "pelly", "Pelly Crossing", "Pelly crossing", "Ross", "ross", "Ross River", "ross river", "Ross river", "Ross/Pelly", "Pelly/Ross", "Pelly River/Ross River", "Pelly/Ross River", "Ross/Pelly River", "Pelly/Ross Rivers", "Ross/Pelly Rivers")) {
         stations <-c ("09BA001", "09BB001", "09BC001", "09BC002", "09BC004")
-        extra_years <- "09BC002:2013,1972"
+        extra_years <- "09BC002:2013,1992,1972"
         rmarkdown::render(
           input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
           output_file = paste0("Pelly.Ross Condition Report ", Sys.Date()),
@@ -168,7 +168,7 @@ floodReport <-
       ### Generate a report for Old Crow###
       if (report_name %in% c("Old Crow", "Old crow", "old crow")) {
         stations <-c ("09FD002", "09FD003", "09FC001", "09FA001", "09FB003", "09FB002")
-        extra_years <- "09FD003:2007"
+        extra_years <- "09FD003:2007,2015"
         rmarkdown::render(
           input = system.file("rmd", "Report_template.Rmd", package="WRBfloods"),
           output_file = paste0("Old Crow Condition Report ", Sys.Date()),
