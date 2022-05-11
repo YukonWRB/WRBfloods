@@ -285,11 +285,12 @@ zoom_level_plot <- function(
   all_data$Year_Real <- as.numeric(all_data$Year_Real)
   all_data <- dplyr::bind_rows(all_data, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
   
-  #TODO: This is necessary to avoid legend entries where there is no data. Fix it please!
-  # Drop na rows on a per-group basis
-  test <- all_data %>%
+  # Drop na rows if there are 0 data points in a group, with exception of the ribbon data contained where Year_Real == NA
+  rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
+  all_data <- all_data %>%
     dplyr::group_by(Year_Real) %>%
-    dplyr::filter(!all(is.na(Value)))
+    dplyr::filter(!all(is.na(Value))) %>%
+    dplyr::bind_rows(rm)
   
   legend_length <- length(unique(all_data$Year_Real))
   
