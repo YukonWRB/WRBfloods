@@ -72,14 +72,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         level_zoom = TRUE
       )
       }
-
-                                        # complete_year = levelData[[1]][[2]]
-                                        # plot_years_df = levelData[[1]][[3]]
-                                        # dummy_year_df = levelData[[1]][[4]]
-                                        # zoom_data = levelData[[2]]
-                                        # station_number <- i
-
-
+      
 
       #Level data processing
       startYearLevel <-
@@ -128,6 +121,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
   flowInfo <- list()
   
   for(i in stations) {
+    station_info <- tidyhydat::hy_stations(i)
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
       
       tbl <- data.frame(
@@ -273,7 +267,7 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
 
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
-if (report_type %in% c("Both", "Level", "both", "level")){
+if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   cat("  \n# Summary of levels and level changes in meters  \n")
   levelTable <- dplyr::bind_rows(levelInfo)[c(1,3:5,7, 10, 15,16)]
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
@@ -285,7 +279,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
-if (report_type %in% c("Both", "Flow", "both", "flow")){
+if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   cat( "  \n# Summary of flows and flow changes in m^3^/s  \n")
   flowTable <- dplyr::bind_rows(flowInfo)[c(1,3:5,7, 10, 15)]
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
