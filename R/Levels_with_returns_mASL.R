@@ -197,8 +197,8 @@ daily_level_plot <- function(
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(all_data$Min, na.rm=TRUE)
   maxHist <- max(all_data$Max, na.rm=TRUE)
-  minLines <- min(zoom_data$Value, na.rm=TRUE)
-  maxLines <- max(zoom_data$Value,na.rm=TRUE)
+  minLines <- min(all_data$Value, na.rm=TRUE)
+  maxLines <- max(all_data$Value,na.rm=TRUE)
   min <- if (minHist < minLines) minHist else minLines
   max <- if (maxHist > maxLines) maxHist else maxLines
   

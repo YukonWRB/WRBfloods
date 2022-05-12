@@ -15,9 +15,9 @@
 
 #' Title
 #'
-#' @param station_number 
-#' @param extract_realtime 
-#' @param select_years 
+#' @param station_number The WSC station for which you want to fecth data.
+#' @param extract_realtime Should real-time data be extracted, or only historical data?
+#' @param select_years The years for which data should be plotted.
 #' @param csv_path 
 #'
 #' @return A data.frame of timeseries data.

@@ -1,12 +1,10 @@
 #' Level and Flow condition reporting utility
 #' 
-#' This function will allow for the generation of preset flood reports with minimal user inputs, and can generate reports based on a custom list of stations.  A Word document will be generated in which edits and additional images/information can be incorporated.
+#' This function generates condition reports for preset or user-specified Water Survey of Canada stations. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
 #' 
-#' SPECIAL NOTES:
+#' 
 #' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
-#' 
 #' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.  \n
-#' 
 #' You also must manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
@@ -35,7 +33,6 @@
 #'
 
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
-#TODO: make sure the md file gets paragraph spacing. might need /n to work!
 
 floodReport <-
   function(report_name = NULL,
