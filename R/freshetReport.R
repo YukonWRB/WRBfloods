@@ -5,9 +5,9 @@
 #' 
 #' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
 #' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.  \n
-#' You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
+#' You also must manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
-#' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
+#' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".
 #' 
 #' @param custom_report_stations A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!
 #' 
@@ -35,7 +35,7 @@
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
 
 floodReport <-
-  function(report_name = NULL,
+  function(report_name = "Territory",
            custom_report_stations = NULL,
            extra_years = NULL,
            preset_extra_years = FALSE,
@@ -63,7 +63,8 @@ floodReport <-
     #####Generate reports#####
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == FALSE) {
       #deals with mistakes
-      print("You cannot specify a both report_name AND custom_report_stations. Choose one and try again.")
+      print("You specified custom report stations while the preset report was also set (if defaults to 'Territory'). I've set the preset to NULL so you get a custom report instead.")
+      report_name <- NULL
     }
     
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {

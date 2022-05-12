@@ -270,7 +270,7 @@ zoom_level_plot <- function(
     dummy_year_df,
     zoom_data,
     zoom_days = 30,
-    colours = c("blue", "green4", "darkorchid3", "darkorange", "aquamarine4", "cyan2", "firebrick3", "chartreuse1"),
+    colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "black"),
     legend_position = "right",
     line_size = 1,
     point_size = 1

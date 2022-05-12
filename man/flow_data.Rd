@@ -12,11 +12,11 @@ flow_data(
 )
 }
 \arguments{
-\item{station_number}{}
+\item{station_number}{The WSC station for which you want to fecth data.}
 
-\item{extract_realtime}{}
+\item{extract_realtime}{Should real-time data be extracted, or only historical data?}
 
-\item{select_years}{}
+\item{select_years}{The years for which data should be plotted.}
 
 \item{csv_path}{}
 }
