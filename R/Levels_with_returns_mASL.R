@@ -49,7 +49,6 @@ daily_level_data <- function(
       if (datum_na == FALSE){
         recent_level$Value <- recent_level$Value + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL if there is a datum - otherwise do nothing
       }
-      #TODO: find a way to add data points for the missing periods here
     }
     
     level_real_time <- level_real_time %>%
@@ -148,7 +147,8 @@ daily_level_data <- function(
   
 }
 
-
+#TODO: IQR is currently setting plot y axis. This must be either the IQR OR the level, whichever is greater
+#TODO: full year plot still gets extra years that have no data. Fix with what's in the zoom plot.
 
 #' Plot WSC hydrometric data.
 #' 
@@ -193,6 +193,8 @@ daily_level_plot <- function(
     dplyr::summarize(Mean = mean(Value))
   legend_length <- length(legend_length$Year_Real) - 1 # The '-1' accounts for the NA row
   all_data$Year_Real <- as.numeric(all_data$Year_Real)
+  
+  #TODO: apply y limits as in the zoom plot in case we get some crazy year!
   
   # Generate the plot
   plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
@@ -276,6 +278,11 @@ zoom_level_plot <- function(
   all_data <- all_data[all_data$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()) | is.na(Year_Real)==TRUE)
   minHist <- min(all_data$Min)
   maxHist <- max(all_data$Max)
+  minZoom <- min(zoom_data$Value)
+  maxZoom <- max(zoom_data$Value)
+  min <-
+  max <- 
+  #TODO: flesh out the two lines above and apply to the graph
   
   #Make dates as posixct
   all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
