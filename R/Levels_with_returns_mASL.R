@@ -149,8 +149,6 @@ daily_level_data <- function(
   
 }
 
-#TODO: IQR is currently setting plot y axis. This must be either the IQR OR the level, whichever is greater
-#TODO: full year plot still gets extra years that have no data. Fix with what's in the zoom plot.
 
 #' Plot WSC hydrometric data.
 #' 
@@ -177,7 +175,7 @@ daily_level_plot <- function(
     colours = c("blue", "green4", "darkorchid3", "darkorange", "aquamarine4", "cyan2", "firebrick3", "chartreuse1"),
     legend_position = "right",
     line_size = 1,
-    point_size = 1
+    point_size = 0.75
 )
   
 {
@@ -196,10 +194,26 @@ daily_level_plot <- function(
   legend_length <- length(legend_length$Year_Real) - 1 # The '-1' accounts for the NA row
   all_data$Year_Real <- as.numeric(all_data$Year_Real)
   
-  #TODO: apply y limits as in the zoom plot in case we get some crazy year!
+  #find the min/max for the y axis, otherwise it defaults to first plotted ts
+  minHist <- min(all_data$Min, na.rm=TRUE)
+  maxHist <- max(all_data$Max, na.rm=TRUE)
+  minLines <- min(zoom_data$Value, na.rm=TRUE)
+  maxLines <- max(zoom_data$Value,na.rm=TRUE)
+  min <- if (minHist < minLines) minHist else minLines
+  max <- if (maxHist > maxLines) maxHist else maxLines
+  
+  # Drop na rows if there are 0 data points in a group, with exception of the ribbon data contained where Year_Real == NA
+  rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
+  all_data <- all_data %>%
+    dplyr::group_by(Year_Real) %>%
+    dplyr::filter(!all(is.na(Value))) %>%
+    dplyr::bind_rows(rm)
+  
+  legend_length <- length(unique(na.omit(all_data$Year_Real)))
   
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
+  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) +
+    ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
     tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""), paste(complete_year, "-12-31", sep = ""))) +
@@ -212,7 +226,7 @@ daily_level_plot <- function(
     ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = unique(all_data$Year_Real)[1:legend_length], values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(all_data$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
   
     #Add return periods if they exist for this station
@@ -278,14 +292,15 @@ zoom_level_plot <- function(
   
   #remove the current year from all_data as it's in zoom_data
   all_data <- all_data[all_data$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()) | is.na(Year_Real)==TRUE)
-  minHist <- min(all_data$Min)
-  maxHist <- max(all_data$Max)
-  minZoom <- min(zoom_data$Value)
-  maxZoom <- max(zoom_data$Value)
-  min <-
-  max <- 
-  #TODO: flesh out the two lines above and apply to the graph
   
+  #find the min/max for the y axis, otherwise it defaults to first plotted ts
+  minHist <- min(all_data$Min, na.rm=TRUE)
+  maxHist <- max(all_data$Max, na.rm=TRUE)
+  minZoom <- min(zoom_data$Value, na.rm=TRUE)
+  maxZoom <- max(zoom_data$Value,na.rm=TRUE)
+  min <- if (minHist < minZoom) minHist else minZoom
+  max <- if (maxHist > maxZoom) maxHist else maxZoom
+
   #Make dates as posixct
   all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
   
@@ -304,12 +319,12 @@ zoom_level_plot <- function(
   legend_length <- length(unique(all_data$Year_Real))
   
   #TODO: get this information on the plot, above/below the legend
-  # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)), 
+  # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
-  
+
   # Generate the plot
   plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
-    ggplot2::ylim(minHist, maxHist) +
+    ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b %d")) +
     tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date())) +

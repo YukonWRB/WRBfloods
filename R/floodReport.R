@@ -35,7 +35,6 @@
 #'
 
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
-#TODO: add tryCatch for meteograms, they live on a drive and cannot be accessed from outside of YG.
 #TODO: make sure the md file gets paragraph spacing. might need /n to work!
 
 floodReport <-

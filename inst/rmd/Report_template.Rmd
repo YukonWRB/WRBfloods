@@ -432,15 +432,19 @@ The following images represent precipitation in and around Yukon. Each image int
 ```{r HRDPA, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.15, fig.width=7, results='asis'}
 
 #using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive.
+tryCatch({
+  setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
+  wxfiles<- list.files()
+  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
 
-setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
-wxfiles<- list.files()
-par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+  imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
 
-imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+  cat("  \n  \n  ")
+  imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+}, error=function(e) {
+  cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+})
 
-cat("  \n  \n  ")
-imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
 
 
 ```

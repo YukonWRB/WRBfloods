@@ -11,7 +11,8 @@ zoom_level_plot(
   dummy_year_df,
   zoom_data,
   zoom_days = 30,
-  colours = c("blue", "green4", "darkorchid3", "orange1", "aquamarine4", "cyan2"),
+  colours = c("blue", "green4", "darkorchid3", "darkorange", "aquamarine4", "cyan2",
+    "firebrick3", "chartreuse1"),
   legend_position = "right",
   line_size = 1,
   point_size = 1
