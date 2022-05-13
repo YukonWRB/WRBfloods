@@ -2,7 +2,7 @@
 % Please edit documentation in R/flowPlot.R
 \name{flowPlot}
 \alias{flowPlot}
-\title{flow plots of WSC data}
+\title{Flow plots of WSC data}
 \usage{
 flowPlot(station, years, zoom = FALSE, zoom_days = 30, save_path = "choose")
 }
@@ -21,9 +21,10 @@ flowPlot(station, years, zoom = FALSE, zoom_days = 30, save_path = "choose")
 A .png file of the plot requested, plus the plot displayed in RStudio.
 }
 \description{
-Generates plots of water flows from Water Survey of Canada stations, with up to 9 years specified by the user.
+Generates plots of water flows from Water Survey of Canada stations, with up to 10 years specified by the user.
 }
 \details{
-To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
+To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+
 You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 }

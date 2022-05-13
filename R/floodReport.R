@@ -1,10 +1,12 @@
-#' Level and Flow condition reporting utility
+#' Level and Flow condition reporting utility - internal
 #' 
 #' This function generates condition reports for preset or user-specified Water Survey of Canada stations. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
 #' 
 #' 
-#' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
-#' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.  \n
+#' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+#' 
+#' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
+#' 
 #' You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
@@ -151,7 +153,7 @@ floodReport <-
       
       ### Generate a report for Teslin###
       if (report_name %in% c("Teslin", "teslin")) {
-        stations <-c ("09AE002", "09AE006", "09AE003")
+        stations <-c ("09AE002", "09AE006", "09AE003", "10AC005")
         preset_extras <- "09EA002:1962,1992,2021"
         
         if (preset_extra_years==TRUE){
@@ -232,7 +234,7 @@ floodReport <-
     
     ### Generate a report for Liard/Watson###
     if (report_name %in% c("Liard", "Watson", "Watson Lake", "Watson lake", "watson lake", "Liard River", "Liard river", "liard river", "Liard/Watson", "Watson/Liard", "Watson Lake/Liard River", "Liard River/Watson Lake")) {
-      stations <-c ("10AA001", "10AA006", "10AA004", "10AA005", "10AB001", "10AB001", "10AD002")
+      stations <-c ("10AA001", "10AA006", "10AA004", "10AA005", "10AB001", "10AD002")
       preset_extras <- "10AA001:2007,2012,2013"
       
       if (preset_extra_years==TRUE){

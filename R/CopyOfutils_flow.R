@@ -1,41 +1,29 @@
-# Download, process, save, and plot Canadian hydrometric data
-# 
-# Development credits at bottom of file
+# Download, process, save, and plot flow data from WSC databases
 
-# install.packages("magrittr")
-# install.packages("tidyhydat")
-# install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
-# install.packages("dplyr")
-# install.packages("lubridate")
-# install.packages("fasstr")
-# install.packages("tidyquant")
-# install.packages("ggplot2")
-# install.packages("scales")
+# Ghislain de Laplante (ghislain.delaplante@yukon.ca)
 
+# Adapted from original functions developed by:
+# Ryan Connon (ryan_connon@gov.nt.ca; 867-767-9234 x 53127)
+# Water Resources, Government of the Northwest Territories
 
-#' Title
+#' Download flow data
+#' 
+#' Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use flowData function instead.
 #'
-#' @param station_number The WSC station for which you want to fecth data.
-#' @param extract_realtime Should real-time data be extracted, or only historical data?
-#' @param select_years The years for which data should be plotted.
-#' @param csv_path 
+#' @param station_number The WSC station for which you want data.
+#' @param select_years The years for which you want data.
+#' @param flow_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
 #'
-#' @return A data.frame of timeseries data.
+#' @return A list containing one element (a list of 4 with level data and historical data) if level_zoom is FALSE, or a list of 2 if level_zoom is TRUE (addition of high-res level data)
 #' @export
 #'
 
-flow_data <- function(
+utils_flow_data <- function(
 	station_number,
-	extract_realtime = FALSE, 
-	select_years = 2020, 
-	csv_path = NA # or provide path to folder as text string
+	select_years,
+	flow_zoom = TRUE
 ){
 	
-	if(extract_realtime == T) {
-		token_out <- tidyhydat.ws::token_ws()
-	}
-	
-	#station <- tidyhydat::hy_stations(station_number)
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
 	
 	level_historic <- (tidyhydat::hy_daily_flows(station_number = station_number)
@@ -179,11 +167,11 @@ flow_data <- function(
 #' @param y_min 
 #' @param y_max 
 #'
-#' @return A plot of flow volumnes for a WSC station.
+#' @return A plot of flow volumes for a WSC station.
 #' @export 
 #'
 
-flow_plot <- function(
+utils_daily_flow_plot <- function(
 	
 	station_number,
 	complete_year,
@@ -303,20 +291,3 @@ flow_plot <- function(
 	}
 	
 }
-
-# Credits ----
-
-# Original functions developed by:
-# Ryan Connon (ryan_connon@gov.nt.ca; 867-767-9234 x 53127)
-# Water Resources, Government of the Northwest Territories
-
-# Adapted for use in Yukon by:
-# Holly Goulding (Holly.Goulding@yukon.ca)
-# Anthony Bier (Anthony.Bier@yukon.ca)
-# Water Resources,Government of Yukon
-
-# Modified for Markdown demonstration by:
-# Ashton Drew(ashton.drew@kdv-decisions.com; 919-886-2811)
-# KDV Decision Analysis LLC
-# and
-

@@ -24,6 +24,7 @@ A .png file of the plot requested, plus the plot displayed in RStudio.
 Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
 }
 \details{
-To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
+To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+
 You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 }

@@ -2,7 +2,8 @@
 #' 
 #' Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
 #' 
-#' To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
+#' To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+#' 
 #' You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param station The WSC station for which you wish to generate a plot.
@@ -26,7 +27,7 @@ levelPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choos
   }
   
   #Get the level data
-    levelData <- daily_level_data(
+    levelData <- utils_level_data(
       station_number = station,
       select_years = years,
       level_zoom = TRUE
@@ -34,14 +35,14 @@ levelPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choos
   
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
-    plot <- daily_level_plot(station_number = station,
+    plot <- utils_daily_level_plot(station_number = station,
                              complete_year = levelData$tidyData[[2]],
                              plot_years_df = levelData$tidyData[[3]],
                              dummy_year_df = levelData$tidyData[[4]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in level data
-    plot <- zoom_level_plot(station_number = station,
+    plot <- utils_zoom_level_plot(station_number = station,
                             complete_year = levelData$tidyData[[2]],
                             plot_years_df = levelData$tidyData[[3]],
                             dummy_year_df = levelData$tidyData[[4]],

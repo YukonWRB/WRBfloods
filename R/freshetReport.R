@@ -1,11 +1,14 @@
-#' Freshet condition reporting utility
+#' Freshet condition reporting utility - public
 #' 
 #' This function generates condition reports for preset or user-specified Water Survey of Canada stations, in a format intended for public consumption. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
 #' 
 #' 
-#' Parts of this report fetch password-protected information: \n
-#' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
-#' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.  \n
+#' Parts of this report fetch password-protected information:
+#' 
+#' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+#' 
+#' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
+#' 
 #' You also must manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".
@@ -35,7 +38,7 @@
 
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
 
-floodReport <-
+freshetReport <-
   function(report_name = "Territory",
            custom_report_stations = NULL,
            extra_years = NULL,
@@ -82,7 +85,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Yukon Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -109,7 +112,7 @@ floodReport <-
         }
         
           rmarkdown::render(
-            input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+            input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
             output_file = paste0("Dawson Condition Report ", Sys.Date()),
             output_dir = save_path,
             params = list(
@@ -136,7 +139,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Carmacks Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -163,7 +166,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Teslin Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -190,7 +193,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Pelly.Ross Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -217,7 +220,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Old Crow Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -244,7 +247,7 @@ floodReport <-
       }
       
       rmarkdown::render(
-        input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+        input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
         output_file = paste0("Liard.Watson Condition Report ", Sys.Date()),
         output_dir = save_path,
         params = list(
@@ -271,7 +274,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Mayo.Stewart Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -298,7 +301,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Southern Lakes Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -325,7 +328,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Whitehorse.Laberge Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
@@ -353,7 +356,7 @@ floodReport <-
         }
         
         rmarkdown::render(
-          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
           output_file = paste0("Custom Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(

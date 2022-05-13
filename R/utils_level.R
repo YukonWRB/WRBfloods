@@ -1,16 +1,16 @@
-# Download, process, save, and plot Canadian hydrometric data.
+# Download, process, save, and plot level data from WSC databases
 
-# Simplified function for plotting.
 # Ghislain de Laplante (ghislain.delaplante@yukon.ca)
 
 # Adapted from original functions developed by:
 # Ryan Connon (ryan_connon@gov.nt.ca; 867-767-9234 x 53127)
 # Water Resources, Government of the Northwest Territories
-#
 
-#' Daily level data
+#' Download level data
 #' 
-#' @param station_number The WSC station number for which you want data
+#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use levelData function instead.
+#' 
+#' @param station_number The WSC station number for which you want data.
 #' @param select_years The year(s) for which you want data
 #' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
 
@@ -20,15 +20,15 @@
 
 #TODO: catch and remove data spikes
 
-daily_level_data <- function(
+utils_level_data <- function(
     station_number,
-    select_years = c(1950:2020),
-    level_zoom = FALSE
+    select_years,
+    level_zoom = TRUE
 ){
+  
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
   
-  level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)
-                     [,-c(3,5)])
+  level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
   
   datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]))
@@ -38,13 +38,15 @@ daily_level_data <- function(
   }
   
   
-  token_out <- tidyhydat.ws::token_ws()
+
   if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
+    token_out <- tidyhydat.ws::token_ws()
+    
     level_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, parameters = 46, start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), token = token_out)
     
-    recent_level <- data.frame() #creates it in case the if statement below does not run so that the ouput of the function is constant in class
-    #If statement below if requesting zoomed-in plot
-    if (level_zoom == TRUE){
+    recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
+
+    if (level_zoom == TRUE){ #If requesting zoomed-in plot
       recent_level <- level_real_time
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
       recent_level <- recent_level[,-c(3,5:10)]
@@ -63,7 +65,7 @@ daily_level_data <- function(
       level_real_time$Level <- level_real_time$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL if there is a datum
     }
     
-    # Need to add NaN for blank days first
+    # Need to add NaN for blank days
     level_df <- dplyr::bind_rows(level_historic, level_real_time)
     
   } else {
@@ -103,13 +105,12 @@ daily_level_data <- function(
                   QP25 = quantile(Level, 0.25, na.rm = TRUE),
                   QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
     dplyr::ungroup() %>%
-    hablar::rationalize()
+    hablar::rationalize() #rationalize replaces Inf values with NA
   
-  # Find most recent complete year on dataset to use as IQR and max/min year
+  # Find most recent complete year to use as IQR and max/min year
   complete_year <- level_df[!(format(level_df$Date,"%m") == "02" & format(level_df$Date, "%d") == "29"), , drop = FALSE] %>%
     dplyr::group_by(lubridate::year(Date)) %>%
-    dplyr::summarize(n = length(Level),
-                     .groups ="drop")
+    dplyr::summarize(n = length(Level), .groups ="drop")
   colnames(complete_year)[1] <- "Year"
   length_complete_year <- max(complete_year$n)
   complete_year <- complete_year %>%
@@ -150,12 +151,12 @@ daily_level_data <- function(
 }
 
 
-#' Plot WSC hydrometric data.
+#' Plot WSC hydrometric level data for the whole year using daily means.
 #' 
-#' Function to plot water levels while including return intervals, where those exist and are specified in this package's data file named data$return_periods.
-#'
+#' This utility function is designed to take the output of the utils_level_data function. If you're looking for a plot, use the levelPlot function instead.
+#' 
 #' @param station_number The station for which you want to plot data.
-#' @param complete_year The current year, normally output from daily_level_Data.
+#' @param complete_year The current year, normally output from daily_level_data.
 #' @param plot_years_df data.frame containing plotting data for all years selected, normally output from daily_level_data
 #' @param dummy_year_df Output from daily_level
 #' @param colours Colour for the lines and points
@@ -167,12 +168,12 @@ daily_level_data <- function(
 #' @export
 #'
 
-daily_level_plot <- function(
+utils_daily_level_plot <- function(
     station_number,
     complete_year,
     plot_years_df,
     dummy_year_df,
-    colours = c("blue", "green4", "darkorchid3", "darkorange", "aquamarine4", "cyan2", "firebrick3", "chartreuse1"),
+    colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "black"),
     legend_position = "right",
     line_size = 1,
     point_size = 0.75
@@ -246,12 +247,14 @@ daily_level_plot <- function(
 
 
 
-#' Zoomed-in plot of WSC data.
+#' Plot WSC hydrometric level data for a set number of days using 5 minute data points for the current year.
+#' 
+#' This utility function is designed to take the output of the utils_level_data function. If you're looking for a plot, use the levelPlot function instead.
 #'
 #' @param station_number The station for which you want to plot data.
 #' @param complete_year The year for which you want to plot.
-#' @param plot_years_df Don't worry about this
-#' @param dummy_year_df Also don't worry about this.
+#' @param plot_years_df A data.frame of plotting data
+#' @param dummy_year_df A data.frame containing only the min, max, and quartiles.
 #' @param zoom_data The data frame of zoomed-in data.
 #' @param zoom_days The number of days to plot, counting back from the current date.
 #' @param colours Colour of the lines/points.
@@ -263,7 +266,7 @@ daily_level_plot <- function(
 #' @export
 #'
 
-zoom_level_plot <- function(
+utils_zoom_level_plot <- function(
     station_number,
     complete_year,
     plot_years_df,
@@ -273,7 +276,7 @@ zoom_level_plot <- function(
     colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "black"),
     legend_position = "right",
     line_size = 1,
-    point_size = 1
+    point_size = 0.75
 )
   
 {
@@ -326,6 +329,7 @@ zoom_level_plot <- function(
   plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
+    #TODO: adjust the scale breaks when n days <14
     ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b %d")) +
     tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date())) +
     ggplot2::theme_classic() +
