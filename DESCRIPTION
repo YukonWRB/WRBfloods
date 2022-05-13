@@ -1,10 +1,12 @@
 Package: WRBfloods
 Title: WRB's flood report functions
-Version: 1.0.2
+Version: 1.0.3
 Authors@R: 
     person("Ghislain", "de Laplante", , "ghislain.delaplante@yukon.ca", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5093-9185"))
 Description: This package exists to facilitate the generation of flood reports by the Yukon Water Resources Branch.
+Remotes:
+    github::bcgov/tidyhydat.ws
 Imports: 
     readxl,
     rmarkdown,
