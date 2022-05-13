@@ -7,15 +7,14 @@
 #' You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param station The WSC station for which you wish to generate a plot.
-#' @param years The year(s) you wish to plot. Maximum of 8 years specified in a vector.
+#' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector.
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
 #' @param zoom_days Number from 1 to 365. Not used unless zoom=TRUE.
 #' @param save_path Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.
 #'
-#' @return A .png file of the plot requested, plus the plot displayed in RStudio.
+#' @return A .png file of the plot requested, plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 #' @export
 #'
-
 
 flowPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choose") {
   
@@ -52,9 +51,10 @@ flowPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choose
   plot <- plot +
     ggplot2::labs(title=title) +
     ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
-  print(plot)
   
   #Save it
   ggplot2::ggsave(filename=paste0(save_path,"/", station, "_FLOW_", if(zoom==TRUE) "ZOOM_" else "", Sys.Date(), "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), lubridate::minute(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), ".png"), plot=plot, height=8, width=12, units="in", device="png", dpi=500)
+  
+  return(plot)
   
 }
