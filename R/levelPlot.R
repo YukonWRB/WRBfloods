@@ -1,6 +1,6 @@
 #' Level plots of WSC data
 #' 
-#' Generates plots of water levels from Water Survey of Canada stations, with up to 8 years specified by the user.
+#' Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
 #' 
 #' To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.  \n
 #' You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
@@ -18,11 +18,12 @@
 
 levelPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choose") {
   
+  library(tidyhydat.ws) #This is necessary because... because? Problem seems to be with tidyhydat.ws somewhere...
+  
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
     save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
   }
-  
   
   #Get the level data
     levelData <- daily_level_data(
@@ -31,7 +32,6 @@ levelPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choos
       level_zoom = TRUE
     )
   
-  
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- daily_level_plot(station_number = station,
@@ -39,7 +39,6 @@ levelPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choos
                              plot_years_df = levelData$tidyData[[3]],
                              dummy_year_df = levelData$tidyData[[4]])
   }
-  
   
   if (zoom == TRUE){ #Plot zoomed-in level data
     plot <- zoom_level_plot(station_number = station,
@@ -50,13 +49,14 @@ levelPlot <- function(station, years, zoom=FALSE, zoom_days=30, save_path="choos
                             zoom_days = zoom_days)
   }
   
-  title <- paste0("Station ", station, ": ", stringr::str_to_title(tidyhydat::hy_stations(station)[,2]))
   plot <- plot +
-    ggplot2::labs(title=title) +
+    ggplot2::labs(title=paste0("Station ", station, ": ", stringr::str_to_title(tidyhydat::hy_stations(station)[,2]))) +
     ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+  
   print(plot)
   
-  ggplot2::ggsave(filename=paste0(save_path,"/", station, "_", Sys.Date(), "_", lubridate::hour(as.POSIXct(format((Sys.time()), tz='America/Whitehorse'))), "00.png"), plot=plot, height=8, width=12, units="in", device="png", dpi=500)
+  #Save it
+  ggplot2::ggsave(filename=paste0(save_path,"/", station, "_LEVEL_", if(zoom==TRUE) "ZOOM_" else "", Sys.Date(), "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), lubridate::minute(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), ".png"), plot=plot, height=8, width=12, units="in", device="png", dpi=500)
   
 }
   
