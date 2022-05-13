@@ -12,7 +12,7 @@ utils_zoom_flow_plot(
   zoom_data,
   zoom_days = 30,
   colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3",
-    "aquamarine4", "gold1", "chartreuse1", "black"),
+    "aquamarine4", "gold1", "chartreuse1", "black", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
   point_size = 0.75

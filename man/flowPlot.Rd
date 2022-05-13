@@ -9,7 +9,7 @@ flowPlot(station, years, zoom = FALSE, zoom_days = 30, save_path = "choose")
 \arguments{
 \item{station}{The WSC station for which you wish to generate a plot.}
 
-\item{years}{The year(s) you wish to plot. Maximum of 8 years specified in a vector.}
+\item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector.}
 
 \item{zoom}{TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.}
 
@@ -18,7 +18,7 @@ flowPlot(station, years, zoom = FALSE, zoom_days = 30, save_path = "choose")
 \item{save_path}{Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.}
 }
 \value{
-A .png file of the plot requested, plus the plot displayed in RStudio.
+A .png file of the plot requested, plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 }
 \description{
 Generates plots of water flows from Water Survey of Canada stations, with up to 10 years specified by the user.
