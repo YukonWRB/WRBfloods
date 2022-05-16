@@ -148,23 +148,31 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
       flowData <- data.frame() #Created to standardize the eventual output of this code block
       tryCatch ({
         #Get the Flow data
-        flowData <- utils_flow_data(
+        if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
+          flowData <- utils_flow_data(
+            station_number = i,
+            select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
+            flow_zoom = TRUE
+          )
+        } else {
+          flowData <- utils_flow_data(
           station_number = i,
-          extract_realtime = TRUE,
+          flow_zoom = TRUE,
           select_years = lubridate::year(Sys.Date())
-        )
-        
+          )
+        }
+
         #Flow data processing
-        startYearFlow <- min(lubridate::year(flowData[[1]]$Date), na.rm = T)
-        todayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==Sys.Date()]
-        todayFlowPerc <- round(flowData[[3]]$prctile[flowData[[3]]$Date==Sys.Date()],1)
-        yesterdayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-1)]
-        twodayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-2)]
-        threedayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-3)]
-        fourdayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-4)]
-        fivedayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-5)]
-        sixdayFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-6)]
-        weekFlow <- flowData[[3]]$Value[flowData[[3]]$Date==(Sys.Date()-7)]
+        startYearFlow <- min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
+        todayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==Sys.Date()]
+        todayFlowPerc <- round(flowData$tidyData[[3]]$prctile[flowData$tidyData[[3]]$Date==Sys.Date()],1)
+        yesterdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-1)]
+        twodayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-2)]
+        threedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-3)]
+        fourdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-4)]
+        fivedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-5)]
+        sixdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-6)]
+        weekFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date==(Sys.Date()-7)]
         
         tbl <- data.frame(
           `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),

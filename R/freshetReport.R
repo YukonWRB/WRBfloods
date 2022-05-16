@@ -86,7 +86,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Yukon Condition Report ", Sys.Date()),
+          output_file = paste0("Yukon Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -113,7 +113,7 @@ freshetReport <-
         
           rmarkdown::render(
             input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-            output_file = paste0("Dawson Condition Report ", Sys.Date()),
+            output_file = paste0("Dawson Freshet Report ", Sys.Date()),
             output_dir = save_path,
             params = list(
               stations = stations,
@@ -140,7 +140,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Carmacks Condition Report ", Sys.Date()),
+          output_file = paste0("Carmacks Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -167,7 +167,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Teslin Condition Report ", Sys.Date()),
+          output_file = paste0("Teslin Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -194,7 +194,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Pelly.Ross Condition Report ", Sys.Date()),
+          output_file = paste0("Pelly.Ross Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -221,7 +221,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Old Crow Condition Report ", Sys.Date()),
+          output_file = paste0("Old Crow Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -248,7 +248,7 @@ freshetReport <-
       
       rmarkdown::render(
         input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-        output_file = paste0("Liard.Watson Condition Report ", Sys.Date()),
+        output_file = paste0("Liard.Watson Freshet Report ", Sys.Date()),
         output_dir = save_path,
         params = list(
           stations = stations,
@@ -275,7 +275,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Mayo.Stewart Condition Report ", Sys.Date()),
+          output_file = paste0("Mayo.Stewart Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -302,7 +302,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Southern Lakes Condition Report ", Sys.Date()),
+          output_file = paste0("Southern Lakes Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -329,7 +329,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Whitehorse.Laberge Condition Report ", Sys.Date()),
+          output_file = paste0("Whitehorse.Laberge Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -357,11 +357,11 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Custom Condition Report ", Sys.Date()),
+          output_file = paste0("Custom Freshet Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = paste0("Condition Report for Station(s) ", toString(custom_report_stations)),
+            report_name = paste0("Freshet Report for Station(s) ", toString(custom_report_stations)),
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
