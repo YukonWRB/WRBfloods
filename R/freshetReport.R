@@ -25,7 +25,11 @@
 #' 
 #' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
 #' 
-#' @param meteogram Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.
+#' @param precip Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE
+#' 
+#' @param meteogram Should meteograms relevant to the stations in the report be included? TRUE or FALSE.
+#' 
+#' @param WSC_images Should images from WSC fixed cameras be included? TRUE or FALSE.
 #' 
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
 #' 
@@ -46,7 +50,9 @@ freshetReport <-
            report_type = "Level",
            level_zoom = TRUE,
            zoom_days = 30,
-           meteogram = TRUE,
+           precip = FALSE,
+           meteogram = FALSE,
+           WSC_images = FALSE,
            image_path = NULL,
            save_path = "choose") {
     
@@ -90,13 +96,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Yukon Conditions Report",
+            report_name = "Yukon Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of territory report
       
@@ -117,13 +125,15 @@ freshetReport <-
             output_dir = save_path,
             params = list(
               stations = stations,
-              report_name = "Dawson Condition Report",
+              report_name = "Dawson Water Report",
               extra_years = extra_years,
               image_path = image_path,
               report_type = report_type,
               level_zoom = level_zoom,
               zoom_days = zoom_days,
-              meteogram = meteogram)
+              precip = precip,
+              meteogram = meteogram,
+              WSC_images = WSC_images)
           )
       } #End of Dawson report
       
@@ -144,13 +154,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Carmacks Condition Report",
+            report_name = "Carmacks Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Carmacks report
       
@@ -171,13 +183,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Teslin Condition Report",
+            report_name = "Teslin Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Carmacks report
       
@@ -198,13 +212,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Pelly/Ross River Condition Report",
+            report_name = "Pelly/Ross River Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Pelly report
       
@@ -225,13 +241,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Old Crow Condition Report",
+            report_name = "Old Crow Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Old Crow report
     
@@ -252,13 +270,15 @@ freshetReport <-
         output_dir = save_path,
         params = list(
           stations = stations,
-          report_name = "Liard River and Watson Lake Area Condition Report",
+          report_name = "Liard/Watson Lake Water Report",
           extra_years = extra_years,
           image_path = image_path,
           report_type = report_type,
           level_zoom = level_zoom,
           zoom_days = zoom_days,
-          meteogram = meteogram)
+          precip = precip,
+          meteogram = meteogram,
+          WSC_images = WSC_images)
       )
     } #End of Liard/Watson report
 
@@ -279,13 +299,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Mayo and Stewart River Condition Report",
+            report_name = "Mayo/Stewart Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Mayo/Stewart report
       
@@ -306,13 +328,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Southern Lakes Condition Report",
+            report_name = "Southern Lakes Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Southern Lakes report
     
@@ -333,13 +357,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Whitehorse/Lake Laberge Condition Report",
+            report_name = "Whitehorse/Laberge Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
         )
       } #End of Whitehorse/Laberge report
     }
@@ -361,13 +387,15 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = paste0("Freshet Report for Station(s) ", toString(custom_report_stations)),
+            report_name = "Custom Water Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
             zoom_days = zoom_days,
-            meteogram = meteogram)
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images)
           )
       } #End of custom report
     }
