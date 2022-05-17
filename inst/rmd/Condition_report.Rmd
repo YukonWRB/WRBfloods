@@ -19,7 +19,6 @@ params:
 ```{r setup, include=FALSE}
 #Normally there would not be a function call in a package, but these packages don't call nicely if they're not loaded.
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyhydat)
 library(tidyhydat.ws)
 ```
 
@@ -106,7 +105,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         `Six days ago` = sixdayLevel,
         `One week ago` = weekLevel,
         `One week change` = todayLevel - weekLevel,
-        `Datum elevation` = as.numeric(tidyhydat::hy_stn_datum_conv(i)[1, 4])
+        `Datum elevation` = dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))
       )
       levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
     }, error=function(e) {}
@@ -345,13 +344,18 @@ Water level and/or flow data is pulled from [historical](https://wateroffice.ec.
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
 
-stationInfo <- lapply(stations, function(x) tidyhydat::hy_stations(x)[c(2,1,7,8)]) %>%
+stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))) %>%
   purrr::reduce(dplyr::bind_rows) %>% 
-  plyr::rename(c("STATION_NAME"="Station Name", "STATION_NUMBER"="ID", "LATITUDE"="Latitude", "LONGITUDE"="Longitude"))
+  plyr::rename(c("STATION_NAME"="Station Name", "STATION_NUMBER"="ID", "LATITUDE"="Latitude", "LONGITUDE"="Longitude", "DATUM_TO"="Datum"))
+
+sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate)" , stationInfo$Datum)
+sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed)", sub)
+stationInfo$Datum <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010", sub)
+
 
 stationInfo$`Station Name` <- stringr::str_to_title(stationInfo$`Station Name`)
 
-knitr::kable(stationInfo, digits=3, caption="These are the stations contained in this report:")
+knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
 
 ```
 
@@ -368,7 +372,7 @@ for(i in stations) {
       
       if (report_type %in% c("Both", "Level", "both", "level")){
         tryCatch ({
-          datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(i)[1,4])) #different axis text if no datum
+          datum_na <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])) #different axis text if no datum
           
           cat("  \n### Level  \n")
           

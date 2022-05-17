@@ -43,7 +43,7 @@ freshetReport <-
            custom_report_stations = NULL,
            extra_years = NULL,
            preset_extra_years = FALSE,
-           report_type = "Both",
+           report_type = "Level",
            level_zoom = TRUE,
            zoom_days = 30,
            meteogram = TRUE,

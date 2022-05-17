@@ -31,10 +31,10 @@ utils_level_data <- function(
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
   
-  datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]))
+  datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
   
   if(datum_na == FALSE) {
-    level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
+    level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
   }
   
   
@@ -45,7 +45,13 @@ utils_level_data <- function(
     #TODO: remove line below once tidyhydat.ws is fixed.
     param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
     
-    level_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, parameters = 46, start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), token = token_out)
+    level_real_time <- tidyhydat.ws::realtime_ws(
+      station_number = station_number, 
+      parameters = 46, 
+      start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), 
+      end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
+      token = token_out
+      )
     
     recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 
@@ -54,7 +60,7 @@ utils_level_data <- function(
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
       recent_level <- recent_level[,-c(3,5:10)]
       if (datum_na == FALSE){
-        recent_level$Value <- recent_level$Value + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL if there is a datum - otherwise do nothing
+        recent_level$Value <- recent_level$Value + dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])) #adjusting to MASL if there is a datum - otherwise do nothing
       }
     }
     
@@ -65,7 +71,7 @@ utils_level_data <- function(
                        .groups = "drop")
     level_real_time <- level_real_time[,-c(2,3)]
     if (datum_na == FALSE){
-      level_real_time$Level <- level_real_time$Level + as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]) #adjusting to MASL if there is a datum
+      level_real_time$Level <- level_real_time$Level + dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])) #adjusting to MASL if there is a datum
     }
     
     # Need to add NaN for blank days
@@ -184,7 +190,7 @@ utils_daily_level_plot <- function(
   
 {
   #check if datum exists
-  datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]))
+  datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
   
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>% 
@@ -235,7 +241,7 @@ utils_daily_level_plot <- function(
   
     #Add return periods if they exist for this station
     if (station_number %in% data$return_periods$ID==TRUE){
-      levelConvert <- as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
+      levelConvert <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))
       stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
       
       plot <- plot + 
@@ -284,7 +290,7 @@ utils_zoom_level_plot <- function(
   
 {
   #check if datum exists
-  datum_na <- is.na(as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4]))
+  datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
   
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>%
@@ -349,7 +355,7 @@ utils_zoom_level_plot <- function(
   
   #Add return periods if they exist for this station
   if (station_number %in% data$return_periods$ID==TRUE){
-    levelConvert <- as.numeric(tidyhydat::hy_stn_datum_conv(station_number)[1,4])
+    levelConvert <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))
     stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
     plot <- plot + 
