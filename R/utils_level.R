@@ -33,8 +33,10 @@ utils_level_data <- function(
   
   datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
   
+  #TODO: work on code from here below to retain a column with local datum only.
+  
   if(datum_na == FALSE) {
-    level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
+    level_historic$Level[level_historic$Level < 50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
   }
   
   
@@ -60,7 +62,7 @@ utils_level_data <- function(
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
       recent_level <- recent_level[,-c(3,5:10)]
       if (datum_na == FALSE){
-        recent_level$Value <- recent_level$Value + dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])) #adjusting to MASL if there is a datum - otherwise do nothing
+        recent_level$Value <- recent_level$Value + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum - otherwise do nothing
       }
     }
     
@@ -71,7 +73,7 @@ utils_level_data <- function(
                        .groups = "drop")
     level_real_time <- level_real_time[,-c(2,3)]
     if (datum_na == FALSE){
-      level_real_time$Level <- level_real_time$Level + dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])) #adjusting to MASL if there is a datum
+      level_real_time$Level <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
     }
     
     # Need to add NaN for blank days
@@ -241,7 +243,7 @@ utils_daily_level_plot <- function(
   
     #Add return periods if they exist for this station
     if (station_number %in% data$return_periods$ID==TRUE){
-      levelConvert <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))
+      levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
       stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
       
       plot <- plot + 
@@ -355,7 +357,7 @@ utils_zoom_level_plot <- function(
   
   #Add return periods if they exist for this station
   if (station_number %in% data$return_periods$ID==TRUE){
-    levelConvert <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))
+    levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
     stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
     plot <- plot + 
