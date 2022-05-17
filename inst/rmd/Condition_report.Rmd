@@ -368,7 +368,7 @@ for(i in stations) {
   station_info <- tidyhydat::hy_stations(i)
   if(is.na(station_info$STATION_NUMBER[1])==FALSE){
     tryCatch ( {
-      cat("  \n## ", stringr::str_to_title(station_info$STATION_NAME)," (Station ", i,")  \n")
+      cat("  \n## ", stringr::str_to_title(station_info$STATION_NAME)," (station ", i,")  \n")
       
       if (report_type %in% c("Both", "Level", "both", "level")){
         tryCatch ({
