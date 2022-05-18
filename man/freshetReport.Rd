@@ -9,10 +9,12 @@ freshetReport(
   custom_report_stations = NULL,
   extra_years = NULL,
   preset_extra_years = FALSE,
-  report_type = "Both",
+  report_type = "Level",
   level_zoom = TRUE,
   zoom_days = 30,
-  meteogram = TRUE,
+  precip = FALSE,
+  meteogram = FALSE,
+  WSC_images = FALSE,
   image_path = NULL,
   save_path = "choose"
 )
@@ -32,7 +34,11 @@ freshetReport(
 
 \item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
-\item{meteogram}{Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.}
+\item{precip}{Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE}
+
+\item{meteogram}{Should meteograms relevant to the stations in the report be included? TRUE or FALSE.}
+
+\item{WSC_images}{Should images from WSC fixed cameras be included? TRUE or FALSE.}
 
 \item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.}
 
