@@ -54,7 +54,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       ID = i,
       `Start year` = NA,
       `Today percent historic` = NA,
-      Today = NA,
+      Level = NA,
+      `Level masl` = NA,
       Yesterday = NA,
       `24 hr change` = NA,
       `Two days ago` = NA,
@@ -85,26 +86,42 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       )
       }
       
+      datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
 
       #Level data processing
-      startYearLevel <-
-        min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
-      todayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      if (datum_na==TRUE) {
+              startYearLevel <- min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
+      todayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      todayLevelmasl <- NA
       todayLevelPerc <- round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())], 1)
-      yesterdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 1) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      twodayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 2) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      threedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 3) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      fourdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 4) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      fivedayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 5) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      sixdayLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 6) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      weekLevel <- levelData$tidyData[[3]]$Value[levelData$tidyData[[3]]$Date == (Sys.Date() - 7) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      yesterdayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 1) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      twodayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 2) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      threedayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 3) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      fourdayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 4) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      fivedayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 5) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      sixdayLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 6) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      weekLevel <- levelData$tidyData[[3]]$Level[levelData$tidyData[[3]]$Date == (Sys.Date() - 7) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      } else {
+              startYearLevel <- min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
+      todayLevel <- levelData$tidyData[[3]]$`Level`[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      todayLevelmasl <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      todayLevelPerc <- round(levelData$tidyData[[3]]$prctile[levelData$tidyData[[3]]$Date == Sys.Date() & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())], 1)
+      yesterdayLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 1) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      twodayLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 2) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      threedayLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 3) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      fourdayLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 4) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      fivedayLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 5) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      sixdayLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 6) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      weekLevel <- levelData$tidyData[[3]]$`Level masl`[levelData$tidyData[[3]]$Date == (Sys.Date() - 7) & levelData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+      }
       
       tbl <- data.frame(
         `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
         ID = i,
         `Start year` = startYearLevel,
         `Today percent historic` = todayLevelPerc,
-        Today = todayLevel,
+        Level = todayLevel,
+        `Level masl` = todayLevelmasl,
         Yesterday = yesterdayLevel,
         `24 hr change` = todayLevel - yesterdayLevel,
         `Two days ago` = twodayLevel,
@@ -117,12 +134,39 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         `One week change` = todayLevel - weekLevel,
         `Datum elevation` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
       )
+      
+      #next few lines calculate where we're at for return periods
+      if (i %in% data$return_periods$ID==TRUE) {
+        
+        if (datum_na == FALSE){
+          levelConvert <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))
+          stn <- dplyr::filter(data$return_periods, ID == i) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
+        } else {
+          stn <- dplyr::filter(data$return_periods, ID == i)
+        }
+
+        tbl$`Current return period` <- 
+          if (todayLevel < stn$twoyear) "<2 year" 
+          else if (todayLevel < stn$fiveyear) "2 to 5 year" 
+          else if (todaylevel < stn$tenyear) "5 to 10 year" 
+          else if (todayLevel < stn$twentyyear) "10 to 20 year" 
+          else if (todayLevel < stn$fiftyyear) "20 to 50 year" 
+          else if (todayLevel < stn$onehundredyear) "50 to 100 year" 
+          else if (todayLevel < stn$twohundredyear) "100 to 200 year" 
+          else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) "> 200 year" 
+          else if (todayLevel < stn$fivehundredyear) "200 to 500 year" 
+          else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) ">500 year"
+          else if (todayLevel < stn$thousandyear) "500 to 1000 year"
+          else if (todayLevel > stn$thousandyear) ">1000 year"
+      } else {
+        "NA"
+      }
+      
       levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
     }, error=function(e) {}
     ) #End of tryCatch for station existence
     levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
     levelDataList[[i]] <- levelData
-    
     
   } #End of LEVEL for loop
 }# End of if "level" or "both" selected statement
@@ -403,7 +447,6 @@ for(i in stations) {
       
       if (report_type %in% c("Both", "Level", "both", "level")){
         tryCatch ({
-          datum_na <- dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])) #different axis text if no datum
           
           cat("  \n### Level  \n")
           
