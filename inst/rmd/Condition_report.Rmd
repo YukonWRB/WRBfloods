@@ -62,7 +62,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
     tryCatch ({
       #Get the level data
       if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
-        levelData <- utils_evel_data(
+        levelData <- utils_level_data(
         station_number = i,
         select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
         level_zoom = TRUE
