@@ -33,13 +33,16 @@ utils_level_data <- function(
   
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
-  #TODO: work on code from here below to retain a column with local datum only.
+  #TODO: find a way to filter out spikes
+  
+  
+  level_historic$`Level masl` <- level_historic$Level #create col here so we end up with two cols filled out
   
   if(datum_na == FALSE) {
-    level_historic$Level[level_historic$Level < 50 & !is.na(level_historic$Level)] <- level_historic$Level[level_historic$Level <50 & !is.na(level_historic$Level)] + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
+    level_historic$`Level masl`[level_historic$`Level masl` < 50 & !is.na(level_historic$`Level masl`)] <- level_historic$`Level masl`[level_historic$`Level masl` <50 & !is.na(level_historic$`Level masl`)] + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
+  } else {
+    level_historic$`Level masl` <- NA
   }
-  
-  
 
   if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
     token_out <- tidyhydat.ws::token_ws()
@@ -58,11 +61,13 @@ utils_level_data <- function(
     recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 
     if (level_zoom == TRUE){ #If requesting zoomed-in plot
-      recent_level <- level_real_time
+      recent_level <- level_real_time %>% plyr::rename(c("Value"="Level"))
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
       recent_level <- recent_level[,-c(3,5:10)]
       if (datum_na == FALSE){
-        recent_level$Value <- recent_level$Value + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum - otherwise do nothing
+        recent_level$`Level masl` <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
+      } else {
+        recent_level$`Level masl` <- NA
       }
     }
     
@@ -72,8 +77,11 @@ utils_level_data <- function(
                        Level = mean(Value),
                        .groups = "drop")
     level_real_time <- level_real_time[,-c(2,3)]
-    if (datum_na == FALSE){
-      level_real_time$Level <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
+    
+    if (datum_na == FALSE){ #Generate new column to hold masl levels
+      level_real_time$`Level masl` <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
+    } else {
+      level_real_time$`Level masl` <- NA
     }
     
     # Need to add NaN for blank days
@@ -92,31 +100,60 @@ utils_level_data <- function(
   
   # Create dayofyear column with seq(1:365) so that leap years and non leap years are equal
   # Calculate percentiles (IQR, max/min)
-  level_df <- level_df %>%
-    dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
-                                     ifelse(lubridate::month(Date) <= 2,
-                                            lubridate::yday(Date),
-                                            lubridate::yday(Date) - 1),
-                                     lubridate::yday(Date))) %>%
-    dplyr::filter(!is.na(Level)) %>% 
-    dplyr::group_by(dayofyear) %>%
-    dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100) %>%
-    fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now
-    dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
-                                     ifelse(lubridate::month(Date) <= 2,
-                                            lubridate::yday(Date),
-                                            lubridate::yday(Date) - 1),
-                                     lubridate::yday(Date))) %>%
-    dplyr::group_by(dayofyear) %>%
-    dplyr::mutate(Max = max(Level, na.rm = TRUE),
-                  Min = min(Level, na.rm = TRUE),
-                  QP90 = quantile(Level, 0.90, na.rm = TRUE),
-                  QP75 = quantile(Level, 0.75, na.rm = TRUE),
-                  QP50 = quantile(Level, 0.50, na.rm = TRUE),
-                  QP25 = quantile(Level, 0.25, na.rm = TRUE),
-                  QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
-    dplyr::ungroup() %>%
-    hablar::rationalize() #rationalize replaces Inf values with NA
+  if (datum_na==TRUE) {
+    level_df <- level_df %>%
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
+                                       ifelse(lubridate::month(Date) <= 2,
+                                              lubridate::yday(Date),
+                                              lubridate::yday(Date) - 1),
+                                       lubridate::yday(Date))) %>%
+      dplyr::filter(!is.na(Level)) %>%  #remove na values in Level so that stats::ecdf can work below - they're added in after
+      dplyr::group_by(dayofyear) %>%
+      dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100) %>%
+      fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
+                                       ifelse(lubridate::month(Date) <= 2,
+                                              lubridate::yday(Date),
+                                              lubridate::yday(Date) - 1),
+                                       lubridate::yday(Date))) %>%
+      dplyr::group_by(dayofyear) %>%
+      dplyr::mutate(Max = max(Level, na.rm = TRUE),
+                    Min = min(Level, na.rm = TRUE),
+                    QP90 = quantile(Level, 0.90, na.rm = TRUE),
+                    QP75 = quantile(Level, 0.75, na.rm = TRUE),
+                    QP50 = quantile(Level, 0.50, na.rm = TRUE),
+                    QP25 = quantile(Level, 0.25, na.rm = TRUE),
+                    QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
+      dplyr::ungroup() %>%
+      hablar::rationalize() #rationalize replaces Inf values with NA
+  } else {
+    level_df <- level_df %>%
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
+                                       ifelse(lubridate::month(Date) <= 2,
+                                              lubridate::yday(Date),
+                                              lubridate::yday(Date) - 1),
+                                       lubridate::yday(Date))) %>%
+      dplyr::filter(!is.na(`Level masl`)) %>%  #remove na values in `Level masl` so that stats::ecdf can work below - they're added in after
+      dplyr::group_by(dayofyear) %>%
+      dplyr::mutate(prctile = (stats::ecdf(`Level masl`)(`Level masl`)) * 100) %>%
+      fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
+                                       ifelse(lubridate::month(Date) <= 2,
+                                              lubridate::yday(Date),
+                                              lubridate::yday(Date) - 1),
+                                       lubridate::yday(Date))) %>%
+      dplyr::group_by(dayofyear) %>%
+      dplyr::mutate(Max = max(`Level masl`, na.rm = TRUE),
+                    Min = min(`Level masl`, na.rm = TRUE),
+                    QP90 = quantile(`Level masl`, 0.90, na.rm = TRUE),
+                    QP75 = quantile(`Level masl`, 0.75, na.rm = TRUE),
+                    QP50 = quantile(`Level masl`, 0.50, na.rm = TRUE),
+                    QP25 = quantile(`Level masl`, 0.25, na.rm = TRUE),
+                    QP10 = quantile(`Level masl`, 0.10, na.rm = TRUE)) %>%
+      dplyr::ungroup() %>%
+      hablar::rationalize() #rationalize replaces Inf values with NA
+  }
+
   
   # Find most recent complete year to use as IQR and max/min year
   complete_year <- level_df[!(format(level_df$Date,"%m") == "02" & format(level_df$Date, "%d") == "29"), , drop = FALSE] %>%
@@ -131,8 +168,9 @@ utils_level_data <- function(
   # Create a 'dummy_year' data frame that will contain IQR, max/min for the most recent complete year
   dummy_year <- level_df %>%
     subset(lubridate::year(Date) == complete_year) %>%
-    dplyr::select(-Level) %>%
-    dplyr::mutate(Level = as.numeric(NA ),
+    dplyr::select(-Level, -`Level masl`) %>%
+    dplyr::mutate(Level = as.numeric(NA),
+                  `Level masl` = as.numeric(NA),
                   Year_Real = NA,
                   prctile = NA) 
   
@@ -147,10 +185,9 @@ utils_level_data <- function(
                     Year_Real = i) %>%
       dplyr::mutate(Date_2 = as.Date(paste(Year, Month, Day, sep = "-"))) %>%
       dplyr::select(-Date, -Month, -Day, -Year) %>%
-      dplyr::rename(Date = Date_2,
-                    Value = Level)
+      dplyr::rename(Date = Date_2)
     
-    single_year <- single_year[,c(1, 13, 3:11, 2, 12)]
+    single_year <- single_year[,c(1, 14, 4:12, 2, 3, 13)]
     plot_years <- dplyr::bind_rows(plot_years, single_year)
     
   }
@@ -179,6 +216,10 @@ utils_level_data <- function(
 #' @export
 #'
 
+complete_year <- tidyData$tidyData[[2]] # complete_year
+plot_years_df <- tidyData$tidyData[[3]] # plot_years
+dummy_year_df <- tidyData$tidyData[[4]] # dummy_year
+
 utils_daily_level_plot <- function(
     station_number,
     complete_year,
@@ -196,21 +237,22 @@ utils_daily_level_plot <- function(
   
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>% 
-    dplyr::select(-dayofyear, -Level)
-  all_data <- all_data[,c(1, 2, 12, 11, 3, 4, 6:10, 5)] %>% dplyr::arrange(desc(Year_Real), desc(Date))
+    dplyr::select(-dayofyear)
+  all_data <- all_data[,c(1, 2, 3, 13, 12, 11, 4, 6:10, 5)] %>% dplyr::arrange(desc(Year_Real), desc(Date))
   
   # Code for number of factors in the legend
   legend_length <- all_data %>%
     dplyr::group_by(Year_Real) %>%
-    dplyr::summarize(Mean = mean(Value))
+    dplyr::summarize(Mean = mean(Level))
   legend_length <- length(legend_length$Year_Real) - 1 # The '-1' accounts for the NA row
+  
   all_data$Year_Real <- as.numeric(all_data$Year_Real)
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(all_data$Min, na.rm=TRUE)
   maxHist <- max(all_data$Max, na.rm=TRUE)
-  minLines <- min(all_data$Value, na.rm=TRUE)
-  maxLines <- max(all_data$Value,na.rm=TRUE)
+  minLines <- if (datum_na==TRUE) min(all_data$Level, na.rm=TRUE) else min(all_data$`Level masl`, na.rm=TRUE)
+  maxLines <- if(datum_na==TRUE) max(all_data$Level,na.rm=TRUE) else max(all_data$`Level masl`, na.rm=TRUE)
   min <- if (minHist < minLines) minHist else minLines
   max <- if (maxHist > maxLines) maxHist else maxLines
   
@@ -218,13 +260,13 @@ utils_daily_level_plot <- function(
   rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
   all_data <- all_data %>%
     dplyr::group_by(Year_Real) %>%
-    dplyr::filter(!all(is.na(Value))) %>%
+    dplyr::filter(!all(is.na(Level))) %>%
     dplyr::bind_rows(rm)
   
   legend_length <- length(unique(na.omit(all_data$Year_Real)))
   
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) +
+  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level_masl`)) +
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
@@ -296,8 +338,8 @@ utils_zoom_level_plot <- function(
   
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>%
-    dplyr::select(-dayofyear, -Level)
-  all_data <- all_data[,c(1, 2, 12, 11, 3, 4, 6:10, 5)]
+    dplyr::select(-dayofyear)
+  all_data <- all_data[,c(1, 2, 3, 13, 12, 11, 4, 6:10, 5)]
 
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
@@ -310,11 +352,11 @@ utils_zoom_level_plot <- function(
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(all_data$Min, na.rm=TRUE)
   maxHist <- max(all_data$Max, na.rm=TRUE)
-  minZoom <- min(zoom_data$Value, na.rm=TRUE)
-  maxZoom <- max(zoom_data$Value,na.rm=TRUE)
+  minZoom <- if (datum_na==TRUE) min(zoom_data$Level, na.rm=TRUE) else min(zoom_data$`Level masl`, na.rm=TRUE)
+  maxZoom <- if (datum_na==TRUE) max(zoom_data$Level, na.rm=TRUE) else max(zoom_data$`Level masl`, na.rm=TRUE)
   min <- if (minHist < minZoom) minHist else minZoom
   max <- if (maxHist > maxZoom) maxHist else maxZoom
-
+  
   #Make dates as posixct
   all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
   
@@ -327,7 +369,7 @@ utils_zoom_level_plot <- function(
   rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
   all_data <- all_data %>%
     dplyr::group_by(Year_Real) %>%
-    dplyr::filter(!all(is.na(Value))) %>%
+    dplyr::filter(!all(is.na(Level))) %>%
     dplyr::bind_rows(rm)
   
   legend_length <- length(unique(all_data$Year_Real))
@@ -337,7 +379,7 @@ utils_zoom_level_plot <- function(
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
+  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level_masl`)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     #TODO: adjust the scale breaks when n days <14
