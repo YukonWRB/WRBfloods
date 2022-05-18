@@ -24,6 +24,16 @@ library(tidyhydat.ws)
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 
+#Make vectors of links to stations and of near/affected communities for later use
+links <- vector() #make it to fill it next
+community <- vector()
+for (i in stations){
+  newlink <- dplyr::filter(data$spatial_stns, `WSC ID` == i)$Link
+  newcommunity <- dplyr::filter(data$spatial_stns, `WSC ID`==i)$`nrst community`
+  links <- c(links, newlink)
+  community <- c(community, newcommunity)
+}
+
 levelDataList <- list()
 levelInfo <- list()
   
@@ -105,7 +115,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         `Six days ago` = sixdayLevel,
         `One week ago` = weekLevel,
         `One week change` = todayLevel - weekLevel,
-        `Datum elevation` = dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))
+        `Datum elevation` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
       )
       levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
     }, error=function(e) {}
@@ -344,20 +354,41 @@ Water level and/or flow data is pulled from [historical](https://wateroffice.ec.
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
 
-stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))) %>%
-  purrr::reduce(dplyr::bind_rows) %>% 
-  plyr::rename(c("STATION_NAME"="Station Name", "STATION_NUMBER"="ID", "LATITUDE"="Latitude", "LONGITUDE"="Longitude", "DATUM_TO"="Datum"))
+stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
+  purrr::reduce(dplyr::bind_rows)
 
-sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate)" , stationInfo$Datum)
-sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed)", sub)
-stationInfo$Datum <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010", sub)
+stationInfo$links <- links #bring in the links created in earlier code chunk
 
+  stationInfo$STATION_NAME <- stringr::str_to_title(stationInfo$STATION_NAME) #remove ALL CAPS
 
-stationInfo$`Station Name` <- stringr::str_to_title(stationInfo$`Station Name`)
+  stationInfo$Station <- paste0(stationInfo$STATION_NAME, " ([", stationInfo$STATION_NUMBER, "](", stationInfo$links, "))")
+  
+  stationInfo <- stationInfo[c(7,3,4,5)]
+  
+  stationInfo <- plyr::rename(stationInfo, c("LATITUDE"="Latitude", "LONGITUDE"="Longitude", "DATUM_TO"="Datum"))
+  
+#Combine station Name with ID and links, called Station
+
+#shrink the datum names
+sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate) [2]", stationInfo$Datum)
+sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed) [1]", sub)
+sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010 [3]", sub)
+stationInfo$Datum <- gsub("Local datum", "Local datum [4]", sub)
+
 
 knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
 
 ```
+
+Notes: 
+
+[1] Vertical datum not specified in historical records, but implementation date indicates use of CGVD28.
+
+[2] Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).
+
+[3] Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).
+
+[4] Arbitrary datum relative to station or other nearby fixed point.
 
 \newpage
 
@@ -527,7 +558,7 @@ tryCatch({
       cat("  \n")
     }
   }
-}, error=function(e){cat("Fetching images failed. Do you have login credentials in your .Renviron file? Check the function notes for details.")})
+}, error=function(e){cat("  \nFetching images failed. Do you have login credentials in your .Renviron file? Check the function notes for details.")})
 
 
 ```
