@@ -216,9 +216,6 @@ utils_level_data <- function(
 #' @export
 #'
 
-complete_year <- tidyData$tidyData[[2]] # complete_year
-plot_years_df <- tidyData$tidyData[[3]] # plot_years
-dummy_year_df <- tidyData$tidyData[[4]] # dummy_year
 
 utils_daily_level_plot <- function(
     station_number,
