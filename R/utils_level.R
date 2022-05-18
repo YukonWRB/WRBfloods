@@ -31,7 +31,7 @@ utils_level_data <- function(
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
   
-  datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
+  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
   #TODO: work on code from here below to retain a column with local datum only.
   
@@ -192,7 +192,7 @@ utils_daily_level_plot <- function(
   
 {
   #check if datum exists
-  datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
+  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>% 
@@ -292,7 +292,7 @@ utils_zoom_level_plot <- function(
   
 {
   #check if datum exists
-  datum_na <- is.na(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
+  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
   # Format data for plotting
   all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>%
