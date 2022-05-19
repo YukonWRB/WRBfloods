@@ -314,7 +314,7 @@ For water level and flow conditions: Water Resources Branch Forecasting Team: [w
 
 <br>
 
-```{r Calculate station info, echo=FALSE, results='asis', message=FALSE}
+```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
 
 stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
   purrr::reduce(dplyr::bind_rows)
@@ -330,10 +330,11 @@ stationInfo <- stationInfo[c(7,3,4,5)]
 stationInfo <- plyr::rename(stationInfo, c("LATITUDE"="Latitude", "LONGITUDE"="Longitude", "DATUM_TO"="Datum"))
 
 #shrink the datum names
-sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate) [2]", stationInfo$Datum)
-sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed) [1]", sub)
-sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010 [3]", sub)
-stationInfo$Datum <- gsub("Local datum", "Local datum [4]", sub)
+sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate)", stationInfo$Datum)
+sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed)", sub)
+sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010", sub)
+sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 1928", "CGVD28", sub)
+stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```
 
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
@@ -352,6 +353,8 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
   
   levelTable$`Advisory in effect` <- ""
+  levelTable$Community <- community
+  levelTable <- dplyr::relocate(levelTable, Community)
   
   levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
@@ -365,8 +368,9 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 **Notes:**
 
 ```{r Levels explanation, echo=FALSE, results='asis', message=FALSE}
-if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){
-  cat("Current water levels are presented relative to the local datum (column 2) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 3). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences (decameter or more) may exist between CGVD2013 and CGVD28! More information on datums is provided in a table of station information below.")
+
+if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
+  cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences (decameter or more) may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information below.")
 } else {
   cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website.")
 }
@@ -394,19 +398,38 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
 Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Water Survey of Canada. Return intervals are plotted where available, representing two, ten, one hundred and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 2013 (CGVD2013) unless indicated below.
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
+datums <- unique(stationInfo$Datum)
+
+#Make a table with the necessary notes and their associated datums
+note_table <- data.frame(datum = c("CGVD28 (approximate)", 
+             "CGVD28 (assumed)", 
+             "CGVD2013:2010", 
+             "CGVD28", 
+             "Local datum"), 
+           note = c("Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).", 
+             "Vertical datum not specified in historical records, but implementation date indicates use of [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 1928 [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).", 
+             "Arbitrary datum relative to station or other nearby fixed point."))
+
+
+#Add a number to each datum and populate notes with the required notes
+notes <- vector()
+for (i in datums){
+  stationInfo$Datum <- gsub(i, paste0(i, "[", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
+  notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
+}
+
+
 knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
-#TODO: get the notes below to appear only if the datum is specified, and to have the right [1] number
+
+cat("Notes:  \n")
+for (i in 1:length(notes)){
+  cat(notes[[i]], "  \n")
+}
 ```
 
-Notes: 
 
-[1] Vertical datum not specified in historical records, but implementation date indicates use of CGVD28.
-
-[2] Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).
-
-[3] Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).
-
-[4] Arbitrary datum relative to station or other nearby fixed point.
 
 \newpage
 
