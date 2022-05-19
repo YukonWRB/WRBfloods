@@ -222,7 +222,7 @@ utils_daily_level_plot <- function(
     complete_year,
     plot_years_df,
     dummy_year_df,
-    colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "black", "lightsalmon"),
+    colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
     point_size = 0.75
@@ -323,7 +323,7 @@ utils_zoom_level_plot <- function(
     dummy_year_df,
     zoom_data,
     zoom_days = 30,
-    colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "black", "lightsalmon"),
+    colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
     point_size = 0.75
@@ -355,7 +355,7 @@ utils_zoom_level_plot <- function(
   max <- if (maxHist > maxZoom) maxHist else maxZoom
   
   #Make dates as posixct
-  all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
+  all_data$Date <- as.POSIXct(format(all_data$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
   
   #combine the data.frames now that they both have posixct columns
   zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
@@ -375,12 +375,32 @@ utils_zoom_level_plot <- function(
   # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
+  # x axis settings
+  #TODO: sort out the timezone problem
+  if (zoom_days > 14) {
+    date_breaks="1 week"
+    labs = scales::label_date("%b %d")
+  } else if (zoom_days > 7) {
+      date_breaks="2 days"
+      labs=scales::label_date("%b %d")
+  } else if (zoom_days > 3){
+        date_breaks="1 days"
+        labs=scales::label_date("%b %d")
+  } else if (zoom_days > 2) {
+        date_breaks="12 hours"
+        labs=scales::label_date("%b %d %H:%M")
+  } else if (zoom_days > 1){
+        date_breaks="4 hours"
+        labs=scales::label_date("%b %d %H:%M")
+  } else if (zoom_days ==1) {
+        date_breaks="1 hour"
+        labs=scales::label_time(format="%b %d %H:%M")
+      }
   # Generate the plot
   plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level masl`)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
-    #TODO: adjust the scale breaks when n days <14
-    ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b %d")) +
+    ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone="UTC") +
     tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date())) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
