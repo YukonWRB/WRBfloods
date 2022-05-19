@@ -40,7 +40,7 @@
 #'
 
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
-
+#TODO: get level data table notes to only occur if a certain datum is displayed.
 freshetReport <-
   function(report_name = "Territory",
            custom_report_stations = NULL,

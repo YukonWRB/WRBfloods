@@ -263,7 +263,7 @@ utils_daily_level_plot <- function(
   legend_length <- length(unique(na.omit(all_data$Year_Real)))
   
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level_masl`)) +
+  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level masl`)) +
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
@@ -376,7 +376,7 @@ utils_zoom_level_plot <- function(
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level_masl`)) + 
+  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level masl`)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     #TODO: adjust the scale breaks when n days <14
