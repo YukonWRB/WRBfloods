@@ -371,6 +371,7 @@ Water level and/or flow data is pulled from [historical](https://wateroffice.ec.
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
 knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
+#TODO: get the notes below to appear only if the datum is specified, and to have the right [1] number
 ```
 
 Notes: 
