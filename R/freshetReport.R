@@ -40,7 +40,6 @@
 #'
 
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
-#TODO: get level data table notes to only occur if a certain datum is displayed.
 freshetReport <-
   function(report_name = "Territory",
            custom_report_stations = NULL,
@@ -80,8 +79,10 @@ freshetReport <-
       
       ### Generate a report for the whole territory###
       if (report_name %in% c("Territory", "territory", "Communities", "communities", "Yukon", "Yukon Wide", "Yukon wide", "yukon wide")) {
-        stations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD003", "09BC001", "09BC002", "09AE002", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
-        preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1962,1992,2021", "09BC002:2013,1992,1972", "09FD003:2007,2015", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
+        stations <- c("09AA004", "09AA017", "09AB004", "09AE002", "09AB001", "09AB010", "09AH004", "09AH001", "09BC002", "09BC001", "09DC006", "09EA003", "09EB001", "09FD003", "10AA001" )
+#        preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1992,2021", "09BC002:2013,1992,1972", "09FD003:2007,2015", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
+
+        preset_extras <- c("09EA003:2013","09EB001:2013", "09AH001:2021","09AH004:2021","09AE002:2021", "09BC002:2013", "09FD003:2015", "10AA001:2012", "09DC006:1992", "09AB004:2007,2021", "09AB010:2021")
         
         if (preset_extra_years==TRUE){
           extra_years <- c(preset_extras, extra_years) 
