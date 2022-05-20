@@ -9,8 +9,8 @@ utils_daily_level_plot(
   complete_year,
   plot_years_df,
   dummy_year_df,
-  colours = c("blue", "darkorange", "darkorchid3", "cyan2", "firebrick3",
-    "aquamarine4", "gold1", "chartreuse1", "black", "lightsalmon"),
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
+    "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
   point_size = 0.75

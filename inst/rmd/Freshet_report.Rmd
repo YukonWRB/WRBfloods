@@ -416,14 +416,14 @@ note_table <- data.frame(datum = c("CGVD28 (approximate)",
 #Add a number to each datum and populate notes with the required notes
 notes <- vector()
 for (i in datums){
-  stationInfo$Datum <- gsub(i, paste0(i, "[", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
+  stationInfo$Datum <- gsub(i, paste0(i, " [", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
   notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
 }
 
 
 knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
 
-cat("Notes:  \n")
+cat("**Notes:**  \n")
 for (i in 1:length(notes)){
   cat(notes[[i]], "  \n")
 }
