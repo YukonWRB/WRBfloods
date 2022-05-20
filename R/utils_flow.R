@@ -36,7 +36,12 @@ utils_flow_data <- function(
 	  #TODO: remove line below once tidyhydat.ws is fixed.
 	  param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
 	  
-	  flow_real_time <- tidyhydat.ws::realtime_ws(station_number = station_number, parameters = 47, start_date = ifelse(max(lubridate::year(flow_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), token = token_out)
+	  flow_real_time <- tidyhydat.ws::realtime_ws(
+	    station_number = station_number, 
+	    parameters = 47, 
+	    start_date = ifelse(max(lubridate::year(flow_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
+	    token = token_out
+	    )
 	  
 	  recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	  
