@@ -191,21 +191,28 @@ if (report_type %in% c("Both", "Level", "both", "level")){
   } #End of LEVEL for loop
 }# End of if "level" or "both" selected statement
 
+
+# Get flow data in two lists
 flowDataList <- list()
 flowInfo <- list()
 if (report_type %in% c("Both", "Flow", "both", "flow")){
-
-  
+  #parse out the extra years if requested
+  if (is.null(extra_years)==FALSE){
+    years <- data.frame(data=extra_years)
+    years <- tidyr::separate(years, col=data, into=c("station","years"), sep=":")
+  } else {
+    years <- data.frame()
+  }
+    
   for(i in stations) {
     station_info <- tidyhydat::hy_stations(i)
-    if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
-      
-      tbl <- data.frame(
-        `Station name` = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else{paste0(i, " DOES NOT EXIST")},
+    #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
+       tbl <- data.frame( 
+        `Station name` = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
         ID = i,
-        `Start year` = NA,
-        `Today percent historic` = NA,
-        Today = NA,
+        `Start year flow` = NA,
+        `Current flow`= 0.0001, #this is a number so that lake stations can be removed after.
+        `Current percent historic` = NA,
         Yesterday = NA,
         `24 hr change` = NA,
         `Two days ago` = NA,
@@ -216,7 +223,11 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         `Six days ago` = NA,
         `One week ago` = NA,
         `One week change` = NA
-      )
+      )    
+    
+    if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
+
+      tbl$Current.flow <- NA #Overwrite 0.0001 so that the reader knows that a station should have flow but does not
       
       flowData <- data.frame() #Created to standardize the eventual output of this code block
       tryCatch ({
@@ -229,31 +240,34 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           )
         } else {
           flowData <- utils_flow_data(
-          station_number = i,
-          flow_zoom = TRUE,
-          select_years = lubridate::year(Sys.Date())
+            station_number = i,
+            select_years = lubridate::year(Sys.Date()),
+            flow_zoom = TRUE
           )
         }
         
+
+
+        
         #Flow data processing
-      startYearFlow <-
-        min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
-      todayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      todayFlowPerc <- round(flowData$tidyData[[3]]$prctile[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())], 1)
-      yesterdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 1) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      twodayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 2) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      threedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 3) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      fourdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 4) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      fivedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 5) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      sixdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 6) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-      weekFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 7) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        startYearFlow <-
+          min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
+        todayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        todayFlowPerc <- flowData$tidyData[[3]]$prctile[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        yesterdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 1) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        twodayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 2) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        threedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 3) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        fourdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 4) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        fivedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 5) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        sixdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 6) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+        weekFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 7) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
         
         tbl <- data.frame(
           `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
-          `Start year` = startYearFlow,
-          `Today percent historic` = todayFlowPerc,
-          Today = todayFlow,
+          `Start year flow` = startYearFlow,
+          `Current flow` = todayFlow,
+          `Current percent historic` = todayFlowPerc,
           Yesterday = yesterdayFlow,
           `24 hr change` = todayFlow - yesterdayFlow,
           `Two days ago` = twodayFlow,
@@ -267,12 +281,55 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         )
       }, error = function(e) {}
       ) #End of tryCatch for station existence
+    } #End of loop that runs only if it's not a lake
       flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
-      flowDataList[[i]] <- flowData 
-    }
+      flowDataList[[i]] <- flowData    
   } #End of FLOW for loop
 }# End of if "flow" or "both" selected statement
 
+```
+
+```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
+
+stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
+  purrr::reduce(dplyr::bind_rows)
+
+levelStart <- dplyr::bind_rows(levelInfo)[3] #vector of start years
+
+if (report_type %in% c("Both", "Flow", "both", "flow")){
+  flowStart <- dplyr::bind_rows(flowInfo)[3] #vector of start years only if necessary
+}
+
+starts <- vector()
+for (i in 1:nrow(levelStart)){
+  if (report_type %in% c("Both", "Flow", "both", "flow")){
+    x <- paste0("Level: ", levelStart[i,], " Flow: ", flowStart[i,])
+    starts <- c(starts, x)
+    starts <- gsub(" Flow:", " <br> Flow:", starts) #inserts a line break so level/flow end up on two lines
+  } else {
+    x <- paste0("Level: ", levelStart[i,])
+    starts <- c(starts, x)
+  }
+}
+
+stationInfo$`Start year` <- starts
+
+stationInfo$links <- links #bring in the links created in earlier code chunk
+
+stationInfo$STATION_NAME <- stringr::str_to_title(stationInfo$STATION_NAME) #remove ALL CAPS
+
+stationInfo$Station <- paste0(stationInfo$STATION_NAME, " ([", stationInfo$STATION_NUMBER, "](", stationInfo$links, "))")
+
+stationInfo <- stationInfo[c(8,6,3,4,5)]
+
+stationInfo <- plyr::rename(stationInfo, c("LATITUDE"="Latitude", "LONGITUDE"="Longitude", "DATUM_TO"="Datum"))
+
+#shrink the datum names
+sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate)", stationInfo$Datum)
+sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed)", sub)
+sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010", sub)
+sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 1928", "CGVD28", sub)
+stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```
 
 ```{r Get Precip data, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
@@ -344,33 +401,54 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
 
 ```
 
-# Current Status and Observations
-
-[Enter update here]
-
-<br>
-
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   cat("  \n# Summary of levels and level changes in meters  \n")
-  levelTable <- dplyr::bind_rows(levelInfo)[c(1,3:5,7, 10, 15,16)]
+  levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
+  levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
   names(levelTable) <- gsub("X", "", names(levelTable))
   
-  knitr::kable(levelTable, digits=3)
+  names(levelTable) <- gsub("masl", "(masl)*", names(levelTable))
+  names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
+  names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
+  
+  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+  
+  levelTable$`Advisory in effect` <- ""
+  levelTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
+  levelTable <- dplyr::relocate(levelTable, Community)
+  
+  levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
+  levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
+  
+  knitr::kable(levelTable, digits=2)
 }
 ```
+
+\*masl = meters above sea level
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   cat( "  \n# Summary of flows and flow changes in m^3^/s  \n")
-  flowTable <- dplyr::bind_rows(flowInfo)[c(1,3:5,7, 10, 15)]
+  
+  flowTable <-  dplyr::bind_rows(flowInfo) %>% 
+    dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
+    
+  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)]
+  
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
   
-  knitr::kable(flowTable, digits=3)
+  flowTable$`Current percent historic` <- round(flowTable$`Current percent historic`, 0)
+  
+  print(knitr::kable(flowTable, digits=1))
+  
+  if (NA %in% stringr::str_detect(flowTable$`Current flow`, "NA")){
+    cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
+  }
 }
 ```
 
@@ -417,42 +495,37 @@ colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day"
 Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Government of Canada. Return intervals are plotted where available, represting two, ten, one hundred and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 1928 (CGVD28).
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
+datums <- unique(stationInfo$Datum)
 
-stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
-  purrr::reduce(dplyr::bind_rows)
+#Make a table with the necessary notes and their associated datums
+note_table <- data.frame(datum = c("CGVD28 (approximate)", 
+             "CGVD28 (assumed)", 
+             "CGVD2013:2010", 
+             "CGVD28", 
+             "Local datum"), 
+           note = c("Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).", 
+             "Vertical datum not specified in historical records, but implementation date indicates use of [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 1928 [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).", 
+             "Arbitrary datum relative to station or other nearby fixed point."))
 
-stationInfo$links <- links #bring in the links created in earlier code chunk
 
-  stationInfo$STATION_NAME <- stringr::str_to_title(stationInfo$STATION_NAME) #remove ALL CAPS
+#Add a number to each datum and populate notes with the required notes
+notes <- vector()
+for (i in datums){
+  stationInfo$Datum <- gsub(i, paste0(i, " [", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
+  notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
+}
 
-  stationInfo$Station <- paste0(stationInfo$STATION_NAME, " ([", stationInfo$STATION_NUMBER, "](", stationInfo$links, "))")
-  
-  stationInfo <- stationInfo[c(7,3,4,5)]
-  
-  stationInfo <- plyr::rename(stationInfo, c("LATITUDE"="Latitude", "LONGITUDE"="Longitude", "DATUM_TO"="Datum"))
-  
-#Combine station Name with ID and links, called Station
-
-#shrink the datum names
-sub <- gsub("APPROXIMATE GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (approximate) [2]", stationInfo$Datum)
-sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed) [1]", sub)
-sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010 [3]", sub)
-stationInfo$Datum <- gsub("Local datum", "Local datum [4]", sub)
 
 
 knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
 
+cat("**Notes:**  \n")
+for (i in 1:length(notes)){
+  cat(notes[[i]], "  \n")
+}
 ```
-
-Notes: 
-
-[1] Vertical datum not specified in historical records, but implementation date indicates use of CGVD28.
-
-[2] Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).
-
-[3] Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).
-
-[4] Arbitrary datum relative to station or other nearby fixed point.
 
 \newpage
 
@@ -507,9 +580,9 @@ for(i in stations) {
 
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  complete_year = flowDataList[[n]][[2]],
-                                  plot_years_df = flowDataList[[n]][[3]],
-                                  dummy_year_df = flowDataList[[n]][[4]])
+                                  complete_year = flowDataList[[n]][[1]][[2]],
+                                  plot_years_df = flowDataList[[n]][[1]][[3]],
+                                  dummy_year_df = flowDataList[[n]][[1]][[4]])
             print(flowPlot)
             cat("  \n\n\\newpage\n\n")
             },
