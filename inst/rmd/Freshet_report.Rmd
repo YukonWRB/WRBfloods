@@ -373,7 +373,7 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
-  cat("  \n# Summary of levels and level changes in meters  \n")
+  cat("  \n# Summary of levels and level changes  \n")
   levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
@@ -383,7 +383,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
   names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
   
-  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
   
   levelTable$`Advisory in effect` <- ""
   levelTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
@@ -419,13 +419,17 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
+  
+    flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
     
-  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)]
+  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)] #remove the rows where 
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
   
   flowTable$`Current percent historic` <- round(flowTable$`Current percent historic`, 0)
+  
+  flowTable <- dplyr::relocate(flowTable, Community)
   
   print(knitr::kable(flowTable, digits=1))
   
