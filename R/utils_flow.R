@@ -207,14 +207,14 @@ utils_daily_flow_plot <- function(
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
     
-    ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
     
     ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
     
     ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = unique(all_data$Year_Real)[1:legend_length], values = colours[1:legend_length], na.translate = FALSE) +
-    ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
+    ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
 
   return(plot)
 }
