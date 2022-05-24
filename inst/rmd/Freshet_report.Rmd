@@ -660,19 +660,31 @@ if (precip == TRUE){
   cat("  \n ## Recent Precipitation Images  \n")
   cat(" The following images represent precipitation in and around Yukon. Each image integrates precipitation (from observations and remote sensing) over the 24 hours prior to the image's valid date/time (Yukon time).  \n")
   
-  #using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive.
-  tryCatch({
-    setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
-    wxfiles<- list.files()
-    par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-    
-    imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-    
-    cat("  \n  \n  ")
-    imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-  }, error=function(e) {
-    cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
-  })
+#using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive. This used to be necessary but stopped working for unknown reason. 
+# tryCatch({
+#   setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
+#   wxfiles<- list.files(pattern="\\.png$")
+#   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+# 
+#   imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+# 
+#   cat("  \n  \n  ")
+#   imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+# }, error=function(e) {
+#   cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+# })
+
+tryCatch({
+  wxfiles<- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", pattern="\\.png$")
+  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+  
+  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+  
+  cat("  \n  \n  ")
+  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)-2])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+}, error=function(e) {
+  cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+})
   
 }
 
@@ -698,7 +710,7 @@ if (meteogram==TRUE){
 
   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   
-  for (i in meteos$Meteogram.code) {
+  for (i in meteos$`Meteogram code`) {
     cat("  \n")
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
@@ -725,8 +737,7 @@ if (WSC_images == TRUE) {
       cat("# Fixed Camera Images")
       for (i in unique(images$Station)){
         last_image <- dplyr::filter(images, Station==i)[1,]
-        cat("  \n### ", stringr::str_to_title(hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
-        
+        cat("  \n### ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
         
         temp <- paste0(tempfile(),".jpg")
         R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image[,1]), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
