@@ -4,12 +4,21 @@
 \alias{levelPlot}
 \title{Level plots of WSC data}
 \usage{
-levelPlot(station, years, zoom = FALSE, zoom_days = 30, save_path = "choose")
+levelPlot(
+  station,
+  years,
+  title = TRUE,
+  zoom = FALSE,
+  zoom_days = 30,
+  save_path = "choose"
+)
 }
 \arguments{
 \item{station}{The WSC station for which you wish to generate a plot.}
 
 \item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector.}
+
+\item{title}{Do you want a title added to the plot? TRUE/FALSE.}
 
 \item{zoom}{TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.}
 
