@@ -247,8 +247,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         }
         
 
-
-        
         #Flow data processing
         startYearFlow <-
           min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
@@ -405,7 +403,7 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   cat("  \n# Summary of levels and level changes \n")
-  levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
+  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 11, 18)]
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
   names(levelTable) <- gsub("X", "", names(levelTable))
@@ -414,7 +412,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
   names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
   
-  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "Current percent historic", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
   
   levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
@@ -423,7 +421,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 }
 ```
 
-\*masl = meters above sea level
+
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
