@@ -96,7 +96,7 @@ freshetReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Yukon Water Report",
+            report_name = "Yukon Hydrometric Conditions Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
