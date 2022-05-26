@@ -411,8 +411,8 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
-  cat("  \n# Summary of levels and level changes  \n")
-  cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Water Survey of Canada.  \n")
+  cat("  \n# Summary of water level conditions in communities  \n")
+  cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
   levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
@@ -442,13 +442,14 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 ```{r Levels explanation, echo=FALSE, results='asis', message=FALSE}
 
 if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
-  cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences (decameter or more) may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information at the end of this document.")
+  cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information at the end of this document.")
 } else {
   cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
 }
 
 ```
 
+Return periods representing two, ten, one hundred and two hundred year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 

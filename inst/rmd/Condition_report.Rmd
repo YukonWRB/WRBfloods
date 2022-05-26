@@ -305,9 +305,15 @@ for (i in 1:nrow(levelStart)){
     starts <- c(starts, x)
     starts <- gsub(" Flow:", " <br> Flow:", starts) #inserts a line break so level/flow end up on two lines
   } else {
-    x <- paste0("Level: ", levelStart[i,])
+    x <- levelStart[i,]
     starts <- c(starts, x)
   }
+}
+
+if (report_type %in% c("Level", "level")){
+  stationInfo$`Start year (level)` <- starts
+} else {
+  stationInfo$`Start year` <- starts
 }
 
 stationInfo$`Start year` <- starts
