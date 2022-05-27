@@ -33,6 +33,7 @@
 #'
 
 #TODO: add some error catching if the inputs do not match what is expected. ELSE statement? tryCatch?
+#TODO: Make and use table of stations in moving water that don't have flow so as to avoid empty flow graphs in reports.
 
 floodReport <-
   function(report_name = NULL,
