@@ -247,8 +247,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         }
         
 
-
-        
         #Flow data processing
         startYearFlow <-
           min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
@@ -307,9 +305,15 @@ for (i in 1:nrow(levelStart)){
     starts <- c(starts, x)
     starts <- gsub(" Flow:", " <br> Flow:", starts) #inserts a line break so level/flow end up on two lines
   } else {
-    x <- paste0("Level: ", levelStart[i,])
+    x <- levelStart[i,]
     starts <- c(starts, x)
   }
+}
+
+if (report_type %in% c("Level", "level")){
+  stationInfo$`Start year (level)` <- starts
+} else {
+  stationInfo$`Start year` <- starts
 }
 
 stationInfo$`Start year` <- starts
@@ -405,7 +409,7 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   cat("  \n# Summary of levels and level changes \n")
-  levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
+  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 11, 18)]
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
   names(levelTable) <- gsub("X", "", names(levelTable))
@@ -414,7 +418,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
   names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
   
-  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "Current percent historic", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
   
   levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
@@ -423,7 +427,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 }
 ```
 
-\*masl = meters above sea level
+
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
@@ -608,20 +612,31 @@ The following images represent precipitation in and around Yukon. Each image int
 
 ```{r HRDPA, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.15, fig.width=7, results='asis'}
 
-#using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive.
+#using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive. This used to be necessary but stopped working for unknown reason. 
+# tryCatch({
+#   setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
+#   wxfiles<- list.files(pattern="\\.png$")
+#   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+# 
+#   imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+# 
+#   cat("  \n  \n  ")
+#   imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+# }, error=function(e) {
+#   cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+# })
+
 tryCatch({
-  setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
-  wxfiles<- list.files()
+  wxfiles<- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", pattern="\\.png$")
   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-
-  imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-
+  
+  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+  
   cat("  \n  \n  ")
-  imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)-2])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
 }, error=function(e) {
   cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
 })
-
 
 
 ```
@@ -653,7 +668,7 @@ if (meteogram==TRUE){
 
   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   
-  for (i in meteos$Meteogram.code) {
+  for (i in meteos$`Meteogram code`) {
     cat("  \n")
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
@@ -680,7 +695,7 @@ tryCatch({
     cat("# Fixed Camera Images")
     for (i in unique(images$Station)){
       last_image <- dplyr::filter(images, Station==i)[1,]
-      cat("  \n### ", stringr::str_to_title(hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
+      cat("  \n### ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
       
       
       temp <- paste0(tempfile(),".jpg")

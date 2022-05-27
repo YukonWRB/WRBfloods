@@ -98,7 +98,7 @@ floodReport <-
       
       ### Generate a report for Dawson###
       if (report_name %in% c("Dawson", "dawson", "Dawson City", "Dawson city")) {
-        stations <- c("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001")
+        stations <- c("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001", "09CB001")
         preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964")
         
         if (preset_extra_years==TRUE){

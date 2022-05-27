@@ -11,7 +11,7 @@ freshetReport(
   preset_extra_years = FALSE,
   report_type = "Level",
   level_zoom = TRUE,
-  zoom_days = 30,
+  zoom_days = 20,
   precip = FALSE,
   meteogram = FALSE,
   WSC_images = FALSE,

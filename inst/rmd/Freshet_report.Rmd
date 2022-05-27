@@ -24,6 +24,74 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat.ws)
 ```
 
+Record-setting May 1 snowpack in many watersheds in the territory creates a high potential for spring snowmelt driven flooding in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in rivers and lakes. The Government of Yukon maintains water monitoring stations at locations across the Yukon to track water levels and flow rates in areas of potential flood risk for communities. This report provides current conditions, outlook, and technical data.
+
+<br>
+
+# Current status
+
+## Snow conditions
+
+While much of the valley bottom snow has melted across the territory, substantial snowpack still exists at elevation.
+
+## Weather conditions
+
+A colder than normal start to May has followed a colder than normal April. While this cold weather allowed for a slow and mostly uneventful thermal breakup on Yukon rivers, it has also preserved the high elevation snowpack. 
+
+## Water conditions
+
+Water levels are currently near or below average across most of the territory. 
+
+## Flood advisories and warnings
+
+There are no advisories currently in effect.
+
+<br>
+
+# Outlook
+
+## Weather forecast
+
+A warming trend is forecast for the long weekend followed by a cooling trend to below seasonal temperatures. Precipitation is expected to move into central and southern Yukon on Sunday and bring the greatest amounts on Monday, mainly in the Klondike, Stewart and Central Yukon River basins.
+
+## Water level outlook
+
+Water levels are expected to continue to rise. The rate of rise will increase in response to the warm weather and precipitation into mid next week, but it expected to slow down again later in the week with cooler temperatures. The weekend weather is not expected to elevate water to flood levels on larger rivers, but smaller watercourses may experience bank full or overbank conditions.  
+
+<br>
+
+<br>
+
+<br>
+
+<br>
+
+<br>
+
+\newpage
+
+# Contact
+
+For water level and flow conditions: Water Resources Branch Forecasting Team: [waterlevels\@yukon.ca](mailto:waterlevels@yukon.ca){.email} For flood response: Yukon Emergency Measures Organization: 867-667-5220 or [EMO.yukon\@yukon.ca](mailto:EMO.yukon@yukon.ca){.email}
+
+<br>
+
+<br>
+
+<br>
+
+<br>
+
+<br>
+
+## Disclaimer and Limitation of Liability
+The User understands and acknowledges that the use of the data is solely at their own risk. The User is solely responsible for confirming the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data.
+The User accepts the data “as is” and acknowledges that the Government of Yukon makes no warranties or representations (express or implied) with respect to the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data, including, without limitation, implied warranties for merchantability, fitness for a particular purpose, and non-infringement. 
+In consideration of access to the data, the User also agrees that in no event will the Government of Yukon be liable (in tort or contract) or responsible whatsoever to the User or any other legal entity for the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data, including, without limitation, any loss of revenue or profit, or for direct, indirect, special, incidental, or consequential damages arising from or related to the data.
+
+\newpage
+
+
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 
 #Make vectors of links to stations and of near/affected communities for later use
@@ -251,8 +319,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         }
         
 
-
-        
         #Flow data processing
         startYearFlow <-
           min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
@@ -293,39 +359,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
 ```
 
-# Current status and observations
-
-## Snow conditions
-
-[Enter update here]
-
-## Weather conditions
-
-[Enter update here]
-
-## Water conditions
-
-[Enter update here]
-
-## Flood advisories and warnings
-
-[Enter update here]
-
-# Outlook
-
-## Weather forecast
-
-[Enter update here]
-
-## Water level outlook
-
-[Enter update here]
-
-# Contact
-
-For water level and flow conditions: Water Resources Branch Forecasting Team: [waterlevels\@yukon.ca](mailto:waterlevels@yukon.ca){.email} For flood response: Yukon Emergency Measures Organization: 867-667-5220 or [EMO.yukon\@yukon.ca](mailto:EMO.yukon@yukon.ca){.email}
-
-<br>
 
 ```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
 
@@ -345,12 +378,17 @@ for (i in 1:nrow(levelStart)){
     starts <- c(starts, x)
     starts <- gsub(" Flow:", " <br> Flow:", starts) #inserts a line break so level/flow end up on two lines
   } else {
-    x <- paste0("Level: ", levelStart[i,])
+    x <- levelStart[i,]
     starts <- c(starts, x)
   }
 }
 
-stationInfo$`Start year` <- starts
+if (report_type %in% c("Level", "level")){
+  stationInfo$`Start year (level)` <- starts
+} else {
+  stationInfo$`Start year` <- starts
+}
+
 
 stationInfo$links <- links #bring in the links created in earlier code chunk
 
@@ -373,7 +411,8 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
-  cat("  \n# Summary of levels and level changes  \n")
+  cat("  \n# Summary of water level conditions in communities  \n")
+  cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
   levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
@@ -403,14 +442,14 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 ```{r Levels explanation, echo=FALSE, results='asis', message=FALSE}
 
 if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
-  cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences (decameter or more) may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information below.")
+  cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information at the end of this document.")
 } else {
-  cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website.")
+  cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
 }
 
 ```
 
-Return periods representing two, ten, one hundred and two hundred year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% change of being met/exceeded every year.
+Return periods representing two, ten, one hundred and two hundred year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
@@ -436,45 +475,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   if (NA %in% stringr::str_detect(flowTable$`Current flow`, "NA")){
     cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
   }
-}
-```
-
-\newpage
-
-# Hydrometric Station Data and Graphs
-
-Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Water Survey of Canada. Return intervals are plotted where available, representing two, ten, one hundred and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 2013 (CGVD2013) unless indicated below.
-
-```{r Station info table, echo=FALSE, results='asis', message=FALSE}
-datums <- unique(stationInfo$Datum)
-
-#Make a table with the necessary notes and their associated datums
-note_table <- data.frame(datum = c("CGVD28 (approximate)", 
-             "CGVD28 (assumed)", 
-             "CGVD2013:2010", 
-             "CGVD28", 
-             "Local datum"), 
-           note = c("Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).", 
-             "Vertical datum not specified in historical records, but implementation date indicates use of [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
-             "Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
-             "Vertical datum in Canadian Geodetic Vertical Datum of 1928 [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).", 
-             "Arbitrary datum relative to station or other nearby fixed point."))
-
-
-#Add a number to each datum and populate notes with the required notes
-notes <- vector()
-for (i in datums){
-  stationInfo$Datum <- gsub(i, paste0(i, " [", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
-  notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
-}
-
-
-
-knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
-
-cat("**Notes:**  \n")
-for (i in 1:length(notes)){
-  cat(notes[[i]], "  \n")
 }
 ```
 
@@ -660,19 +660,31 @@ if (precip == TRUE){
   cat("  \n ## Recent Precipitation Images  \n")
   cat(" The following images represent precipitation in and around Yukon. Each image integrates precipitation (from observations and remote sensing) over the 24 hours prior to the image's valid date/time (Yukon time).  \n")
   
-  #using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive.
-  tryCatch({
-    setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
-    wxfiles<- list.files()
-    par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-    
-    imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-    
-    cat("  \n  \n  ")
-    imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-  }, error=function(e) {
-    cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
-  })
+#using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive. This used to be necessary but stopped working for unknown reason. 
+# tryCatch({
+#   setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
+#   wxfiles<- list.files(pattern="\\.png$")
+#   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+# 
+#   imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+# 
+#   cat("  \n  \n  ")
+#   imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+# }, error=function(e) {
+#   cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+# })
+
+tryCatch({
+  wxfiles<- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", pattern="\\.png$")
+  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+  
+  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+  
+  cat("  \n  \n  ")
+  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)-2])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+}, error=function(e) {
+  cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+})
   
 }
 
@@ -698,7 +710,7 @@ if (meteogram==TRUE){
 
   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   
-  for (i in meteos$Meteogram.code) {
+  for (i in meteos$`Meteogram code`) {
     cat("  \n")
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
@@ -725,8 +737,7 @@ if (WSC_images == TRUE) {
       cat("# Fixed Camera Images")
       for (i in unique(images$Station)){
         last_image <- dplyr::filter(images, Station==i)[1,]
-        cat("  \n### ", stringr::str_to_title(hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
-        
+        cat("  \n### ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
         
         temp <- paste0(tempfile(),".jpg")
         R.utils::downloadFile(paste0("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", last_image[,1]), temp, username=Sys.getenv("ECCCUSER"), password = Sys.getenv("ECCCPASS"))
@@ -751,4 +762,41 @@ if (is.null(image_path)!=TRUE){
   }
 }
 
+```
+
+# Hydrometric station information
+
+Hydrometric stations are maintained by the Water Survey of Canada, and funded in partnership with the Government of Yukon. More information on datums can be found on the WaterOffice.ec.gc.ca website for each individual station linked in the table below. To learn more about hydrometric data please see [https://wateroffice.ec.gc.ca/contactus/faq_e.html](https://wateroffice.ec.gc.ca/contactus/faq_e.html).
+
+```{r Station info table, echo=FALSE, results='asis', message=FALSE}
+datums <- unique(stationInfo$Datum)
+
+#Make a table with the necessary notes and their associated datums
+note_table <- data.frame(datum = c("CGVD28 (approximate)", 
+             "CGVD28 (assumed)", 
+             "CGVD2013:2010", 
+             "CGVD28", 
+             "Local datum"), 
+           note = c("Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).", 
+             "Vertical datum not specified in historical records, but implementation date indicates use of [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 1928 [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).", 
+             "Arbitrary datum relative to station or other nearby fixed point."))
+
+
+#Add a number to each datum and populate notes with the required notes
+notes <- vector()
+for (i in datums){
+  stationInfo$Datum <- gsub(i, paste0(i, " [", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
+  notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
+}
+
+
+
+knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
+
+cat("**Notes:**  \n")
+for (i in 1:length(notes)){
+  cat(notes[[i]], "  \n")
+}
 ```
