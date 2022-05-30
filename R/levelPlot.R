@@ -8,6 +8,7 @@
 #' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector.
 #' @param title Do you want a title added to the plot? TRUE/FALSE.
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
+#' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
 #' @param zoom_days Number from 1 to 365. Not used unless zoom=TRUE.
 #' @param save_path Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.
 #'
@@ -15,7 +16,7 @@
 #' @export
 #'
 
-levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, save_path="choose") {
+levelPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_days=30, save_path="choose") {
   
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
@@ -26,21 +27,20 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, save
     levelData <- utils_level_data(
       station_number = station,
       select_years = years,
-      level_zoom = zoom
+      level_zoom = zoom,
+      filter = filter
     )
   
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- utils_daily_level_plot(station_number = station,
-                             plot_years_df = levelData[[2]],
-                             dummy_year_df = levelData[[3]])
+                             plot_years = levelData[[2]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in level data
     plot <- utils_zoom_level_plot(station_number = station,
-                            plot_years_df = levelData[[2]],
-                            dummy_year_df = levelData[[3]],
-                            zoom_data = levelData[[4]],
+                            plot_years = levelData[[2]],
+                            zoom_data = levelData[[3]],
                             zoom_days = zoom_days)
   }
   

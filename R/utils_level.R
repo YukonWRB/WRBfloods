@@ -13,17 +13,17 @@
 #' @param station_number The WSC station number for which you want data.
 #' @param select_years The year(s) for which you want data
 #' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
+#' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
 
-#' @return A list containing one element (a list of 4 with level data and historical data) if level_zoom is FALSE, or a list of 2 if level_zoom is TRUE (addition of high-res level data)
+#' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
 #'
-
-#TODO: catch and remove data spikes
 
 utils_level_data <- function(
     station_number,
     select_years,
-    level_zoom = TRUE
+    level_zoom = TRUE,
+    filter = FALSE
 ){
   
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
@@ -174,28 +174,29 @@ utils_level_data <- function(
   }
   
   #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
-  #Filter out data spikes
-  if (level_zoom == TRUE){ #If requesting zoomed-in plot, remove spikes by using historical (and thus QC'd) daily min/max values.
-    level_df$dayofyear <- lubridate::yday(level_df$Date)  #repopulate dayofyear in level_df in case of leap year
-    recent_level$dayofyear <- lubridate::yday(recent_level$Date) # create matching column
-    
-    range <- max(level_df$Max)-min(level_df$Min)
-    for (i in unique(recent_level$dayofyear)){
+  if (filter==TRUE){
+    #Filter out data spikes
+    if (level_zoom == TRUE){ #If requesting zoomed-in plot, remove spikes by using historical (and thus QC'd) daily min/max values.
+      level_df$dayofyear <- lubridate::yday(level_df$Date)  #repopulate dayofyear in level_df in case of leap year
+      recent_level$dayofyear <- lubridate::yday(recent_level$Date) # create matching column
       
-      max <- dplyr::filter(level_df, dayofyear==i)$Max[1] + range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
-      min <- dplyr::filter(level_df, dayofyear==i)$Min[1] - range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
-      
-      recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA
+      range <- max(level_df$Max)-min(level_df$Min)
+      for (i in unique(recent_level$dayofyear)){
+        
+        max <- dplyr::filter(level_df, dayofyear==i)$Max[1] + range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
+        min <- dplyr::filter(level_df, dayofyear==i)$Min[1] - range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
+        
+        recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA
+      }
     }
   }
+
   
   if (datum_na == FALSE){ #Create MASL column
     recent_level$`Level masl` <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
   } else {
     recent_level$`Level masl` <- NA #Creating the empty column for consistency in output
   }
-  
-  #TODO: find a way to remove dummy_year, even possibly level_df as the required data is in plot_years already.    
   
   tidyData <- list(level_df, plot_years, recent_level)
   return(tidyData)
@@ -288,7 +289,7 @@ utils_daily_level_plot <- function(
 #' This utility function is designed to take the output of the utils_level_data function. If you're looking for a plot, use the levelPlot function instead.
 #'
 #' @param station_number The station for which you want to plot data.
-#' @param plot_years_df A data.frame of plotting data
+#' @param plot_years A data.frame of plotting data
 #' @param zoom_data The data frame of zoomed-in data.
 #' @param zoom_days The number of days to plot, counting back from the current date.
 #' @param colours Colour of the lines/points.
@@ -302,8 +303,7 @@ utils_daily_level_plot <- function(
 
 utils_zoom_level_plot <- function(
     station_number,
-    plot_years_df,
-    dummy_year_df,
+    plot_years,
     zoom_data,
     zoom_days = 30,
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
@@ -315,42 +315,40 @@ utils_zoom_level_plot <- function(
 {
   #check if datum exists
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
-  
-  # Format data for plotting
-  all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df)
+  graph_year <- max(unique(plot_years$Year_Real))
 
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
   ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   
-  #remove the current year from all_data as it's in zoom_data
-  all_data <- all_data[all_data$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()) | is.na(Year_Real)==TRUE)
+  #remove the current year from plot_years as it's in zoom_data
+  plot_years <- plot_years[plot_years$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()) | is.na(Year_Real)==TRUE)
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
-  minHist <- min(all_data$Min, na.rm=TRUE)
-  maxHist <- max(all_data$Max, na.rm=TRUE)
+  minHist <- min(plot_years$Min, na.rm=TRUE)
+  maxHist <- max(plot_years$Max, na.rm=TRUE)
   minZoom <- if (datum_na==TRUE) min(zoom_data$Level, na.rm=TRUE) else min(zoom_data$`Level masl`, na.rm=TRUE)
   maxZoom <- if (datum_na==TRUE) max(zoom_data$Level, na.rm=TRUE) else max(zoom_data$`Level masl`, na.rm=TRUE)
   min <- if (minHist < minZoom) minHist else minZoom
   max <- if (maxHist > maxZoom) maxHist else maxZoom
   
   #Make dates as posixct
-  all_data$Date <- as.POSIXct(format(all_data$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
+  plot_years$Date <- as.POSIXct(format(plot_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
   
   #combine the data.frames now that they both have posixct columns
   zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
-  all_data$Year_Real <- as.numeric(all_data$Year_Real)
-  all_data <- dplyr::bind_rows(all_data, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
+  plot_years$Year_Real <- as.numeric(plot_years$Year_Real)
+  plot_years <- dplyr::bind_rows(plot_years, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
   
   # Drop na rows if there are 0 data points in a group, with exception of the ribbon data contained where Year_Real == NA
-  rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
-  all_data <- all_data %>%
+  ribbon <- dplyr::select(plot_years, c(Date, Max, Min, QP25, QP75))
+  plot_years <- plot_years %>%
     dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Level))) %>%
-    dplyr::bind_rows(rm)
+    dplyr::bind_rows(ribbon)
   
-  legend_length <- length(unique(all_data$Year_Real))
+  legend_length <- length(unique(na.omit(plot_years$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
   # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
@@ -378,7 +376,7 @@ utils_zoom_level_plot <- function(
         labs=scales::label_time(format="%b %d %H:%M")
       }
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level masl`)) + 
+  plot <- ggplot2::ggplot(plot_years, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level masl`)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone="UTC") +
@@ -392,7 +390,7 @@ utils_zoom_level_plot <- function(
     ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Levels", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(all_data$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Levels", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(plot_years$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if they exist for this station
