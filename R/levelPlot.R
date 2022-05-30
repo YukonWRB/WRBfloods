@@ -3,8 +3,6 @@
 #' Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
 #' 
 #' To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
-#' 
-#' You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 #'
 #' @param station The WSC station for which you wish to generate a plot.
 #' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector.
@@ -24,27 +22,25 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, save
     save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
   }
   
-  #Get the level data
+  #Get the data
     levelData <- utils_level_data(
       station_number = station,
       select_years = years,
-      level_zoom = TRUE
+      level_zoom = zoom
     )
   
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- utils_daily_level_plot(station_number = station,
-                             complete_year = levelData$tidyData[[2]],
-                             plot_years_df = levelData$tidyData[[3]],
-                             dummy_year_df = levelData$tidyData[[4]])
+                             plot_years_df = levelData[[2]],
+                             dummy_year_df = levelData[[3]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in level data
     plot <- utils_zoom_level_plot(station_number = station,
-                            complete_year = levelData$tidyData[[2]],
-                            plot_years_df = levelData$tidyData[[3]],
-                            dummy_year_df = levelData$tidyData[[4]],
-                            zoom_data = levelData$recent_level,
+                            plot_years_df = levelData[[2]],
+                            dummy_year_df = levelData[[3]],
+                            zoom_data = levelData[[4]],
                             zoom_days = zoom_days)
   }
   
