@@ -316,8 +316,6 @@ if (report_type %in% c("Level", "level")){
   stationInfo$`Start year` <- starts
 }
 
-stationInfo$`Start year` <- starts
-
 stationInfo$links <- links #bring in the links created in earlier code chunk
 
 stationInfo$STATION_NAME <- stringr::str_to_title(stationInfo$STATION_NAME) #remove ALL CAPS
