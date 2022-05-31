@@ -12,6 +12,7 @@ params:
   image_path: image_path
   report_type: report_type
   level_zoom: level_zoom
+  flow_zoom: flow_zoom
   zoom_days: zoom_days
   precip: precip
   meteogram: meteogram

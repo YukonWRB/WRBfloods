@@ -36,7 +36,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- utils_daily_flow_plot(station_number = station,
-                             flow_yeras = flowData[[2]])
+                             flow_years = flowData[[2]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in flow data
