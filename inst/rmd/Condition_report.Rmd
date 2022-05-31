@@ -12,12 +12,13 @@ params:
   image_path: image_path
   report_type: report_type
   level_zoom: level_zoom
+  flow_zoom: flow_zoom
   zoom_days: zoom_days
   meteogram: meteogram
 ---
 
 ```{r setup, include=FALSE}
-#Normally there would not be a function call in a package, but these packages don't call nicely if they're not loaded.
+#Normally there would not be a function call in a package, but this package doesn't handle internal data properly.
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat.ws)
 ```
@@ -33,18 +34,17 @@ for (i in stations){
   links <- c(links, newlink)
   community <- c(community, newcommunity)
 }
-
-levelDataList <- list()
-levelInfo <- list()
   
 if (report_type %in% c("Both", "Level", "both", "level")){
-    #parse out the extra years if requested
-    if (is.null(extra_years)==FALSE){
-      years <- data.frame(data=extra_years)
-      years <- tidyr::separate(years, col=data, into=c("station","years"), sep=":")
-    } else {
-      years <- data.frame()
-    }
+  levelDataList <- list()
+  levelInfo <- list()
+  #parse out the extra years if requested
+  if (is.null(extra_years)==FALSE){
+    years <- data.frame(data=extra_years)
+    years <- tidyr::separate(years, col=data, into=c("station","years"), sep=":")
+  } else {
+    years <- data.frame()
+  }
   
   for(i in stations) {
     
@@ -70,7 +70,6 @@ if (report_type %in% c("Both", "Level", "both", "level")){
     )
     
     levelData <- data.frame() #Created to standardize the eventual output of this code block
-    tbl <- data.frame()
     tryCatch ({
       #Get the level data
       if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
@@ -125,7 +124,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
         )
       } else {
-        startYearLevel <- min(lubridate::year(levelData$tidyData[[1]]$Date), na.rm = T)
+        startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
         todayLevel <- levelData[[2]]$`Level`[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         todayLevelmasl <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         todayLevelPerc <- round(levelData[[2]]$prctile[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())], 1)
@@ -199,6 +198,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
 # Get flow data in two lists
 flowDataList <- list()
 flowInfo <- list()
+  
 if (report_type %in% c("Both", "Flow", "both", "flow")){
   #parse out the extra years if requested
   if (is.null(extra_years)==FALSE){
@@ -210,8 +210,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
     
   for(i in stations) {
     station_info <- tidyhydat::hy_stations(i)
-    #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
-       tbl <- data.frame( 
+    tbl <- data.frame( #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
         `Station name` = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
         ID = i,
         `Start year flow` = NA,
@@ -233,36 +232,37 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
       tbl$Current.flow <- NA #Overwrite 0.0001 so that the reader knows that a station could/should have flow but does not
       
-      flowData <- data.frame() #Created to standardize the eventual output of this code block
+      flowData <- data.frame() #Created to standardize the eventual output of this code block; some stations have no flow
       tryCatch ({
         #Get the Flow data
         if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
           flowData <- utils_flow_data(
             station_number = i,
             select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-            flow_zoom = TRUE
+            flow_zoom = flow_zoom,
+            filter=TRUE
           )
         } else {
           flowData <- utils_flow_data(
             station_number = i,
             select_years = lubridate::year(Sys.Date()),
-            flow_zoom = TRUE
+            flow_zoom = flow_zoom,
+            filter = TRUE
           )
         }
         
-
         #Flow data processing
         startYearFlow <-
-          min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
-        todayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        todayFlowPerc <- flowData$tidyData[[3]]$prctile[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        yesterdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 1) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        twodayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 2) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        threedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 3) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        fourdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 4) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        fivedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 5) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        sixdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 6) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        weekFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 7) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+          min(lubridate::year(flowData[[1]]$Date), na.rm = T)
+        todayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == Sys.Date() & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        todayFlowPerc <- flowData[[2]]$prctile[flowData[[2]]$Date == Sys.Date() & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        yesterdayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 1) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        twodayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 2) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        threedayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 3) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        fourdayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 4) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        fivedayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 5) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        sixdayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 6) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        weekFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 7) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         
         tbl <- data.frame(
           `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
@@ -281,7 +281,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           `One week ago` = weekFlow,
           `One week change` = todayFlow - weekFlow
         )
-      }, error = function(e) {}
+      }, error=function(e) {}
       ) #End of tryCatch for station existence
     } #End of loop that runs only if it's not a lake
       flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
@@ -292,18 +292,19 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 ```
 
 ```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
-
 stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
   purrr::reduce(dplyr::bind_rows)
 
-levelStart <- dplyr::bind_rows(levelInfo)[3] #vector of start years
+if (report_type %in% c("Both", "both", "Level", "level")){
+  levelStart <- dplyr::bind_rows(levelInfo)[3] #vector of start years
+}
 
 if (report_type %in% c("Both", "Flow", "both", "flow")){
-  flowStart <- dplyr::bind_rows(flowInfo)[3] #vector of start years only if necessary
+  flowStart <- dplyr::bind_rows(flowInfo)[3] #vector of start years
 }
 
 starts <- vector()
-for (i in 1:nrow(levelStart)){
+for (i in 1:length(stations)){
   if (report_type %in% c("Both", "Flow", "both", "flow")){
     x <- paste0("Level: ", levelStart[i,], " Flow: ", flowStart[i,])
     starts <- c(starts, x)
@@ -547,7 +548,7 @@ for(i in stations) {
           
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
-                                        plot_years = levelDataList[[n]][[2]])
+                                        level_years = levelDataList[[n]][[2]])
           print(levelPlot)
           cat("  \n")
           
@@ -555,15 +556,14 @@ for(i in stations) {
             
             cat("  \n### Level (last", zoom_days, " days) \n")
             zoomPlot <- utils_zoom_level_plot(station_number = i,
-                                        plot_years_df = levelDataList[[n]][[2]],
-                                        zoom_data = levelDataList[[n]][[2]],
+                                        level_years = levelDataList[[n]][[2]],
+                                        zoom_data = levelDataList[[n]][[3]],
                                         zoom_days = zoom_days)
             tryCatch({
               print(zoomPlot)
               cat("  \n")
             },
             error=function(e) {cat("  \n There are no recent levels in the WSC database or the time-series could not be processed. \n")})
-
           }
         },
         error=function(e) {})
@@ -578,9 +578,7 @@ for(i in stations) {
 
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  complete_year = flowDataList[[n]][[1]][[2]],
-                                  plot_years_df = flowDataList[[n]][[1]][[3]],
-                                  dummy_year_df = flowDataList[[n]][[1]][[4]])
+                                  flow_years = flowDataList[[n]][[2]])
             print(flowPlot)
             cat("  \n\n\\newpage\n\n")
             },

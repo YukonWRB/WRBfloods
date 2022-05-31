@@ -6,9 +6,7 @@
 \usage{
 utils_daily_flow_plot(
   station_number,
-  complete_year,
-  plot_years_df,
-  dummy_year_df,
+  flow_years,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
@@ -19,11 +17,7 @@ utils_daily_flow_plot(
 \arguments{
 \item{station_number}{The station for which you want to plot data.}
 
-\item{complete_year}{The current year, normally output from daily_flow_data.}
-
-\item{plot_years_df}{data.frame containing plotting data for all years selected, normally output from daily_flow_data}
-
-\item{dummy_year_df}{Output from daily_flow_data}
+\item{flow_years}{data.frame containing plotting data for all years selected, normally output from daily_flow_data}
 
 \item{colours}{Colour for the lines and points}
 

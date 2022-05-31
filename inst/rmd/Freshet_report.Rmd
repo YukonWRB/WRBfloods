@@ -141,7 +141,6 @@ if (report_type %in% c("Both", "Level", "both", "level")){
     )
     
     levelData <- data.frame() #Created to standardize the eventual output of this code block
-    tbl <- data.frame()
     
     tryCatch ({
       #Get the level data
@@ -313,29 +312,31 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           flowData <- utils_flow_data(
             station_number = i,
             select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-            flow_zoom = TRUE
+            flow_zoom = TRUE,
+            filter=TRUE
           )
         } else {
           flowData <- utils_flow_data(
             station_number = i,
             select_years = lubridate::year(Sys.Date()),
-            flow_zoom = TRUE
+            flow_zoom = TRUE,
+            filter=TRUE
           )
         }
         
 
         #Flow data processing
         startYearFlow <-
-          min(lubridate::year(flowData$tidyData[[1]]$Date), na.rm = T)
-        todayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        todayFlowPerc <- flowData$tidyData[[3]]$prctile[flowData$tidyData[[3]]$Date == Sys.Date() & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        yesterdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 1) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        twodayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 2) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        threedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 3) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        fourdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 4) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        fivedayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 5) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        sixdayFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 6) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
-        weekFlow <- flowData$tidyData[[3]]$Value[flowData$tidyData[[3]]$Date == (Sys.Date() - 7) & flowData$tidyData[[3]]$Year_Real == lubridate::year(Sys.Date())]
+          min(lubridate::year(flowData[[1]]$Date), na.rm = T)
+        todayFlow <- flowData$Flow[flowData$Date == Sys.Date() & flowData$Year_Real == lubridate::year(Sys.Date())]
+        todayFlowPerc <- flowData$prctile[flowData$Date == Sys.Date() & flowData$Year_Real == lubridate::year(Sys.Date())]
+        yesterdayFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 1) & flowData$Year_Real == lubridate::year(Sys.Date())]
+        twodayFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 2) & flowData$Year_Real == lubridate::year(Sys.Date())]
+        threedayFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 3) & flowData$Year_Real == lubridate::year(Sys.Date())]
+        fourdayFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 4) & flowData$Year_Real == lubridate::year(Sys.Date())]
+        fivedayFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 5) & flowData$Year_Real == lubridate::year(Sys.Date())]
+        sixdayFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 6) & flowData$Year_Real == lubridate::year(Sys.Date())]
+        weekFlow <- flowData$Flow[flowData$Date == (Sys.Date() - 7) & flowData$Year_Real == lubridate::year(Sys.Date())]
         
         tbl <- data.frame(
           `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
@@ -370,14 +371,16 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
   purrr::reduce(dplyr::bind_rows)
 
-levelStart <- dplyr::bind_rows(levelInfo)[3] #vector of start years
+if (report_type %in% c("Both", "both", "Level", "level")){
+  levelStart <- dplyr::bind_rows(levelInfo)[3] #vector of start years
+}
 
 if (report_type %in% c("Both", "Flow", "both", "flow")){
   flowStart <- dplyr::bind_rows(flowInfo)[3] #vector of start years only if necessary
 }
 
 starts <- vector()
-for (i in 1:nrow(levelStart)){
+for (i in 1:length(stations)){
   if (report_type %in% c("Both", "Flow", "both", "flow")){
     x <- paste0("Level: ", levelStart[i,], " Flow: ", flowStart[i,])
     starts <- c(starts, x)
@@ -501,7 +504,7 @@ for(i in stations) {
           
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
-                                        plot_years = levelDataList[[n]][[2]])
+                                        level_years = levelDataList[[n]][[2]])
           print(levelPlot)
           cat("  \n")
           
@@ -509,7 +512,7 @@ for(i in stations) {
             
             cat("  \n### Level (last", zoom_days, " days) \n")
             zoomPlot <- utils_zoom_level_plot(station_number = i,
-                                        plot_years = levelDataList[[n]][[2]],
+                                        level_years = levelDataList[[n]][[2]],
                                         zoom_data = levelDataList[[n]][[3]],
                                         zoom_days = zoom_days)
             tryCatch({
@@ -532,9 +535,7 @@ for(i in stations) {
 
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  complete_year = flowDataList[[n]][[1]][[2]],
-                                  plot_years_df = flowDataList[[n]][[1]][[3]],
-                                  dummy_year_df = flowDataList[[n]][[1]][[4]])
+                                  flow_years = flowDataList[[n]][[2]])
             print(flowPlot)
             cat("  \n\n\\newpage\n\n")
             },

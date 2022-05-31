@@ -13,15 +13,17 @@
 #' @param station_number The WSC station for which you want data.
 #' @param select_years The years for which you want data.
 #' @param flow_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
-#'
-#' @return A list containing one element (a list of 4 with flow data and historical data) if flow_zoom is FALSE, or a list of 2 if flow_zoom is TRUE (addition of high-res flow data)
+#' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
+
+#' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
 #'
 
 utils_flow_data <- function(
 	station_number,
 	select_years,
-	flow_zoom = TRUE
+	flow_zoom = TRUE,
+	filter=FALSE
 ){
 	
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
@@ -46,7 +48,7 @@ utils_flow_data <- function(
 	  recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	  
 	  if (flow_zoom == TRUE){ #If requesting zoomed-in plot
-	    recent_flow <- flow_real_time
+	    recent_flow <- flow_real_time %>% plyr::rename(c("Value"="Flow"))
 	    recent_flow$DateOnly <- lubridate::date(recent_flow$Date)
 	    recent_flow <- recent_flow[,-c(3,5:10)]
 	  }
@@ -80,10 +82,10 @@ utils_flow_data <- function(
 	                                          lubridate::yday(Date),
 	                                          lubridate::yday(Date) - 1),
 	                                   lubridate::yday(Date))) %>%
-	  dplyr::filter(!is.na(Flow)) %>% 
+	  dplyr::filter(!is.na(Flow)) %>% #remove na values in Flow so that stats::ecdf can work below - they're added in after
 	  dplyr::group_by(dayofyear) %>%
 	  dplyr::mutate(prctile = (stats::ecdf(Flow)(Flow)) * 100) %>%
-	  fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now
+	  fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now - including Feb 29
 	  dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
 	                                   ifelse(lubridate::month(Date) <= 2,
 	                                          lubridate::yday(Date),
@@ -100,45 +102,44 @@ utils_flow_data <- function(
 	  dplyr::ungroup() %>%
 	  hablar::rationalize() #rationalize replaces Inf values with NA
 	
-	# Find most recent complete year to use as IQR and max/min year
-	complete_year <- flow_df[!(format(flow_df$Date,"%m") == "02" & format(flow_df$Date, "%d") == "29"), , drop = FALSE] %>%
-	  dplyr::group_by(lubridate::year(Date)) %>%
-	  dplyr::summarize(n = length(Flow), .groups ="drop")
-	colnames(complete_year)[1] <- "Year"
-	length_complete_year <- max(complete_year$n)
-	complete_year <- complete_year %>%
-	  subset(n == length_complete_year)
-	complete_year <- max(complete_year$Year)
+	last_year <- lubridate::year(max(flow_df$Date))
 	
-	# Create a 'dummy_year' data frame that will contain IQR, max/min for the most recent complete year
-	dummy_year <- flow_df %>%
-	  subset(lubridate::year(Date) == complete_year) %>%
-	  dplyr::select(-Flow) %>%
-	  dplyr::mutate(Flow = as.numeric(NA ),
-	                Year_Real = NA,
-	                prctile = NA) 
-	
-	# For loop to populate plot_years with data from each year in select_years
-	plot_years <- data.frame()
+	# For loop to populate flow_years with data from each year in select_years
+	flow_years <- data.frame()
 	for(i in select_years) {
 	  single_year <- flow_df %>%
 	    subset(lubridate::year(Date) == i) %>%
-	    dplyr::mutate(Year = complete_year,
+	    dplyr::mutate(Year = last_year,
 	                  Month = lubridate::month(Date),
 	                  Day = lubridate::day(Date), 
 	                  Year_Real = i) %>%
 	    dplyr::mutate(Date_2 = as.Date(paste(Year, Month, Day, sep = "-"))) %>%
 	    dplyr::select(-Date, -Month, -Day, -Year) %>%
-	    dplyr::rename(Date = Date_2,
-	                  Value = Flow)
+	    dplyr::rename(Date = Date_2)
 	  
 	  single_year <- single_year[,c(1, 13, 3:11, 2, 12)]
-	  plot_years <- dplyr::bind_rows(plot_years, single_year)
-	  
+	  flow_years <- dplyr::bind_rows(flow_years, single_year)
 	}
 	
-	tidyData <- list(flow_df, complete_year, plot_years, dummy_year)
-	tidyData <- list(tidyData=tidyData, recent_flow=recent_flow)
+	#TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
+	if (filter==TRUE){
+	  #Filter out data spikes
+	  if (flow_zoom == TRUE){ #If requesting zoomed-in plot, remove spikes by using historical (and thus QC'd) daily min/max values.
+	    flow_df$dayofyear <- lubridate::yday(flow_df$Date)  #repopulate dayofyear in flow_df in case of leap year
+	    recent_flow$dayofyear <- lubridate::yday(recent_flow$Date) # create matching column
+	    
+	    range <- max(flow_df$Max)-min(flow_df$Min)
+	    for (i in unique(recent_flow$dayofyear)){
+	      
+	      max <- dplyr::filter(flow_df, dayofyear==i)$Max[1] + range
+	      min <- dplyr::filter(flow_df, dayofyear==i)$Min[1] - range
+	      
+	      recent_flow[recent_flow$dayofyear==i & (recent_flow$Flow < min | recent_flow$Flow > max),]$Flow <- NA
+	    }
+	  }
+	}
+	
+	tidyData <- list(flow_df, flow_years, recent_flow)
 	return(tidyData)
 	
 }
@@ -150,9 +151,7 @@ utils_flow_data <- function(
 #' This utility function is designed to take the output of the utils_flow_data function. If you're looking for a plot, use the flowPlot function instead.
 #'
 #' @param station_number The station for which you want to plot data.
-#' @param complete_year The current year, normally output from daily_flow_data.
-#' @param plot_years_df data.frame containing plotting data for all years selected, normally output from daily_flow_data
-#' @param dummy_year_df Output from daily_flow_data
+#' @param flow_years data.frame containing plotting data for all years selected, normally output from daily_flow_data
 #' @param colours Colour for the lines and points
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
@@ -164,9 +163,7 @@ utils_flow_data <- function(
 
 utils_daily_flow_plot <- function(
   station_number,
-  complete_year,
-  plot_years_df,
-  dummy_year_df,
+  flow_years,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
@@ -174,41 +171,33 @@ utils_daily_flow_plot <- function(
 )
 
 {
-  # Format data for plotting
-  all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>% 
-    dplyr::select(-dayofyear, -Flow)
-  all_data <- all_data[,c(1, 2, 12, 11, 3, 4, 6:10, 5)] %>% dplyr::arrange(desc(Year_Real), desc(Date))
-  
-  # Code for number of factors in the legend
-  legend_length <- all_data %>%
-    dplyr::group_by(Year_Real) %>%
-    dplyr::summarize(Mean = mean(Value))
-  legend_length <- length(legend_length$Year_Real) - 1 # The '-1' accounts for the NA row
-  all_data$Year_Real <- as.numeric(all_data$Year_Real)
+  graph_year <- max(unique(flow_years$Year_Real))
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
-  minHist <- min(all_data$Min, na.rm=TRUE)
-  maxHist <- max(all_data$Max, na.rm=TRUE)
-  minLines <- min(all_data$Value, na.rm=TRUE)
-  maxLines <- max(all_data$Value,na.rm=TRUE)
+  minHist <- min(flow_years$Min, na.rm=TRUE)
+  maxHist <- max(flow_years$Max, na.rm=TRUE)
+  minLines <- min(flow_years$Flow, na.rm=TRUE)
+  maxLines <- max(flow_years$Flow,na.rm=TRUE)
   min <- if (minHist < minLines) minHist else minLines
   max <- if (maxHist > maxLines) maxHist else maxLines
   
-  # Drop na rows if there are 0 data points in a group, with exception of the ribbon data contained where Year_Real == NA
-  rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
-  all_data <- all_data %>%
-    dplyr::group_by(Year_Real) %>%
-    dplyr::filter(!all(is.na(Value))) %>%
-    dplyr::bind_rows(rm)
+  #Separate out the ribbon data prior to removing NA rows
+  ribbon <- dplyr::select(flow_years, c(Date, Max, Min, QP25, QP75))
+  ribbon$Year_Real <- NA
   
-  legend_length <- length(unique(na.omit(all_data$Year_Real)))
+  flow_years <- flow_years %>%
+    dplyr::group_by(Year_Real) %>%
+    dplyr::filter(!all(is.na(Flow))) %>%
+    dplyr::bind_rows(ribbon)
+  
+  legend_length <- length(unique(na.omit(flow_years$Year_Real)))
   
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) +
+  plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) +
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = "Flow (m^3/s)") +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
-    tidyquant::coord_x_date(xlim = c(paste(complete_year, "-01-01", sep = ""), paste(complete_year, "-12-31", sep = ""))) +
+    tidyquant::coord_x_date(xlim = c(paste(graph_year, "-01-01", sep = ""), paste(graph_year, "-12-31", sep = ""))) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
     
@@ -218,7 +207,7 @@ utils_daily_flow_plot <- function(
     ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = unique(all_data$Year_Real)[1:legend_length], values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = unique(flow_years$Year_Real)[1:legend_length], values = colours[1:legend_length], na.translate = FALSE) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
 
   return(plot)
@@ -229,9 +218,7 @@ utils_daily_flow_plot <- function(
 #' This utility function is designed to take the output of the utils_flow_data function. If you're looking for a plot, use the flowPlot function instead.
 #'
 #' @param station_number The station for which you want to plot data.
-#' @param complete_year The year for which you want to plot.
-#' @param plot_years_df A data.frame of plotting data
-#' @param dummy_year_df A data.frame containing only the min, max, and quartiles.
+#' @param flow_years A data.frame of plotting data
 #' @param zoom_data The data frame of zoomed-in data.
 #' @param zoom_days The number of days to plot, counting back from the current date.
 #' @param colours Colour of the lines/points.
@@ -245,9 +232,7 @@ utils_daily_flow_plot <- function(
 
 utils_zoom_flow_plot <- function(
     station_number,
-    complete_year,
-    plot_years_df,
-    dummy_year_df,
+    flow_years,
     zoom_data,
     zoom_days = 30,
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
@@ -257,51 +242,47 @@ utils_zoom_flow_plot <- function(
 )
 
 {
-  
-  # Format data for plotting
-  all_data <- dplyr::bind_rows(plot_years_df, dummy_year_df) %>%
-    dplyr::select(-dayofyear, -Flow)
-  all_data <- all_data[,c(1, 2, 12, 11, 3, 4, 6:10, 5)]
-  
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
   ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   
-  #remove the current year from all_data as it's in zoom_data
-  all_data <- all_data[all_data$Date %in% ribbon_dates,] %>% subset(Year_Real!=lubridate::year(Sys.Date()) | is.na(Year_Real)==TRUE)
+  #remove the current year from flow_years as it's in zoom_data
+  flow_years <- dplyr::select(flow_years, -c(Flow))
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
-  minHist <- min(all_data$Min, na.rm=TRUE)
-  maxHist <- max(all_data$Max, na.rm=TRUE)
-  minZoom <- min(zoom_data$Value, na.rm=TRUE)
-  maxZoom <- max(zoom_data$Value,na.rm=TRUE)
+  minHist <- min(flow_years$Min, na.rm=TRUE)
+  maxHist <- max(flow_years$Max, na.rm=TRUE)
+  minZoom <- min(zoom_data$Flow, na.rm=TRUE)
+  maxZoom <- max(zoom_data$Flow,na.rm=TRUE)
   min <- if (minHist < minZoom) minHist else minZoom
   max <- if (maxHist > maxZoom) maxHist else maxZoom
   
   #Make dates as posixct
-  all_data$Date <- as.POSIXct(format(all_data$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
+  flow_years$Date <- as.POSIXct(format(flow_years$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
   
   #combine the data.frames now that they both have posixct columns
   zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
-  all_data$Year_Real <- as.numeric(all_data$Year_Real)
-  all_data <- dplyr::bind_rows(all_data, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
+  flow_years$Year_Real <- as.numeric(flow_years$Year_Real)
+  flow_years <- dplyr::bind_rows(flow_years, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
   
-  # Drop na rows if there are 0 data points in a group, with exception of the ribbon data contained where Year_Real == NA
-  rm <- subset(all_data, subset= is.na(Year_Real)==TRUE)
-  all_data <- all_data %>%
+  #Separate out the ribbon data prior to removing NA rows
+  ribbon <- dplyr::select(flow_years, c(Date, Max, Min, QP25, QP75))
+  ribbon$Year_Real <- NA
+
+flow_years <- flow_years %>%
     dplyr::group_by(Year_Real) %>%
-    dplyr::filter(!all(is.na(Value))) %>%
-    dplyr::bind_rows(rm)
+    dplyr::filter(!all(is.na(Flow))) %>%
+    dplyr::bind_rows(ribbon)
   
-  legend_length <- length(unique(all_data$Year_Real))
+  legend_length <- length(unique(na.omit(flow_years$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
   # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
   
   # Generate the plot
-  plot <- ggplot2::ggplot(all_data, ggplot2::aes(x = Date, y = Value)) + 
+  plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = "Flow (m^3/s)") +
     #TODO: adjust the scale breaks when n days <14
@@ -316,7 +297,7 @@ utils_zoom_flow_plot <- function(
     ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(all_data$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(flow_years$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
   
   return(plot)

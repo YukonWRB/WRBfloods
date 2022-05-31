@@ -10,6 +10,7 @@
 #' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector.
 #' @param title Do you want a title added to the plot? TRUE/FALSE.
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
+#' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
 #' @param zoom_days Number from 1 to 365. Not used unless zoom=TRUE.
 #' @param save_path Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.
 #'
@@ -17,7 +18,7 @@
 #' @export
 #'
 
-flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, save_path="choose") {
+flowPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_days=30, save_path="choose") {
   
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
@@ -28,23 +29,20 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, save_
   flowData <- utils_flow_data(
     station_number = station,
     select_years = years,
-    flow_zoom = TRUE
+    flow_zoom = TRUE,
+    filter= filter
   )
   
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- utils_daily_flow_plot(station_number = station,
-                             complete_year = flowData$tidyData[[2]],
-                             plot_years_df = flowData$tidyData[[3]],
-                             dummy_year_df = flowData$tidyData[[4]])
+                             flow_yeras = flowData[[2]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in flow data
     plot <- utils_zoom_flow_plot(station_number = station,
-                            complete_year = flowData$tidyData[[2]],
-                            plot_years_df = flowData$tidyData[[3]],
-                            dummy_year_df = flowData$tidyData[[4]],
-                            zoom_data = flowData$recent_flow,
+                            flow_years = flowData[[2]],
+                            zoom_data = flowData[[3]],
                             zoom_days = zoom_days)
   }
   

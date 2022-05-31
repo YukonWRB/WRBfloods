@@ -9,6 +9,7 @@ levelPlot(
   years,
   title = TRUE,
   zoom = FALSE,
+  filter = FALSE,
   zoom_days = 30,
   save_path = "choose"
 )
@@ -22,6 +23,8 @@ levelPlot(
 
 \item{zoom}{TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.}
 
+\item{filter}{TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.}
+
 \item{zoom_days}{Number from 1 to 365. Not used unless zoom=TRUE.}
 
 \item{save_path}{Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.}
@@ -34,6 +37,4 @@ Generates plots of water levels from Water Survey of Canada stations, with up to
 }
 \details{
 To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
-
-You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 }

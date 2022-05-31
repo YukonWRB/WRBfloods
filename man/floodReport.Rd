@@ -11,6 +11,7 @@ floodReport(
   preset_extra_years = FALSE,
   report_type = "Both",
   level_zoom = TRUE,
+  flow_zoom = FALSE,
   zoom_days = 30,
   meteogram = TRUE,
   image_path = NULL,

@@ -9,6 +9,7 @@ flowPlot(
   years,
   title = TRUE,
   zoom = FALSE,
+  filter = FALSE,
   zoom_days = 30,
   save_path = "choose"
 )
@@ -21,6 +22,8 @@ flowPlot(
 \item{title}{Do you want a title added to the plot? TRUE/FALSE.}
 
 \item{zoom}{TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.}
+
+\item{filter}{TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.}
 
 \item{zoom_days}{Number from 1 to 365. Not used unless zoom=TRUE.}
 

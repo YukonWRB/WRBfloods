@@ -42,6 +42,7 @@ floodReport <-
            preset_extra_years = FALSE,
            report_type = "Both",
            level_zoom = TRUE,
+           flow_zoom = FALSE,
            zoom_days = 30,
            meteogram = TRUE,
            image_path = NULL,
@@ -91,6 +92,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -118,6 +120,7 @@ floodReport <-
               image_path = image_path,
               report_type = report_type,
               level_zoom = level_zoom,
+              flow_zoom = flow_zoom,
               zoom_days = zoom_days,
               meteogram = meteogram)
           )
@@ -145,6 +148,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -172,6 +176,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -199,6 +204,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -226,6 +232,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -253,6 +260,7 @@ floodReport <-
           image_path = image_path,
           report_type = report_type,
           level_zoom = level_zoom,
+          flow_zoom = flow_zoom,
           zoom_days = zoom_days,
           meteogram = meteogram)
       )
@@ -280,6 +288,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -307,6 +316,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -334,6 +344,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
         )
@@ -362,6 +373,7 @@ floodReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             meteogram = meteogram)
           )

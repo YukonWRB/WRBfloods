@@ -34,12 +34,12 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- utils_daily_level_plot(station_number = station,
-                             plot_years = levelData[[2]])
+                             level_years = levelData[[2]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in level data
     plot <- utils_zoom_level_plot(station_number = station,
-                            plot_years = levelData[[2]],
+                            level_years = levelData[[2]],
                             zoom_data = levelData[[3]],
                             zoom_days = zoom_days)
   }

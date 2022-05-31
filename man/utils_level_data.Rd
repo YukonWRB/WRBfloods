@@ -4,7 +4,12 @@
 \alias{utils_level_data}
 \title{Download level data}
 \usage{
-utils_level_data(station_number, select_years, level_zoom = TRUE)
+utils_level_data(
+  station_number,
+  select_years,
+  level_zoom = TRUE,
+  filter = FALSE
+)
 }
 \arguments{
 \item{station_number}{The WSC station number for which you want data.}
@@ -12,9 +17,11 @@ utils_level_data(station_number, select_years, level_zoom = TRUE)
 \item{select_years}{The year(s) for which you want data}
 
 \item{level_zoom}{TRUE/FALSE, should high-res data be kept for zoomed-in plots?}
+
+\item{filter}{TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.}
 }
 \value{
-A list containing one element (a list of 4 with level data and historical data) if level_zoom is FALSE, or a list of 2 if level_zoom is TRUE (addition of high-res level data)
+A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 }
 \description{
 Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use levelData function instead.

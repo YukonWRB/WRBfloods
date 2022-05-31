@@ -6,9 +6,7 @@
 \usage{
 utils_zoom_level_plot(
   station_number,
-  complete_year,
-  plot_years_df,
-  dummy_year_df,
+  level_years,
   zoom_data,
   zoom_days = 30,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
@@ -21,11 +19,7 @@ utils_zoom_level_plot(
 \arguments{
 \item{station_number}{The station for which you want to plot data.}
 
-\item{complete_year}{The year for which you want to plot.}
-
-\item{plot_years_df}{A data.frame of plotting data}
-
-\item{dummy_year_df}{A data.frame containing only the min, max, and quartiles.}
+\item{level_years}{A data.frame of plotting data}
 
 \item{zoom_data}{The data frame of zoomed-in data.}
 
