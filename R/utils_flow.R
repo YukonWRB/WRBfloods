@@ -131,10 +131,10 @@ utils_flow_data <- function(
 	    range <- max(flow_df$Max, na.rm=TRUE) - min(flow_df$Min, na.rm=TRUE)
 	    for (i in unique(recent_flow$dayofyear)){
 	      
-	      max <- dplyr::filter(flow_df, dayofyear==i)$Max[1] + range
-	      min <- dplyr::filter(flow_df, dayofyear==i)$Min[1] - range
+	      max <- max(dplyr::filter(flow_df, dayofyear==i)$Max, na.rm=TRUE) + range
+	      min <- min(dplyr::filter(flow_df, dayofyear==i)$Min, na.rm=TRUE) - range
 	      
-	      recent_flow[recent_flow$dayofyear==i & (recent_flow$Flow < min | recent_flow$Flow > max),]$Flow <- NA
+	      try (recent_flow[recent_flow$dayofyear==i & (recent_flow$Flow < min | recent_flow$Flow > max),]$Flow <- NA)
 	    }
 	  }
 	}

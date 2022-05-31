@@ -172,16 +172,15 @@ utils_level_data <- function(
       recent_level$dayofyear <- lubridate::yday(recent_level$Date) # create matching column
       
       range <- max(level_df$Max, na.rm=TRUE) - min(level_df$Min, na.rm=TRUE)
-      for (i in unique(recent_level$dayofyear)){
+      
+      for (i in unique(recent_level$dayofyear)) {
+        max <- max(dplyr::filter(level_df, dayofyear==i)$Max, na.rm=TRUE) + range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
+        min <- min(dplyr::filter(level_df, dayofyear==i)$Min, na.rm=TRUE) - range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
         
-        max <- dplyr::filter(level_df, dayofyear==i)$Max[1] + range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
-        min <- dplyr::filter(level_df, dayofyear==i)$Min[1] - range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
-        
-        recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA
+        try (recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA)
       }
     }
   }
-
   
   if (datum_na == FALSE){ #Create MASL column
     recent_level$`Level masl` <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
