@@ -22,6 +22,8 @@
 #' 
 #' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.
 #' 
+#' @param flow_zoom Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.
+#' 
 #' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
 #' 
 #' @param precip Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE
@@ -47,6 +49,7 @@ freshetReport <-
            preset_extra_years = FALSE,
            report_type = "Level",
            level_zoom = TRUE,
+           flow_zoom = NULL,
            zoom_days = 20,
            precip = FALSE,
            meteogram = FALSE,
@@ -101,6 +104,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -130,6 +134,7 @@ freshetReport <-
               image_path = image_path,
               report_type = report_type,
               level_zoom = level_zoom,
+              flow_zoom = flow_zoom,
               zoom_days = zoom_days,
               precip = precip,
               meteogram = meteogram,
@@ -159,6 +164,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -188,6 +194,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -217,6 +224,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -246,6 +254,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -275,6 +284,7 @@ freshetReport <-
           image_path = image_path,
           report_type = report_type,
           level_zoom = level_zoom,
+          flow_zoom = flow_zoom,
           zoom_days = zoom_days,
           precip = precip,
           meteogram = meteogram,
@@ -304,6 +314,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -333,6 +344,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -362,6 +374,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
@@ -392,6 +405,7 @@ freshetReport <-
             image_path = image_path,
             report_type = report_type,
             level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,

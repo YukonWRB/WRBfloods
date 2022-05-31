@@ -160,28 +160,34 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       #next few lines calculate where we're at for return periods
       if (i %in% data$return_periods$ID==TRUE) {
         
-        if (datum_na == FALSE){
-          levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
-          stn <- dplyr::filter(data$return_periods, ID == i) %>%
-             dplyr::mutate_if(is.numeric, ~.+ levelConvert) #modify the return intervals with the same datum as the database
-          
-        } else {
-          stn <- dplyr::filter(data$return_periods, ID == i)
-        }
+        stn <- dplyr::filter(data$return_periods, ID == i)
 
         tbl$`Current return period` <- 
-          if (todayLevel < stn$twoyear) "<2 year" 
-          else if (todayLevel < stn$fiveyear) "2 to 5 year" 
-          else if (todaylevel < stn$tenyear) "5 to 10 year" 
-          else if (todayLevel < stn$twentyyear) "10 to 20 year" 
-          else if (todayLevel < stn$fiftyyear) "20 to 50 year" 
-          else if (todayLevel < stn$onehundredyear) "50 to 100 year" 
-          else if (todayLevel < stn$twohundredyear) "100 to 200 year" 
-          else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) "> 200 year" 
-          else if (todayLevel < stn$fivehundredyear) "200 to 500 year" 
-          else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) ">500 year"
-          else if (todayLevel < stn$thousandyear) "500 to 1000 year"
-          else if (todayLevel > stn$thousandyear) ">1000 year"
+          if (todayLevel < stn$twoyear) {
+            "<2 year"
+          } else if (todayLevel < stn$fiveyear) {
+              "2 to 5 year"
+            } else if (todaylevel < stn$tenyear) {
+              "5 to 10 year" 
+            } else if (todayLevel < stn$twentyyear) {
+              "10 to 20 year" 
+            } else if (todayLevel < stn$fiftyyear) {
+              "20 to 50 year" 
+            } else if (todayLevel < stn$onehundredyear) {
+              "50 to 100 year"
+            } else if (todayLevel < stn$twohundredyear) {
+              "100 to 200 year"
+            } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
+              "> 200 year" 
+            } else if (todayLevel < stn$fivehundredyear) {
+              "200 to 500 year" 
+            } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
+              ">500 year"
+            } else if (todayLevel < stn$thousandyear) {
+              "500 to 1000 year"
+            } else if (todayLevel > stn$thousandyear) {
+              ">1000 year"
+            }
       } else {
         "NA"
       }
@@ -210,6 +216,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
     
   for(i in stations) {
     station_info <- tidyhydat::hy_stations(i)
+   flowData <- data.frame() #Created to standardize the eventual output of this code block; some stations have no flow
+
     tbl <- data.frame( #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
         `Station name` = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
         ID = i,
@@ -232,7 +240,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
       tbl$Current.flow <- NA #Overwrite 0.0001 so that the reader knows that a station could/should have flow but does not
       
-      flowData <- data.frame() #Created to standardize the eventual output of this code block; some stations have no flow
       tryCatch ({
         #Get the Flow data
         if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){

@@ -11,6 +11,7 @@ freshetReport(
   preset_extra_years = FALSE,
   report_type = "Level",
   level_zoom = TRUE,
+  flow_zoom = NULL,
   zoom_days = 20,
   precip = FALSE,
   meteogram = FALSE,
@@ -31,6 +32,8 @@ freshetReport(
 \item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
 
 \item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.}
+
+\item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.}
 
 \item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
