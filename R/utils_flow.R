@@ -128,7 +128,7 @@ utils_flow_data <- function(
 	    flow_df$dayofyear <- lubridate::yday(flow_df$Date)  #repopulate dayofyear in flow_df in case of leap year
 	    recent_flow$dayofyear <- lubridate::yday(recent_flow$Date) # create matching column
 	    
-	    range <- max(flow_df$Max)-min(flow_df$Min)
+	    range <- max(flow_df$Max, na.rm=TRUE) - min(flow_df$Min, na.rm=TRUE)
 	    for (i in unique(recent_flow$dayofyear)){
 	      
 	      max <- dplyr::filter(flow_df, dayofyear==i)$Max[1] + range

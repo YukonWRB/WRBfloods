@@ -171,7 +171,7 @@ utils_level_data <- function(
       level_df$dayofyear <- lubridate::yday(level_df$Date)  #repopulate dayofyear in level_df in case of leap year
       recent_level$dayofyear <- lubridate::yday(recent_level$Date) # create matching column
       
-      range <- max(level_df$Max)-min(level_df$Min)
+      range <- max(level_df$Max, na.rm=TRUE) - min(level_df$Min, na.rm=TRUE)
       for (i in unique(recent_level$dayofyear)){
         
         max <- dplyr::filter(level_df, dayofyear==i)$Max[1] + range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
