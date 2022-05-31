@@ -18,7 +18,7 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#Normally there would not be a function call in a package, but this package doesn't handle internal data properly.
+#Normally there would not be a library call in a package, but this package doesn't handle internal data properly.
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat.ws)
 ```

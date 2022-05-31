@@ -20,32 +20,36 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#Normally there would not be a function call in a package, but these packages don't call nicely if they're not loaded.
+#Normally there would not be a library call in a package, but this package doesn't handle internal data properly.
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat.ws)
 ```
 
-Record-setting May 1 snowpack in many watersheds in the territory creates a high potential for spring snowmelt driven flooding in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in rivers and lakes. The Government of Yukon maintains water monitoring stations at locations across the Yukon to track water levels and flow rates in areas of potential flood risk for communities. This report provides current conditions, outlook, and technical data.
+Record-setting May 1 snowpack in many Yukon watersheds creates a high potential for flooding driven by spring snowmelt in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in lakes and rivers. 
+
+The Government of Yukon maintains water monitoring stations at locations across the Yukon, allowing the tracking of water water levels and flow rates in areas that inform potential flood risk for communities. 
+
+This report provides current conditions, outlook, and technical data.
 
 <br>
 
 # Current status
 
-## Snow conditions
-
-While much of the valley bottom snow has melted across the territory, substantial snowpack still exists at elevation.
-
 ## Weather conditions
 
-A colder than normal start to May has followed a colder than normal April. While this cold weather allowed for a slow and mostly uneventful thermal breakup on Yukon rivers, it has also preserved the high elevation snowpack. 
+[ENTER WX CONDITIONS
+]
+## Snow conditions
+
+[ENTER SNOW CONDITIONS HERE]
 
 ## Water conditions
 
-Water levels are currently near or below average across most of the territory. 
+[ENTER WATER CONDITION UPDATE HERE]
 
 ## Flood advisories and warnings
 
-There are no advisories currently in effect.
+[UPDATE ADVISORIES]
 
 <br>
 
@@ -53,35 +57,18 @@ There are no advisories currently in effect.
 
 ## Weather forecast
 
-A warming trend is forecast for the long weekend followed by a cooling trend to below seasonal temperatures. Precipitation is expected to move into central and southern Yukon on Sunday and bring the greatest amounts on Monday, mainly in the Klondike, Stewart and Central Yukon River basins.
+[ENTER FORECAST HERE]
 
 ## Water level outlook
 
-Water levels are expected to continue to rise. The rate of rise will increase in response to the warm weather and precipitation into mid next week, but it expected to slow down again later in the week with cooler temperatures. The weekend weather is not expected to elevate water to flood levels on larger rivers, but smaller watercourses may experience bank full or overbank conditions.  
+[ENTER OUTLOOK HERE]
 
 <br>
-
-<br>
-
-<br>
-
-<br>
-
-<br>
-
-\newpage
 
 # Contact
 
-For water level and flow conditions: Water Resources Branch Forecasting Team: [waterlevels\@yukon.ca](mailto:waterlevels@yukon.ca){.email} For flood response: Yukon Emergency Measures Organization: 867-667-5220 or [EMO.yukon\@yukon.ca](mailto:EMO.yukon@yukon.ca){.email}
-
-<br>
-
-<br>
-
-<br>
-
-<br>
+For water level and flow conditions: Water Resources Branch: [waterlevels\@yukon.ca](mailto:waterlevels@yukon.ca){.email} 
+For flood response: Yukon Emergency Measures Organization: 867-667-5220 or [EMO.yukon\@yukon.ca](mailto:EMO.yukon@yukon.ca){.email}
 
 <br>
 
@@ -449,7 +436,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 }
 ```
 
-\*masl = meters above sea level
+\*masl = metres above sea level
 
 **Notes:**
 
@@ -463,7 +450,7 @@ if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is
 
 ```
 
-Return periods representing two, ten, one hundred and two hundred year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
+Return periods representing two, ten, one hundred, and two hundred year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
@@ -774,7 +761,7 @@ if (is.null(image_path)!=TRUE){
 
 # Hydrometric station information
 
-Hydrometric stations are maintained by the Water Survey of Canada, and funded in partnership with the Government of Yukon. More information on datums can be found on the WaterOffice.ec.gc.ca website for each individual station linked in the table below. To learn more about hydrometric data please see [https://wateroffice.ec.gc.ca/contactus/faq_e.html](https://wateroffice.ec.gc.ca/contactus/faq_e.html).
+Hydrometric stations are maintained by the Water Survey of Canada and funded in partnership with the Government of Yukon. More information on datums can be found on the WaterOffice.ec.gc.ca website for each individual station linked in the table below. To learn more about hydrometric data please see [https://wateroffice.ec.gc.ca/contactus/faq_e.html](https://wateroffice.ec.gc.ca/contactus/faq_e.html).
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
 datums <- unique(stationInfo$Datum)
