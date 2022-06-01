@@ -266,10 +266,12 @@ utils_daily_level_plot <- function(
       
       plot <- plot + 
         ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
         ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-07-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$tenyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "ten year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-07-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "five year return", "ten year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
     } 
   return(plot)
 }
@@ -314,7 +316,8 @@ utils_zoom_level_plot <- function(
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   
   #remove the current year level and level masl as it's already in zoom_data
-  level_years <- dplyr::select(level_years, -c(Level, `Level masl`))
+  level_years[level_years$Date %in% ribbon_dates & level_years$Year_Real==lubridate::year(Sys.Date()),]$Level <- NA
+  level_years[level_years$Date %in% ribbon_dates & level_years$Year_Real==lubridate::year(Sys.Date()),]$`Level masl` <- NA
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(level_years$Min, na.rm=TRUE)
@@ -325,6 +328,7 @@ utils_zoom_level_plot <- function(
   max <- if (maxHist > maxZoom) maxHist else maxZoom
   
   #Make dates as posixct
+  level_years$DateOnly <- level_years$Date
   level_years$Date <- as.POSIXct(format(level_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
   
   #combine the data.frames now that they both have posixct columns
@@ -341,7 +345,7 @@ utils_zoom_level_plot <- function(
     dplyr::filter(!all(is.na(Level))) %>%
     dplyr::bind_rows(ribbon)
   
-  legend_length <- length(unique(na.omit(level_years$Year_Real)))
+  legend_length <- length(unique(na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
   # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
@@ -393,10 +397,13 @@ utils_zoom_level_plot <- function(
     
     plot <- plot + 
       ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
       ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
       ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-      ggplot2::annotate("text", x=Sys.time()-60*60*24*(zoom_days/2), y=c(stn$twoyear, stn$tenyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "ten year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+      ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "five year return", "ten year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+    
   } 
   return(plot)
 }

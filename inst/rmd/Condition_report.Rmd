@@ -446,8 +446,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
-    
-  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)]
+  
+  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)] #0.0001 is the indicator for lake stations, remove those
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
@@ -495,7 +495,7 @@ precip1wk <- 0
 precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]$StationNam), precip12hr, precip24hr, precip48hr, precip72hr, precip96hr, precip1wk)
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day", "Two days", "Three days", "Four days", "One week")
   
-  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time for selected stations."))
+  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time for selected stations."))
 ```
 
 \newpage

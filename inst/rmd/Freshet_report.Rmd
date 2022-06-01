@@ -37,8 +37,8 @@ This report provides current conditions, outlook, and technical data.
 
 ## Weather conditions
 
-[ENTER WX CONDITIONS
-]
+[ENTER WX CONDITIONS]
+
 ## Snow conditions
 
 [ENTER SNOW CONDITIONS HERE]
@@ -59,9 +59,9 @@ This report provides current conditions, outlook, and technical data.
 
 [ENTER FORECAST HERE]
 
-## Water level outlook
+## Water level and flow outlook
 
-[ENTER OUTLOOK HERE]
+[ENTER LEVEL OUTLOOK HERE]
 
 <br>
 
@@ -265,6 +265,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
 # Get flow data in two lists
 flowDataList <- list()
 flowInfo <- list()
+
 if (report_type %in% c("Both", "Flow", "both", "flow")){
   #parse out the extra years if requested
   if (is.null(extra_years)==FALSE){
@@ -306,19 +307,18 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           flowData <- utils_flow_data(
             station_number = i,
             select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-            flow_zoom = TRUE,
+            flow_zoom = flow_zoom,
             filter=TRUE
           )
         } else {
           flowData <- utils_flow_data(
             station_number = i,
             select_years = lubridate::year(Sys.Date()),
-            flow_zoom = TRUE,
+            flow_zoom = flow_zoom,
             filter=TRUE
           )
         }
         
-
         #Flow data processing
         startYearFlow <-
           min(lubridate::year(flowData[[1]]$Date), na.rm = T)
@@ -462,7 +462,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
     flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
     
-  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)] #remove the rows where 
+  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16, 17)] #0.0001 is the indicator for lake stations, remove those
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))

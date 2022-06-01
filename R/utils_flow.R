@@ -248,8 +248,8 @@ utils_zoom_flow_plot <- function(
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   
   #remove the current year from flow_years as it's in zoom_data
-  flow_years <- dplyr::select(flow_years, -c(Flow))
-  
+  flow_years[flow_years$Date %in% ribbon_dates & flow_years$Year_Real==lubridate::year(Sys.Date()),]$Flow <- NA
+
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(flow_years$Min, na.rm=TRUE)
   maxHist <- max(flow_years$Max, na.rm=TRUE)
@@ -275,8 +275,8 @@ flow_years <- flow_years %>%
     dplyr::filter(!all(is.na(Flow))) %>%
     dplyr::bind_rows(ribbon)
   
-  legend_length <- length(unique(na.omit(flow_years$Year_Real)))
-  
+legend_length <- length(unique(na.omit(flow_years[flow_years$DateOnly %in% point_dates,]$Year_Real)))
+
   #TODO: get this information on the plot, above/below the legend
   # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))

@@ -63,6 +63,10 @@ floodReport <-
       save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
     }
     
+    #####Set flow_zoom#####
+    if (is.null(flow_zoom)){
+      flow_zoom=level_zoom
+    }
     
     #####Generate reports#####
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == FALSE) {
