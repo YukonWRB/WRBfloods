@@ -550,9 +550,7 @@ for(i in stations) {
       
       if (report_type %in% c("Both", "Level", "both", "level")){
         tryCatch ({
-          
           cat("  \n### Level  \n")
-          
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
                                         level_years = levelDataList[[n]][[2]])
@@ -562,12 +560,12 @@ for(i in stations) {
           if (level_zoom == TRUE){ #Plot zoomed-in level data
             
             cat("  \n### Level (last", zoom_days, " days) \n")
-            zoomPlot <- utils_zoom_level_plot(station_number = i,
+            zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
                                         level_years = levelDataList[[n]][[2]],
                                         zoom_data = levelDataList[[n]][[3]],
                                         zoom_days = zoom_days)
             tryCatch({
-              print(zoomPlot)
+              print(zoomLevelPlot)
               cat("  \n")
             },
             error=function(e) {cat("  \n There are no recent levels in the WSC database or the time-series could not be processed. \n")})
@@ -580,15 +578,26 @@ for(i in stations) {
       if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
         if (report_type %in% c("Both", "Flow", "both", "flow")){
           tryCatch ({
-
             cat("  \n### Flow  \n")
-
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
                                   flow_years = flowDataList[[n]][[2]])
             print(flowPlot)
-            cat("  \n\n\\newpage\n\n")
-            },
+            cat("  \n")
+            
+            if (flow_zoom == TRUE) { #plot zoomed-in flow data as well
+              cat("  \n### Flow (last", zoom_days, " days)  \n")
+              zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
+                                                   flow_years = flowDataList[[n]][[2]],
+                                                   zoom_data = flowDataList[[n]][[2]],
+                                                   zoom_days = zoom_days)
+              tryCatch({
+                print(zoomFlowPlot)
+                cat ("  \n")
+              },
+              error=function(e) {cat("  \n There are no recent flows in the WSC database of the time-series could not be processed.  \n")})
+            }
+          },
           error = function(e) {
             cat("  \n Station ", i, " does not appear to have real-time flow (discharge) data right now. \n")
             cat("  \n\\newpage\n\n")})
