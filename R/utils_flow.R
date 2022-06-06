@@ -182,20 +182,20 @@ utils_daily_flow_plot <- function(
   max <- if (maxHist > maxLines) maxHist else maxLines
   
   #Separate out the ribbon data prior to removing NA rows
-  ribbon <- dplyr::select(flow_years, c(Date, Max, Min, QP25, QP75))
-  ribbon$Year_Real <- NA
+  ribbon <- flow_years[flow_years$Year_Real==2022,] %>% dplyr::select(c(Date, Max, Min, QP25, QP75))
   
   flow_years <- flow_years %>%
     dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Flow))) %>%
-    dplyr::bind_rows(ribbon)
+    dplyr::bind_rows(ribbon) %>%
+    dplyr::arrange(Year_Real)
   
   legend_length <- length(unique(na.omit(flow_years$Year_Real)))
   
   # Generate the plot
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) +
     ggplot2::ylim(min, max) +
-    ggplot2::labs(x= "", y = "Flow (m^3/s)") +
+    ggplot2::labs(x= "", y = "Flow (" ~m^3* "/s)") +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
     tidyquant::coord_x_date(xlim = c(paste(graph_year, "-01-01", sep = ""), paste(graph_year, "-12-31", sep = ""))) +
     ggplot2::theme_classic() +
@@ -204,10 +204,10 @@ utils_daily_flow_plot <- function(
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
     
-    ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
+    ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
+    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = unique(flow_years$Year_Real)[1:legend_length], values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = rev(unique(flow_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(flow_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
 
   return(plot)
@@ -246,9 +246,10 @@ utils_zoom_flow_plot <- function(
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
   ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
+  flow_years <- flow_years[flow_years$Date %in% ribbon_dates,]
   
-  #remove the current year from flow_years as it's in zoom_data
-  flow_years[flow_years$Date %in% ribbon_dates & flow_years$Year_Real==lubridate::year(Sys.Date()),]$Flow <- NA
+  #remove the current year from flow_years as it's in zoom_data at better resolution
+  flow_years[flow_years$Date %in% ribbon_dates & flow_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(flow_years$Flow),]$Flow <- NA
 
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(flow_years$Min, na.rm=TRUE)
@@ -259,32 +260,55 @@ utils_zoom_flow_plot <- function(
   max <- if (maxHist > maxZoom) maxHist else maxZoom
   
   #Make dates as posixct
-  flow_years$Date <- as.POSIXct(format(flow_years$Date), tz="America/Whitehorse") #this is necessary because the high-res data has hour:minute
+  flow_years$DateOnly <- flow_years$Date
+  flow_years$Date <- as.POSIXct(format(flow_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
+  
+  #Separate out the ribbon data prior to removing NA rows and combining data.frames
+  ribbon <- flow_years[flow_years$Year_Real==2022,] %>% dplyr::select(c(Date, Max, Min, QP25, QP75))
   
   #combine the data.frames now that they both have posixct columns
   zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
-  flow_years$Year_Real <- as.numeric(flow_years$Year_Real)
-  flow_years <- dplyr::bind_rows(flow_years, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
+  flow_years <- dplyr::bind_rows(flow_years, zoom_data)
   
-  #Separate out the ribbon data prior to removing NA rows
-  ribbon <- dplyr::select(flow_years, c(Date, Max, Min, QP25, QP75))
-  ribbon$Year_Real <- NA
 
-flow_years <- flow_years %>%
+  flow_years <- flow_years %>%
     dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Flow))) %>%
-    dplyr::bind_rows(ribbon)
-  
+    dplyr::bind_rows(ribbon) %>%
+    dplyr::arrange(Year_Real)
+    
 legend_length <- length(unique(na.omit(flow_years[flow_years$DateOnly %in% point_dates,]$Year_Real)))
 
-  #TODO: get this information on the plot, above/below the legend
-  # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
-  #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
-  
+#TODO: get this information on the plot, above/below the legend
+# last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
+#                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
+
+# x axis settings
+#TODO: sort out the timezone problem
+if (zoom_days > 14) {
+  date_breaks="1 week"
+  labs = scales::label_date("%b %d")
+} else if (zoom_days > 7) {
+  date_breaks="2 days"
+  labs=scales::label_date("%b %d")
+} else if (zoom_days > 3){
+  date_breaks="1 days"
+  labs=scales::label_date("%b %d")
+} else if (zoom_days > 2) {
+  date_breaks="12 hours"
+  labs=scales::label_date("%b %d %H:%M")
+} else if (zoom_days > 1){
+  date_breaks="4 hours"
+  labs=scales::label_date("%b %d %H:%M")
+} else if (zoom_days ==1) {
+  date_breaks="1 hour"
+  labs=scales::label_time(format="%b %d %H:%M")
+}
+
   # Generate the plot
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) + 
     ggplot2::ylim(min, max) +
-    ggplot2::labs(x= "", y = "Flow (m^3/s)") +
+    ggplot2::labs(x= "", y = "Flow (" ~m^3* "/s)") +
     #TODO: adjust the scale breaks when n days <14
     ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b %d")) +
     tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date())) +
@@ -294,10 +318,11 @@ legend_length <- length(unique(na.omit(flow_years[flow_years$DateOnly %in% point
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T)  +
     
-    ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
+    ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
+    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(flow_years$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
+    
+    ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), rev(unique(flow_years$Year_Real)[1:legend_length-1])), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(na.omit(flow_years$Year_Real))[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
   
   return(plot)

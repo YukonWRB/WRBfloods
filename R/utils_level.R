@@ -230,14 +230,13 @@ utils_daily_level_plot <- function(
   min <- if (minHist < minLines) minHist else minLines
   max <- if (maxHist > maxLines) maxHist else maxLines
   
-#Separate out the ribbon data prior to removing NA rows
-  ribbon <- dplyr::select(level_years, c(Date, Max, Min, QP25, QP75))
-  ribbon$Year_Real <- NA
-  
+#Separate out the ribbon data prior to removing NA rows, incorporate it again after.
+  ribbon <- level_years[level_years$Year_Real==2022,] %>% dplyr::select(c(Date, Max, Min, QP25, QP75))
   level_years <- level_years %>%
     dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Level))) %>%
-    dplyr::bind_rows(ribbon)
+    dplyr::bind_rows(ribbon) %>%
+    dplyr::arrange(Year_Real)
   
   legend_length <- length(unique(na.omit(level_years$Year_Real)))
   
@@ -253,10 +252,10 @@ utils_daily_level_plot <- function(
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
     
-    ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
+    ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
+    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = unique(level_years$Year_Real)[1:legend_length], values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = rev(unique(level_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(level_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
     #Add return periods if they exist for this station
@@ -314,10 +313,11 @@ utils_zoom_level_plot <- function(
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
   ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
+  level_years <- level_years[level_years$Date %in% ribbon_dates,]
   
-  #remove the current year level and level masl as it's already in zoom_data
-  level_years[level_years$Date %in% ribbon_dates & level_years$Year_Real==lubridate::year(Sys.Date()),]$Level <- NA
-  level_years[level_years$Date %in% ribbon_dates & level_years$Year_Real==lubridate::year(Sys.Date()),]$`Level masl` <- NA
+  #remove the current year level and level masl as it's already in zoom_data at better resolution
+  level_years[level_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(level_years$Level),]$Level <- NA
+  level_years[level_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(level_years$`Level masl`),]$`Level masl` <- NA
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(level_years$Min, na.rm=TRUE)
@@ -331,19 +331,19 @@ utils_zoom_level_plot <- function(
   level_years$DateOnly <- level_years$Date
   level_years$Date <- as.POSIXct(format(level_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
   
+  #Separate out the ribbon data prior to removing NA rows and combining data.frames
+  ribbon <- level_years[level_years$Year_Real==2022,] %>% dplyr::select(c(Date, Max, Min, QP25, QP75))
+  
   #combine the data.frames now that they both have posixct columns
   zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
-  level_years$Year_Real <- as.numeric(level_years$Year_Real)
-  level_years <- dplyr::bind_rows(level_years, zoom_data) %>% dplyr::arrange(desc(Year_Real), desc(Date))
+  level_years <- dplyr::bind_rows(level_years, zoom_data)
   
-  #Separate out the ribbon data prior to removing NA rows
-  ribbon <- dplyr::select(level_years, c(Date, Max, Min, QP25, QP75))
-  ribbon$Year_Real <- NA
-  
+  #Remove NAs and reintegrate ribbon
   level_years <- level_years %>%
     dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Level))) %>%
-    dplyr::bind_rows(ribbon)
+    dplyr::bind_rows(ribbon) %>%
+    dplyr::arrange(Year_Real)
   
   legend_length <- length(unique(na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
   
@@ -371,7 +371,8 @@ utils_zoom_level_plot <- function(
   } else if (zoom_days ==1) {
         date_breaks="1 hour"
         labs=scales::label_time(format="%b %d %H:%M")
-      }
+  }
+  
   # Generate the plot
   plot <- ggplot2::ggplot(level_years, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else `Level masl`)) + 
     ggplot2::ylim(min, max) +
@@ -384,10 +385,10 @@ utils_zoom_level_plot <- function(
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T)  +
     
-    ggplot2::geom_point(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = forcats::fct_inorder(factor(Year_Real))), size = line_size, na.rm = T) +
+    ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
+    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
     
-    ggplot2::scale_colour_manual(name = "Levels", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), unique(level_years$Year_Real)[2:legend_length]), values = colours[1:legend_length], na.translate = FALSE) +
+    ggplot2::scale_colour_manual(name = "Levels", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), rev(unique(level_years$Year_Real)[1:legend_length-1])), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(na.omit(level_years$Year_Real))[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if they exist for this station
