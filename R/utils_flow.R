@@ -120,6 +120,7 @@ utils_flow_data <- function(
 	  single_year <- single_year[,c(1, 13, 3:11, 2, 12)]
 	  flow_years <- dplyr::bind_rows(flow_years, single_year)
 	}
+	flow_years$Year_Real <- as.numeric(flow_years$Year_Real)
 	
 	#TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
 	if (filter==TRUE){

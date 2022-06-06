@@ -163,6 +163,7 @@ utils_level_data <- function(
     single_year <- single_year[,c(1, 14, 4:12, 2, 3, 13)]
     level_years <- dplyr::bind_rows(level_years, single_year)
   }
+  level_years$Year_Real <- as.numeric(level_years$Year_Real)
   
   #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
   if (filter==TRUE){
@@ -174,8 +175,9 @@ utils_level_data <- function(
       range <- max(level_df$Max, na.rm=TRUE) - min(level_df$Min, na.rm=TRUE)
       
       for (i in unique(recent_level$dayofyear)) {
-        max <- max(dplyr::filter(level_df, dayofyear==i)$Max, na.rm=TRUE) + range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
-        min <- min(dplyr::filter(level_df, dayofyear==i)$Min, na.rm=TRUE) - range - if (datum_na==FALSE) as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) else 0
+        dat <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
+        max <- max(dplyr::filter(level_df, dayofyear==i)$Max, na.rm=TRUE) + range - if (datum_na==FALSE) dat else 0
+        min <- min(dplyr::filter(level_df, dayofyear==i)$Min, na.rm=TRUE) - range - if (datum_na==FALSE) dat else 0
         
         try (recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA)
       }
