@@ -319,7 +319,9 @@ utils_zoom_level_plot <- function(
   
   #remove the current year level and level masl as it's already in zoom_data at better resolution
   level_years[level_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(level_years$Level),]$Level <- NA
-  level_years[level_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(level_years$`Level masl`),]$`Level masl` <- NA
+  if (datum_na==FALSE){
+    level_years[level_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(level_years$`Level masl`),]$`Level masl` <- NA
+  }
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(level_years$Min, na.rm=TRUE)

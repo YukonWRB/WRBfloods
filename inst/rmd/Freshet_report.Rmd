@@ -533,7 +533,7 @@ for(i in stations) {
               cat("  \n### Flow (last", zoom_days, " days)  \n")
               zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
                                                    flow_years = flowDataList[[n]][[2]],
-                                                   zoom_data = flowDataList[[n]][[2]],
+                                                   zoom_data = flowDataList[[n]][[3]],
                                                    zoom_days = zoom_days)
               tryCatch({
                 print(zoomFlowPlot)
