@@ -508,7 +508,7 @@ colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day"
 
 # Hydrometric Station Data and Graphs
 
-Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Government of Canada. Return intervals are plotted where available, represting two, ten, one hundred and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 1928 (CGVD28).
+Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Government of Canada. Return intervals are plotted where available, representing two, ten, one hundred, and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 1928 (CGVD28).
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
 datums <- unique(stationInfo$Datum)
