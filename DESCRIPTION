@@ -34,7 +34,9 @@ Imports:
     rvest,
     R.utils,
     hablar,
-    foreign
+    foreign,
+    pdftools,
+    qpdf
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
