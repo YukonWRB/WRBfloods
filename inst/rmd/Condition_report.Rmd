@@ -54,19 +54,21 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       ID = i,
       `Start year` = NA,
       `Today percent historic` = NA,
-      Level = NA,
+      `Level m`= NA,
       `Level masl` = NA,
       Yesterday = NA,
-      `24 hr change` = NA,
+      `24 hr change cm` = NA,
       `Two days ago` = NA,
+      `48 hr change cm` = NA,
       `Three days ago` = NA,
-      `72 hr change` = NA,
+      `72 hr change cm` = NA,
       `Four days ago` = NA,
       `Five days ago` = NA,
       `Six days ago` = NA,
       `One week ago` = NA,
-      `One week change` = NA,
-      `Datum elevation` = NA
+      `One week change cm` = NA,
+      `Datum elevation m` = NA,
+      `Current return period` <- "NA"
     )
     
     levelData <- data.frame() #Created to standardize the eventual output of this code block
@@ -114,6 +116,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           Yesterday = yesterdayLevel,
           `24 hr change cm` = (todayLevel - yesterdayLevel)*100,
           `Two days ago` = twodayLevel,
+          `48 hr change cm` = (todayLevel-twodayLevel)*100,
           `Three days ago` = threedayLevel,
           `72 hr change cm` = (todayLevel - threedayLevel)*100,
           `Four days ago` = fourdayLevel,
@@ -121,7 +124,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           `Six days ago` = sixdayLevel,
           `One week ago` = weekLevel,
           `One week change cm` = (todayLevel - weekLevel)*100,
-          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
+          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
+          `Current return period` <- "NA"
         )
       } else {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
@@ -146,6 +150,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           Yesterday = yesterdayLevel,
           `24 hr change cm` = (todayLevelmasl - yesterdayLevel)*100,
           `Two days ago` = twodayLevel,
+          `48 hr change cm` = (todayLevelmasl - twodayLevel)*100,
           `Three days ago` = threedayLevel,
           `72 hr change cm` = (todayLevelmasl - threedayLevel)*100,
           `Four days ago` = fourdayLevel,
@@ -153,7 +158,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           `Six days ago` = sixdayLevel,
           `One week ago` = weekLevel,
           `One week change cm` = (todayLevelmasl - weekLevel)*100,
-          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
+          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
+          `Current return period` <- "NA"
         )
       }
       
@@ -161,35 +167,34 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       if (i %in% data$return_periods$ID==TRUE) {
         
         stn <- dplyr::filter(data$return_periods, ID == i)
-
+        
         tbl$`Current return period` <- 
           if (todayLevel < stn$twoyear) {
             "<2 year"
           } else if (todayLevel < stn$fiveyear) {
-              "2 to 5 year"
-            } else if (todaylevel < stn$tenyear) {
-              "5 to 10 year" 
-            } else if (todayLevel < stn$twentyyear) {
-              "10 to 20 year" 
-            } else if (todayLevel < stn$fiftyyear) {
-              "20 to 50 year" 
-            } else if (todayLevel < stn$onehundredyear) {
-              "50 to 100 year"
-            } else if (todayLevel < stn$twohundredyear) {
-              "100 to 200 year"
-            } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
-              "> 200 year" 
-            } else if (todayLevel < stn$fivehundredyear) {
-              "200 to 500 year" 
-            } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
-              ">500 year"
-            } else if (todayLevel < stn$thousandyear) {
-              "500 to 1000 year"
-            } else if (todayLevel > stn$thousandyear) {
-              ">1000 year"
-            }
-      } else {
-        "NA"
+            "2 to 5 year"
+          } else if (todaylevel < stn$tenyear) {
+            "5 to 10 year" 
+          } else if (todayLevel < stn$twentyyear) {
+            "10 to 20 year" 
+          } else if (todayLevel < stn$fiftyyear) {
+            "20 to 50 year" 
+          } else if (todayLevel < stn$onehundredyear) {
+            "50 to 100 year"
+          } else if (todayLevel < stn$twohundredyear) {
+            "100 to 200 year"
+          } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
+            "> 200 year" 
+          } else if (todayLevel < stn$fivehundredyear) {
+            "200 to 500 year" 
+          } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
+            ">500 year"
+          } else if (todayLevel < stn$thousandyear) {
+            "500 to 1000 year"
+          } else if (todayLevel > stn$thousandyear) {
+            ">1000 year"
+          }
+      } else { tbl$`Current return period` <- "NA"
       }
       
     }, error=function(e) {}
@@ -419,7 +424,7 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   cat("  \n# Summary of levels and level changes \n")
-  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 11, 18)]
+  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 10, 12, 19)] #select columns of level m, level masl, today percent historic, 24 hour change, 48 hour change, 72 hour change, current return period.
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
   names(levelTable) <- gsub("X", "", names(levelTable))
@@ -428,9 +433,10 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
   names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
   
-  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "Current percent historic", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "Current percent historic", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "Current return period")
   
   levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
+  levelTable$`48 hr change (cm)` <- round(levelTable$`48 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
   
   knitr::kable(levelTable, digits=2)

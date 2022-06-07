@@ -249,8 +249,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
             } else if (todayLevel > stn$thousandyear) {
               ">1000 year"
             }
-      } else {
-        "NA"
+      } else { tbl$`Current return period` <- "NA"
       }
       
     }, error=function(e) {}
