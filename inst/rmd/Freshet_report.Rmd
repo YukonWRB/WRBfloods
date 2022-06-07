@@ -125,7 +125,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       `Six days ago` = NA,
       `One week ago` = NA,
       `One week change cm` = NA,
-      `Datum elevation m` = NA
+      `Datum elevation m` = NA,
+      `Current return period` = "NA"
     )
     
     levelData <- data.frame() #Created to standardize the eventual output of this code block
@@ -181,7 +182,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           `Six days ago` = sixdayLevel,
           `One week ago` = weekLevel,
           `One week change cm` = (todayLevel - weekLevel)*100,
-          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
+          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
+          `Current return period` = "NA"
         )
       } else {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
@@ -213,7 +215,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           `Six days ago` = sixdayLevel,
           `One week ago` = weekLevel,
           `One week change cm` = (todayLevelmasl - weekLevel)*100,
-          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4])))
+          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
+          `Current return period` = "NA"
         )
       }
       

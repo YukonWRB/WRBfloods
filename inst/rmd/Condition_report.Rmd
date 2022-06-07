@@ -232,6 +232,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         Yesterday = NA,
         `24 hr change` = NA,
         `Two days ago` = NA,
+        `48 hr change` = NA,
         `Three days ago` = NA,
         `72 hr change` = NA,
         `Four days ago` = NA,
@@ -285,6 +286,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           Yesterday = yesterdayFlow,
           `24 hr change` = todayFlow - yesterdayFlow,
           `Two days ago` = twodayFlow,
+          `48 hr change` = todayFlow-twodayFlow,
           `Three days ago` = threedayFlow,
           `72 hr change` = todayFlow - threedayFlow,
           `Four days ago` = fourdayFlow,
@@ -443,8 +445,6 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 }
 ```
 
-
-
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
@@ -453,7 +453,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
   
-  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16)] #0.0001 is the indicator for lake stations, remove those
+  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17)] #0.0001 is the indicator for lake stations, remove those
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
