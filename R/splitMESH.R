@@ -25,7 +25,14 @@ pdftext <- pdftools::pdf_text(targetFile)
 titles <- stringr::str_extract(pdftext, "[0-9]{2}[A-Za-z]{2}[0-9]{3}") #gets the station codes
   
 for (i in 1:length(titles)){
-  qpdf::pdf_subset(targetFile, pages = i, output=paste0(output, "/", titles[i], ".pdf"))
+  name <- stringr::str_to_title(tidyhydat::hy_stations(titles[i])$STATION_NAME)
+  name <- gsub("River", "R", name)
+  name <- gsub("Lake", "Lk", name)
+  name <- gsub("Creek", "Ck", name)
+  name <- gsub("Kilometre", "km", name)
+  name <- gsub("Kilometer", "km", name)
+  name <- gsub("Highway", "Hwy", name)
+  qpdf::pdf_subset(targetFile, pages = i, output=paste0(output, "/", titles[i], "_", name, ".pdf"))
 }
   
 } #End of function
