@@ -80,14 +80,14 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         station_number = i,
         select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
         level_zoom = level_zoom,
-        filter = FALSE
+        filter = TRUE
       )
       } else{
         levelData <- utils_level_data(
         station_number = i,
         select_years = lubridate::year(Sys.Date()),
         level_zoom = level_zoom,
-        filter = FALSE
+        filter = TRUE
       )
       }
       
