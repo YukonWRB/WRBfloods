@@ -310,9 +310,10 @@ utils_zoom_level_plot <- function(
   #check if datum exists
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
+  extra_days <- round(zoom_days/3, 0)
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
-  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+1, 'days')
+  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+extra_days, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   level_years <- level_years[level_years$Date %in% ribbon_dates,]
   
@@ -334,6 +335,9 @@ utils_zoom_level_plot <- function(
   level_years$DateOnly <- level_years$Date
   level_years$Date <- as.POSIXct(format(level_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
   
+  #Correct the time to Yukon Time
+  zoom_data$Date <- zoom_data$Date-7*60*60
+  
   #Separate out the ribbon data prior to removing NA rows and combining data.frames
   ribbon <- level_years[level_years$Year_Real==2022,] %>% dplyr::select(c(Date, Max, Min, QP25, QP75))
   
@@ -351,8 +355,8 @@ utils_zoom_level_plot <- function(
   legend_length <- length(unique(na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
-  # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
-  #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
+  last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
+                    time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
   # x axis settings
   #TODO: sort out the timezone problem
@@ -381,7 +385,7 @@ utils_zoom_level_plot <- function(
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone="UTC") +
-    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date())) +
+    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date()+extra_days)) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
     
