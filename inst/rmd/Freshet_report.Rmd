@@ -1,6 +1,6 @@
 ---
 title: "`r params$report_name`"
-subtitle: "`r paste0(format(Sys.Date(), '%B %e'),', ', lubridate::year(Sys.Date()), ' at ', lubridate::hour(as.POSIXct(format((Sys.time()), tz='America/Whitehorse'))), ':00')`"
+subtitle: "`r paste0(format(Sys.Date(), '%B %e'), ', ', lubridate::year(Sys.Date()), ' at ', format(Sys.time(), '%I %p', tz='America/Whitehorse'))`"
 date: 
 output: 
   word_document:
