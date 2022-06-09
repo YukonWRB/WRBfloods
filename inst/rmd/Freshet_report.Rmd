@@ -86,8 +86,8 @@ In consideration of access to the data, the User also agrees that in no event wi
 links <- vector() #make it to fill it next
 community <- vector()
 for (i in stations){
-  newlink <- dplyr::filter(data$spatial_stns, `WSC ID` == i)$Link
-  newcommunity <- dplyr::filter(data$spatial_stns, `WSC ID`==i)$`nrst community`
+  newlink <- dplyr::filter(data$spatial_stns, `WSC_ID` == i)$Link
+  newcommunity <- dplyr::filter(data$spatial_stns, `WSC_ID`==i)$`nrst_community`
   links <- c(links, newlink)
   community <- c(community, newcommunity)
 }
@@ -109,27 +109,27 @@ if (report_type %in% c("Both", "Level", "both", "level")){
     
     #tryCatch special here: the error function was not creating any output, so the error data.frames are created here. If successful, it is overwritten in the for loop, otherwise the error output is already created for each i
     tbl <- data.frame(
-      `Station name` = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else{paste0(i, " DOES NOT EXIST")},
+      Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else{paste0(i, " DOES NOT EXIST")},
       ID = i,
       `Start year level` = NA,
-      `Today percent historic` = NA,
-      `Level m`= NA,
-      `Level masl` = NA,
+      Today_percent_historic = NA,
+      Level_m= NA,
+      Level_masl = NA,
       Yesterday = NA,
-      `24 hr change cm` = NA,
-      `Two days ago` = NA,
-      `Three days ago` = NA,
-      `72 hr change cm` = NA,
-      `Four days ago` = NA,
-      `Five days ago` = NA,
-      `Six days ago` = NA,
-      `One week ago` = NA,
-      `One week change cm` = NA,
-      `Datum elevation m` = NA,
-      `Current return period` = "NA"
+      `24_hr_change_cm` = NA,
+      Two_days_ago = NA,
+      Three_days_ago = NA,
+      `72_hr_change_cm` = NA,
+      Four_days_ago = NA,
+      Five_days_ago = NA,
+      Six_days_ago = NA,
+      One_week_ago = NA,
+      One_week_change_cm = NA,
+      Datum_elevation_m = NA,
+      Current_return_period = "NA"
     )
     
-    levelData <- data.frame() #Created to standardize the eventual output of this code block
+    levelData <- list() #Created to standardize the eventual output of this code block
     
     tryCatch ({
       #Get the level data
@@ -155,7 +155,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       if (datum_na==TRUE) {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
         todayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        todayLevelmasl <- NA
+        todayLevelmasl <- as.numeric(NA)
         todayLevelPerc <- round(levelData[[2]]$prctile[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())], 1)
         yesterdayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 1) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         twodayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
@@ -166,57 +166,57 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         weekLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 7) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         
         tbl <- data.frame(
-          `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
+          Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
           `Start year level` = startYearLevel,
-          `Today percent historic` = todayLevelPerc,
-          `Level m`= todayLevel,
-          `Level masl` = todayLevelmasl,
+          Today_percent_historic = todayLevelPerc,
+          Level_m= todayLevel,
+          Level_masl = todayLevelmasl,
           Yesterday = yesterdayLevel,
-          `24 hr change cm` = (todayLevel - yesterdayLevel)*100,
-          `Two days ago` = twodayLevel,
-          `Three days ago` = threedayLevel,
-          `72 hr change cm` = (todayLevel - threedayLevel)*100,
-          `Four days ago` = fourdayLevel,
-          `Five days ago` = fivedayLevel,
-          `Six days ago` = sixdayLevel,
-          `One week ago` = weekLevel,
-          `One week change cm` = (todayLevel - weekLevel)*100,
-          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
-          `Current return period` = "NA"
+          `24_hr_change_cm` = (todayLevel - yesterdayLevel)*100,
+          Two_days_ago = twodayLevel,
+          Three_days_ago = threedayLevel,
+          `72_hr_change_cm` = (todayLevel - threedayLevel)*100,
+          Four_days_ago = fourdayLevel,
+          Five_days_ago = fivedayLevel,
+          Six_days_ago = sixdayLevel,
+          One_week_ago = weekLevel,
+          One_week_change_cm = (todayLevel - weekLevel)*100,
+          Datum_elevation_m = as.numeric(NA),
+          Current_return_period = "NA"
         )
       } else {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
         todayLevel <- levelData[[2]]$`Level`[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        todayLevelmasl <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        todayLevelmasl <- levelData[[2]]$Level_masl[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         todayLevelPerc <- round(levelData[[2]]$prctile[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())], 1)
-        yesterdayLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 1) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        twodayLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        threedayLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fourdayLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 4) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fivedayLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 5) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        sixdayLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 6) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        weekLevel <- levelData[[2]]$`Level masl`[levelData[[2]]$Date == (Sys.Date() - 7) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        yesterdayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 1) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        twodayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        threedayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        fourdayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 4) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        fivedayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 5) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        sixdayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 6) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        weekLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 7) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         
         tbl <- data.frame(
-          `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
+          Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
           `Start year level` = startYearLevel,
-          `Today percent historic` = todayLevelPerc,
-          `Level m`= todayLevel,
-          `Level masl` = todayLevelmasl,
+          Today_percent_historic = todayLevelPerc,
+          Level_m= todayLevel,
+          Level_masl = todayLevelmasl,
           Yesterday = yesterdayLevel,
-          `24 hr change cm` = (todayLevelmasl - yesterdayLevel)*100,
-          `Two days ago` = twodayLevel,
-          `Three days ago` = threedayLevel,
-          `72 hr change cm` = (todayLevelmasl - threedayLevel)*100,
-          `Four days ago` = fourdayLevel,
-          `Five days ago` = fivedayLevel,
-          `Six days ago` = sixdayLevel,
-          `One week ago` = weekLevel,
-          `One week change cm` = (todayLevelmasl - weekLevel)*100,
-          `Datum elevation m` = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
-          `Current return period` = "NA"
+          `24_hr_change_cm` = (todayLevelmasl - yesterdayLevel)*100,
+          Two_days_ago = twodayLevel,
+          Three_days_ago = threedayLevel,
+          `72_hr_change_cm` = (todayLevelmasl - threedayLevel)*100,
+          Four_days_ago = fourdayLevel,
+          Five_days_ago = fivedayLevel,
+          Six_days_ago = sixdayLevel,
+          One_week_ago = weekLevel,
+          One_week_change_cm = (todayLevelmasl - weekLevel)*100,
+          Datum_elevation_m = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
+          Current_return_period = "NA"
         )
       }
       
@@ -226,12 +226,12 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         
        stn <- dplyr::filter(data$return_periods, ID == i)
       
-        tbl$`Current return period` <- 
+        tbl$Current_return_period <- 
           if (todayLevel < stn$twoyear) {
             "<2 year"
           } else if (todayLevel < stn$fiveyear) {
               "2 to 5 year"
-            } else if (todaylevel < stn$tenyear) {
+            } else if (todayLevel < stn$tenyear) {
               "5 to 10 year" 
             } else if (todayLevel < stn$twentyyear) {
               "10 to 20 year" 
@@ -252,7 +252,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
             } else if (todayLevel > stn$thousandyear) {
               ">1000 year"
             }
-      } else { tbl$`Current return period` <- "NA"
+      } else { tbl$Current_return_period <- "NA"
       }
       
     }, error=function(e) {}
@@ -282,20 +282,20 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
     flowData <- data.frame() #Created to standardize the eventual output of this code block
     
     tbl <- data.frame( #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
-        `Station name` = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
+        Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
         ID = i,
         `Start year flow` = NA,
         `Current flow`= 0.0001, #this is a number so that lake stations can be removed after.
         `Current percent historic` = NA,
         Yesterday = NA,
         `24 hr change` = NA,
-        `Two days ago` = NA,
-        `Three days ago` = NA,
+        Two_days_ago = NA,
+        Three_days_ago = NA,
         `72 hr change` = NA,
-        `Four days ago` = NA,
-        `Five days ago` = NA,
-        `Six days ago` = NA,
-        `One week ago` = NA,
+        Four_days_ago = NA,
+        Five_days_ago = NA,
+        Six_days_ago = NA,
+        One_week_ago = NA,
         `One week change` = NA
       )    
     
@@ -335,20 +335,20 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         weekFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 7) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
         
         tbl <- data.frame(
-          `Station name` = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
+          Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
           `Start year flow` = startYearFlow,
           `Current flow` = todayFlow,
           `Current percent historic` = todayFlowPerc,
           Yesterday = yesterdayFlow,
           `24 hr change` = todayFlow - yesterdayFlow,
-          `Two days ago` = twodayFlow,
-          `Three days ago` = threedayFlow,
+          Two_days_ago = twodayFlow,
+          Three_days_ago = threedayFlow,
           `72 hr change` = todayFlow - threedayFlow,
-          `Four days ago` = fourdayFlow,
-          `Five days ago` = fivedayFlow,
-          `Six days ago` = sixdayFlow,
-          `One week ago` = weekFlow,
+          Four_days_ago = fourdayFlow,
+          Five_days_ago = fivedayFlow,
+          Six_days_ago = sixdayFlow,
+          One_week_ago = weekFlow,
           `One week change` = todayFlow - weekFlow
         )
       }, error = function(e) {}
@@ -378,9 +378,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 starts <- vector()
 for (i in 1:length(stations)){
   if (report_type %in% c("Both", "Flow", "both", "flow")){
-    x <- paste0("Level: ", levelStart[i,], " Flow: ", flowStart[i,])
+    x <- paste0("Level: ", levelStart[i,], " <br> Flow: ", flowStart[i,])
     starts <- c(starts, x)
-    starts <- gsub(" Flow:", " <br> Flow:", starts) #inserts a line break so level/flow end up on two lines
   } else {
     x <- levelStart[i,]
     starts <- c(starts, x)
@@ -712,7 +711,7 @@ if (meteogram==TRUE){
 
   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
   
-  for (i in meteos$`Meteogram code`) {
+  for (i in meteos$`Meteogram_code`) {
     cat("  \n")
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
