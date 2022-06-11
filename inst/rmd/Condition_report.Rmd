@@ -435,8 +435,8 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
     all6hr[[j]] <- subset(dplyr::bind_rows(all6hr[[j]], subsequent[[i]][[j-1]]), Station %in% stations)
   }
 }
-}, error=function(e){ cat("The HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")
-})#End of trycatch for getting precip data
+}, error=function(e){}
+)#End of trycatch for getting precip data
 
 ```
 
@@ -493,8 +493,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
 # Accumulated Precipitation Above Stations
 
 ```{r Precip table, echo=FALSE, results='asis', message=FALSE}
-
-precip12hr <- all6hr[[1]]$PR_mm + all6hr[[2]]$PR_mm
+tryCatch({
+  precip12hr <- all6hr[[1]]$PR_mm + all6hr[[2]]$PR_mm
 
 precip24hr <- precip12hr + all6hr[[3]]$PR_mm + all6hr[[4]]$PR_mm
 
@@ -522,6 +522,7 @@ precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day", "Two days", "Three days", "Four days", "One week")
   
   knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time for selected stations."))
+}error = function(e){cat("  \nThe HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
 ```
 
 \newpage
@@ -681,7 +682,8 @@ tryCatch({
 
 ```{r Meteograms, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8.8, fig.width=7.5, results='asis'}
 if (meteogram==TRUE){
-  cat("  \n# Weather forecast(s)  \n")
+  tryCatch({
+    cat("  \n# Weather forecast(s)  \n")
 
   stationCoords <- sf::st_as_sf(stationInfo, coords=c("Longitude", "Latitude"), crs=4326) %>% 
     sf::st_set_crs(4326) %>%
@@ -711,6 +713,9 @@ if (meteogram==TRUE){
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
   }
+  }, error=function(e) {
+    cat(" \nMeteograms could not be fetched or incorporated into the report. Check the URL https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/ to confirm it is accessible, if yes contact Ghislain for a fix.")
+  })
 }
 
 ```
