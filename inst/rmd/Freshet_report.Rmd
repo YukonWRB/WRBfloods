@@ -171,7 +171,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           ID = i,
           `Start year level` = startYearLevel,
           Today_percent_historic = todayLevelPerc,
-          Level_m= todayLevel,
+          Level_m = todayLevel,
           Level_masl = todayLevelmasl,
           Yesterday = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {yesterdayLevel},
           `24_hr_change_cm` = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {(todayLevel - yesterdayLevel)*100},
@@ -206,7 +206,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           ID = i,
           `Start year level` = startYearLevel,
           Today_percent_historic = todayLevelPerc,
-          Level_m= todayLevel,
+          Level_m = todayLevel,
           Level_masl = todayLevelmasl,
           Yesterday = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {yesterdayLevel},
           `24_hr_change_cm` = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {(todayLevelmasl - yesterdayLevel)*100},
@@ -289,19 +289,19 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
     tbl <- data.frame( #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
         Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
         ID = i,
-        `Start year flow` = NA,
-        `Current flow`= 0.0001, #this is a number so that lake stations can be removed after.
-        `Current percent historic` = NA,
+        Start_year_flow = NA,
+        Current_flow= 0.0001, #this is a number so that lake stations can be removed after.
+        Current_percent_historic = NA,
         Yesterday = NA,
-        `24 hr change` = NA,
+        `24_hr_change` = NA,
         Two_days_ago = NA,
         Three_days_ago = NA,
-        `72 hr change` = NA,
+        `72_hr_change` = NA,
         Four_days_ago = NA,
         Five_days_ago = NA,
         Six_days_ago = NA,
         One_week_ago = NA,
-        `One week change` = NA
+        One_week_change = NA
       )    
     
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
@@ -341,20 +341,20 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
-          `Start year flow` = startYearFlow,
-          `Current flow` = todayFlow,
-          `Current percent historic` = todayFlowPerc,
+          Start_year_flow = startYearFlow,
+          Current_flow = todayFlow,
+          Current_percent_historic = todayFlowPerc,
           Yesterday = if(length(yesterdayFlow)==0) {as.numeric(NA)} else {yesterdayFlow},
-          `24 hr change` = if(length(yesterdayFlow)==0) {as.numeric(NA)} else {todayFlow - yesterdayFlow},
+          `24_hr_change` = if(length(yesterdayFlow)==0) {as.numeric(NA)} else {todayFlow - yesterdayFlow},
           Two_days_ago = if(length(twodayFlow)==0) {as.numeric(NA)} else {twodayFlow},
-          `48 hr change` = if(length(twodayFlow)==0) {as.numeric(NA)} else {todayFlow-twodayFlow},
+          `48_hr_change` = if(length(twodayFlow)==0) {as.numeric(NA)} else {todayFlow-twodayFlow},
           Three_days_ago = if(length(threedayFlow)==0) {as.numeric(NA)} else {threedayFlow},
-          `72 hr change` = if(length(threedayFlow)==0) {as.numeric(NA)} else {todayFlow - threedayFlow},
+          `72_hr_change` = if(length(threedayFlow)==0) {as.numeric(NA)} else {todayFlow - threedayFlow},
           Four_days_ago = if(length(fourdayFlow)==0) {as.numeric(NA)} else {fourdayFlow},
           Five_days_ago = if(length(fivedayFlow)==0) {as.numeric(NA)} else {fivedayFlow},
           Six_days_ago = if(length(sixdayFlow)==0) {as.nueric(NA)} else {sixdayFlow},
           One_week_ago = if(length(weekFlow)==0) {as.numeric(NA)} else {weekFlow},
-          `One week change` = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
+          One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
         )
       }, error = function(e) {}
       ) #End of tryCatch for station existence
@@ -420,7 +420,7 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   cat("  \n# Summary of water level conditions in communities  \n")
   cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
-  levelTable <- dplyr::bind_rows(levelInfo)[c(5,6, 8, 11, 18)]
+  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 8, 12, 19)]
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
   names(levelTable) <- gsub("X", "", names(levelTable))
@@ -468,18 +468,20 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
     flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
     
-  flowTable <- dplyr::filter(flowTable, Current.flow != 0.0001)[c(1, 5, 6, 8, 11, 16, 17)] #0.0001 is the indicator for lake stations, remove those
+  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 12, 18)] #0.0001 is the indicator for lake stations, remove those
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
   
-  flowTable$`Current percent historic` <- round(flowTable$`Current percent historic`, 0)
+  flowTable$Current_percent_historic <- round(flowTable$Current_percent_historic, 0)
   
   flowTable <- dplyr::relocate(flowTable, Community)
   
+    colnames(flowTable) <- c("Community", "Station name (number)", "Current flow (m^3^/s)", "Current percent of historic max", "24 hr change (m^3^/s)", "72 hr change (m^3^/s)")
+  
   print(knitr::kable(flowTable, digits=1))
   
-  if (NA %in% stringr::str_detect(flowTable$`Current flow`, "NA")){
+  if (NA %in% stringr::str_detect(flowTable$Current_flow, "NA")){
     cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
   }
 }
