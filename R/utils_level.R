@@ -359,25 +359,24 @@ utils_zoom_level_plot <- function(
                     time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
   # x axis settings
-  #TODO: sort out the timezone problem
   if (zoom_days > 14) {
     date_breaks="1 week"
     labs = scales::label_date("%b %d")
   } else if (zoom_days > 7) {
-      date_breaks="2 days"
-      labs=scales::label_date("%b %d")
+    date_breaks="2 days"
+    labs=scales::label_date("%b %d")
   } else if (zoom_days > 3){
-        date_breaks="1 days"
-        labs=scales::label_date("%b %d")
+    date_breaks="1 days"
+    labs=scales::label_date("%b %d")
   } else if (zoom_days > 2) {
-        date_breaks="12 hours"
-        labs=scales::label_date("%b %d %H:%M")
+    date_breaks="12 hours"
+    labs=scales::label_date("%b %d %H:%M")
   } else if (zoom_days > 1){
-        date_breaks="4 hours"
-        labs=scales::label_date("%b %d %H:%M")
+    date_breaks="4 hours"
+    labs=scales::label_date("%b %d %H:%M")
   } else if (zoom_days ==1) {
-        date_breaks="1 hour"
-        labs=scales::label_time(format="%b %d %H:%M")
+    date_breaks="1 hour"
+    labs=scales::label_time(format="%b %d %H:%M")
   }
   
   # Generate the plot

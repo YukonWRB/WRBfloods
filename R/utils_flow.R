@@ -289,7 +289,6 @@ legend_length <- length(unique(na.omit(flow_years[flow_years$DateOnly %in% point
 #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
 # x axis settings
-#TODO: sort out the timezone problem
 if (zoom_days > 14) {
   date_breaks="1 week"
   labs = scales::label_date("%b %d")
@@ -314,9 +313,8 @@ if (zoom_days > 14) {
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = "Flow (" ~m^3* "/s)") +
-    #TODO: adjust the scale breaks when n days <14
-    ggplot2::scale_x_datetime(date_breaks = "1 week", labels = scales::date_format("%b %d")) +
-    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date()+extra_years)) +
+    ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone="UTC") +
+    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date()+extra_days)) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
     
