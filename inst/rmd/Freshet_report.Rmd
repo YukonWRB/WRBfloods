@@ -155,16 +155,16 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       #Level data processing
       if (datum_na==TRUE) {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        todayLevelmasl <- as.numeric(NA)
-        todayLevelPerc <- round(levelData[[2]]$prctile[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())], 1)
-        yesterdayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 1) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        twodayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        threedayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fourdayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 4) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fivedayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 5) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        sixdayLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 6) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        weekLevel <- levelData[[2]]$Level[levelData[[2]]$Date == (Sys.Date() - 7) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        todayLevel <- levelData[[3]]$Level[levelData[[3]]$Date == max(levelData[[3]]$Date)]
+        todayLevelmasl <- NA
+        todayLevelPerc <- round((todayLevel-levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (levelData[[2]]$Max[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())] - levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
+        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 + 60*30), by = "5 min"))$Level)
+        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 + 60*30), by = "5 min"))$Level)
+        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 + 60*30), by = "5 min"))$Level)
+        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 + 60*30), by = "5 min"))$Level)
+        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 + 60*30), by = "5 min"))$Level)
+        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 + 60*30), by = "5 min"))$Level)
+        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 + 60*30), by = "5 min"))$Level)
         
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
@@ -173,31 +173,33 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           Today_percent_historic = todayLevelPerc,
           Level_m= todayLevel,
           Level_masl = todayLevelmasl,
-          Yesterday = yesterdayLevel,
-          `24_hr_change_cm` = (todayLevel - yesterdayLevel)*100,
-          Two_days_ago = twodayLevel,
-          Three_days_ago = threedayLevel,
-          `72_hr_change_cm` = (todayLevel - threedayLevel)*100,
-          Four_days_ago = fourdayLevel,
-          Five_days_ago = fivedayLevel,
-          Six_days_ago = sixdayLevel,
-          One_week_ago = weekLevel,
-          One_week_change_cm = (todayLevel - weekLevel)*100,
+          Yesterday = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {yesterdayLevel},
+          `24_hr_change_cm` = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {(todayLevel - yesterdayLevel)*100},
+          Two_days_ago = if(length(twodayLevel)==0) {as.numeric(NA)} else {twodayLevel},
+          `48_hr_change_cm` = if(length(twodayLevel)==0) {as.numeric(NA)} else {(todayLevel-twodayLevel)*100},
+          Three_days_ago = if(length(threedayLevel)==0) {as.numeric(NA)} else {threedayLevel},
+          `72_hr_change_cm` = if(length(threedayLevel)==0) {as.numeric(NA)} else {(todayLevel - threedayLevel)*100},
+          Four_days_ago = if(length(fourdayLevel)==0) {as.numeric(NA)} else {fourdayLevel},
+          Five_days_ago = if(length(fivedayLevel)==0) {as.numeric(NA)} else {fivedayLevel},
+          Six_days_ago = if(length(sixdayLevel)==0) {as.numeric(NA)} else {sixdayLevel},
+          One_week_ago = if(length(weekLevel)==0) {as.numeric(NA)} else {weekLevel},
+          One_week_change_cm = if(length(weekLevel)==0) {as.numeric(NA)} else {(todayLevel - weekLevel)*100},
           Datum_elevation_m = as.numeric(NA),
-          Current_return_period = "NA"
+          Current_return_period = "NA",
+          Flag = "NA"
         )
       } else {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- levelData[[2]]$`Level`[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        todayLevelmasl <- levelData[[2]]$Level_masl[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        todayLevelPerc <- round(levelData[[2]]$prctile[levelData[[2]]$Date == Sys.Date() & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())], 1)
-        yesterdayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 1) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        twodayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        threedayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 2) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fourdayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 4) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fivedayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 5) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        sixdayLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 6) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        weekLevel <- levelData[[2]]$Level_masl[levelData[[2]]$Date == (Sys.Date() - 7) & levelData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        todayLevel <- levelData[[3]]$Level[levelData[[3]]$Date == max(levelData[[3]]$Date)]
+        todayLevelmasl <- levelData[[3]]$Level_masl[levelData[[3]]$Date == max(levelData[[3]]$Date)]
+        todayLevelPerc <- round((todayLevelmasl-levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (levelData[[2]]$Max[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())] - levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
+        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 + 60*30), by = "5 min"))$Level_masl)
+        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 + 60*30), by = "5 min"))$Level_masl)
+        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 + 60*30), by = "5 min"))$Level_masl)
+        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 + 60*30), by = "5 min"))$Level_masl)
+        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 + 60*30), by = "5 min"))$Level_masl)
+        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 + 60*30), by = "5 min"))$Level_masl)
+        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*30), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 + 60*30), by = "5 min"))$Level_masl)
         
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
@@ -206,18 +208,20 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           Today_percent_historic = todayLevelPerc,
           Level_m= todayLevel,
           Level_masl = todayLevelmasl,
-          Yesterday = yesterdayLevel,
-          `24_hr_change_cm` = (todayLevelmasl - yesterdayLevel)*100,
-          Two_days_ago = twodayLevel,
-          Three_days_ago = threedayLevel,
-          `72_hr_change_cm` = (todayLevelmasl - threedayLevel)*100,
-          Four_days_ago = fourdayLevel,
-          Five_days_ago = fivedayLevel,
-          Six_days_ago = sixdayLevel,
-          One_week_ago = weekLevel,
-          One_week_change_cm = (todayLevelmasl - weekLevel)*100,
-          Datum_elevation_m = as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))),
-          Current_return_period = "NA"
+          Yesterday = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {yesterdayLevel},
+          `24_hr_change_cm` = if(length(yesterdayLevel)==0) {as.numeric(NA)} else {(todayLevelmasl - yesterdayLevel)*100},
+          Two_days_ago = if(length(twodayLevel)==0) {as.numeric(NA)} else {twodayLevel},
+          `48_hr_change_cm` = if(length(twodayLevel)==0) {as.numeric(NA)} else {(todayLevelmasl-twodayLevel)*100},
+          Three_days_ago = if(length(threedayLevel)==0) {as.numeric(NA)} else {threedayLevel},
+          `72_hr_change_cm` = if(length(threedayLevel)==0) {as.numeric(NA)} else {(todayLevelmasl - threedayLevel)*100},
+          Four_days_ago = if(length(fourdayLevel)==0) {as.numeric(NA)} else {fourdayLevel},
+          Five_days_ago = if(length(fivedayLevel)==0) {as.numeric(NA)} else {fivedayLevel},
+          Six_days_ago = if(length(sixdayLevel)==0) {as.numeric(NA)} else {sixdayLevel},
+          One_week_ago = if(length(weekLevel)==0) {as.numeric(NA)} else {weekLevel},
+          One_week_change_cm = if(length(weekLevel)==0) {as.numeric(NA)} else {(todayLevelmasl - weekLevel)*100},
+          Datum_elevation_m = as.numeric(NA),
+          Current_return_period = "NA",
+          Flag = "NA"
         )
       }
       
@@ -323,17 +327,16 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         }
         
         #Flow data processing
-        startYearFlow <-
-          min(lubridate::year(flowData[[1]]$Date), na.rm = T)
-        todayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == Sys.Date() & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        todayFlowPerc <- flowData[[2]]$prctile[flowData[[2]]$Date == Sys.Date() & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        yesterdayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 1) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        twodayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 2) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        threedayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 3) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fourdayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 4) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        fivedayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 5) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        sixdayFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 6) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
-        weekFlow <- flowData[[2]]$Flow[flowData[[2]]$Date == (Sys.Date() - 7) & flowData[[2]]$Year_Real == lubridate::year(Sys.Date())]
+        startYearFlow <- min(lubridate::year(flowData[[1]]$Date), na.rm = T)
+        todayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)]
+        todayFlowPerc <- round((todayFlow-flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) /   (flowData[[2]]$Max[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())] - flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
+        yesterdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 + 60*30), by = "5 min"))$Flow)
+        twodayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 + 60*30), by = "5 min"))$Flow)
+        threedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 + 60*30), by = "5 min"))$Flow)
+        fourdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*96 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*96 + 60*30), by = "5 min"))$Flow)
+        fivedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*120 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*120 + 60*30), by = "5 min"))$Flow)
+        sixdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*144 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*144 + 60*30), by = "5 min"))$Flow)
+        weekFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*168 - 60*30), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*168 + 60*30), by = "5 min"))$Flow)
         
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
@@ -341,16 +344,17 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           `Start year flow` = startYearFlow,
           `Current flow` = todayFlow,
           `Current percent historic` = todayFlowPerc,
-          Yesterday = yesterdayFlow,
-          `24 hr change` = todayFlow - yesterdayFlow,
-          Two_days_ago = twodayFlow,
-          Three_days_ago = threedayFlow,
-          `72 hr change` = todayFlow - threedayFlow,
-          Four_days_ago = fourdayFlow,
-          Five_days_ago = fivedayFlow,
-          Six_days_ago = sixdayFlow,
-          One_week_ago = weekFlow,
-          `One week change` = todayFlow - weekFlow
+          Yesterday = if(length(yesterdayFlow)==0) {as.numeric(NA)} else {yesterdayFlow},
+          `24 hr change` = if(length(yesterdayFlow)==0) {as.numeric(NA)} else {todayFlow - yesterdayFlow},
+          Two_days_ago = if(length(twodayFlow)==0) {as.numeric(NA)} else {twodayFlow},
+          `48 hr change` = if(length(twodayFlow)==0) {as.numeric(NA)} else {todayFlow-twodayFlow},
+          Three_days_ago = if(length(threedayFlow)==0) {as.numeric(NA)} else {threedayFlow},
+          `72 hr change` = if(length(threedayFlow)==0) {as.numeric(NA)} else {todayFlow - threedayFlow},
+          Four_days_ago = if(length(fourdayFlow)==0) {as.numeric(NA)} else {fourdayFlow},
+          Five_days_ago = if(length(fivedayFlow)==0) {as.numeric(NA)} else {fivedayFlow},
+          Six_days_ago = if(length(sixdayFlow)==0) {as.nueric(NA)} else {sixdayFlow},
+          One_week_ago = if(length(weekFlow)==0) {as.numeric(NA)} else {weekFlow},
+          `One week change` = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
         )
       }, error = function(e) {}
       ) #End of tryCatch for station existence
