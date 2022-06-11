@@ -466,9 +466,12 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
   
-    flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
-    
-  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 12, 18)] #0.0001 is the indicator for lake stations, remove those
+  flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
+
+  
+  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 11, 16, 19)] #0.0001 is the indicator for lake stations, remove those
+  
+
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
@@ -477,9 +480,9 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   flowTable <- dplyr::relocate(flowTable, Community)
   
-    colnames(flowTable) <- c("Community", "Station name (number)", "Current flow (m^3^/s)", "Current percent of historic max", "24 hr change (m^3^/s)", "72 hr change (m^3^/s)")
+    colnames(flowTable) <- c("Community", "Station name (number)", "Current flow (m^3^/s)", "Current percent of historic max", "24 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
   
-  print(knitr::kable(flowTable, digits=1))
+  print(knitr::kable(flowTable, digits=0))
   
   if (NA %in% stringr::str_detect(flowTable$Current_flow, "NA")){
     cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")

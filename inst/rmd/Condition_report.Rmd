@@ -369,7 +369,6 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```
 
 ```{r Get Precip data, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-#TODO: make a tryCatch here in case it fails... plus tryCatch elsewhere too.
 tryCatch({
   #Get the links from the web, turn it into a usable table
 htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/") #6 hour products for first day
