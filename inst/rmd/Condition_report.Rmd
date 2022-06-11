@@ -369,8 +369,9 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 ```
 
 ```{r Get Precip data, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-
-#Get the links from the web, turn it into a usable table
+#TODO: make a tryCatch here in case it fails... plus tryCatch elsewhere too.
+tryCatch({
+  #Get the links from the web, turn it into a usable table
 htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/") #6 hour products for first day
 nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
   rvest::html_attr("href")
@@ -434,6 +435,8 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
     all6hr[[j]] <- subset(dplyr::bind_rows(all6hr[[j]], subsequent[[i]][[j-1]]), Station %in% stations)
   }
 }
+}, error=function(e){ cat("The HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")
+})#End of trycatch for getting precip data
 
 ```
 

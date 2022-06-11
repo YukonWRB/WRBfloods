@@ -567,7 +567,8 @@ for(i in stations) {
 ```
 
 ```{r Precipitation, echo=FALSE, results='asis', message=FALSE}
-if (precip == TRUE){
+tryCatch({
+  if (precip == TRUE){
   #Get the links from the web, turn it into a usable table
   htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/") #6 hour products for first day
   nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
@@ -661,7 +662,9 @@ if (precip == TRUE){
   
   colnames(precipTable) <- c("Station name", "ID", "One day", "Three days", "One week")
   
-  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time for where available."))
+  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time where available."))
+}, error=function(e) {"Precipitation shapefiles could not be downloaded of processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem."})
+
   
   
   # And now for some images
