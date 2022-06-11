@@ -567,8 +567,9 @@ for(i in stations) {
 ```
 
 ```{r Precipitation, echo=FALSE, results='asis', message=FALSE}
-tryCatch({
   if (precip == TRUE){
+tryCatch({
+
   #Get the links from the web, turn it into a usable table
   htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/") #6 hour products for first day
   nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
@@ -662,8 +663,7 @@ tryCatch({
   
   colnames(precipTable) <- c("Station name", "ID", "One day", "Three days", "One week")
   
-  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time where available."))
-}, error=function(e) {"Precipitation shapefiles could not be downloaded of processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem."})
+  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time where available."))}, error=function(e) {cat("  \nPrecipitation shapefiles could not be downloaded of processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
 
   
   
@@ -703,7 +703,8 @@ tryCatch({
 
 ```{r Meteograms, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8.8, fig.width=7.5, results='asis'}
 if (meteogram==TRUE){
-  cat("  \n# Weather forecast(s)  \n")
+  tryCatch({
+     cat("  \n# Weather forecast(s)  \n")
 
   stationCoords <- sf::st_as_sf(stationInfo, coords=c("Longitude", "Latitude"), crs=4326) %>% 
     sf::st_set_crs(4326) %>%
@@ -725,7 +726,8 @@ if (meteogram==TRUE){
     cat("  \n")
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
-  }
+  }}, error=function(e) {cat("  \nMeteograms could not be fetched or processed. Check the URL https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/ to confirm it is accessible, and if yes contact Ghislain for troubleshooting.")}
+  ) #End of tryCatch
 }
 
 ```

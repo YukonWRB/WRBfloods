@@ -681,7 +681,8 @@ tryCatch({
 
 ```{r Meteograms, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8.8, fig.width=7.5, results='asis'}
 if (meteogram==TRUE){
-  cat("  \n# Weather forecast(s)  \n")
+  tryCatch({
+    cat("  \n# Weather forecast(s)  \n")
 
   stationCoords <- sf::st_as_sf(stationInfo, coords=c("Longitude", "Latitude"), crs=4326) %>% 
     sf::st_set_crs(4326) %>%
@@ -711,6 +712,9 @@ if (meteogram==TRUE){
     imager::load.image(paste0("https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/", dateTimeUTC, "00_054@007_E1_", i, "_I_NAEFS@EPSGRAMS_tt@surf@nt@pr@ws@surf_360.png")) %>% plot(axes=FALSE)
     cat("  \n")
   }
+  }, error=function(e) {
+    cat(" \nMeteograms could not be fetched or incorporated into the report. Check the URL https://collaboration.cmc.ec.gc.ca/cmc/ensemble/data2/combine/images/ to confirm it is accessible, if yes contact Ghislain for a fix.")
+  })
 }
 
 ```
