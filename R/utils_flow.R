@@ -81,7 +81,11 @@ utils_flow_data <- function(
 	                                   ifelse(lubridate::month(Date) <= 2,
 	                                          lubridate::yday(Date),
 	                                          lubridate::yday(Date) - 1),
-	                                   lubridate::yday(Date))) %>%
+	                                   lubridate::yday(Date)))
+	
+	current.year <- dplyr::filter(flow_df, Date == seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) #set the current year aside
+
+	flow_df <- dplyr::filter(flow_df, Date!=seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) %>% #remove current year so it doesn't mess with the stats
 	  dplyr::filter(!is.na(Flow)) %>% #remove na values in Flow so that stats::ecdf can work below - they're added in after
 	  dplyr::group_by(dayofyear) %>%
 	  dplyr::mutate(prctile = (stats::ecdf(Flow)(Flow)) * 100) %>%
@@ -101,6 +105,25 @@ utils_flow_data <- function(
 	                QP10 = quantile(Flow, 0.10, na.rm = TRUE)) %>%
 	  dplyr::ungroup() %>%
 	  hablar::rationalize() #rationalize replaces Inf values with NA
+	
+	current.year$Max <- as.numeric(NA)
+	current.year$Min <- as.numeric(NA)
+	current.year$QP90 <- as.numeric(NA)
+	current.year$QP75 <- as.numeric(NA)
+	current.year$QP50 <- as.numeric(NA)
+	current.year$QP25 <- as.numeric(NA)
+	current.year$QP10 <- as.numeric(NA)
+	
+	for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats
+	  current.year$Max[current.year$dayofyear==i] <- unique(flow_df$Max[flow_df$dayofyear==i])
+	  current.year$Min[current.year$dayofyear==i] <- unique(flow_df$Min[flow_df$dayofyear==i])
+	  current.year$QP90[current.year$dayofyear==i] <- unique(flow_df$QP90[flow_df$dayofyear==i])
+	  current.year$QP75[current.year$dayofyear==i] <- unique(flow_df$QP75[flow_df$dayofyear==i])
+	  current.year$QP50[current.year$dayofyear==i] <- unique(flow_df$QP50[flow_df$dayofyear==i])
+	  current.year$QP25[current.year$dayofyear==i] <- unique(flow_df$QP25[flow_df$dayofyear==i])
+	  current.year$QP10[current.year$dayofyear==i] <- unique(flow_df$QP10[flow_df$dayofyear==i])
+	}
+	flow_df <- dplyr::bind_rows(flow_df, current.year)#add in the current year
 	
 	last_year <- lubridate::year(max(flow_df$Date))
 	

@@ -97,7 +97,11 @@ utils_level_data <- function(
                                        ifelse(lubridate::month(Date) <= 2,
                                               lubridate::yday(Date),
                                               lubridate::yday(Date) - 1),
-                                       lubridate::yday(Date))) %>%
+                                       lubridate::yday(Date)))
+    
+    current.year <- dplyr::filter(level_df, Date == seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) #set the current year aside
+    
+      level_df <- dplyr::filter(level_df, Date!=seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) %>% #remove current year so it doesn't mess with the stats
       dplyr::filter(!is.na(Level)) %>%  #remove na values in Level so that stats::ecdf can work below - they're added in after
       dplyr::group_by(dayofyear) %>%
       dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100) %>%
@@ -117,13 +121,37 @@ utils_level_data <- function(
                     QP10 = quantile(Level, 0.10, na.rm = TRUE)) %>%
       dplyr::ungroup() %>%
       hablar::rationalize() #rationalize replaces Inf values with NA
+      
+      current.year$Max <- as.numeric(NA)
+      current.year$Min <- as.numeric(NA)
+      current.year$QP90 <- as.numeric(NA)
+      current.year$QP75 <- as.numeric(NA)
+      current.year$QP50 <- as.numeric(NA)
+      current.year$QP25 <- as.numeric(NA)
+      current.year$QP10 <- as.numeric(NA)
+      
+      for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats
+        current.year$Max[current.year$dayofyear==i] <- unique(level_df$Max[level_df$dayofyear==i])
+        current.year$Min[current.year$dayofyear==i] <- unique(level_df$Min[level_df$dayofyear==i])
+        current.year$QP90[current.year$dayofyear==i] <- unique(level_df$QP90[level_df$dayofyear==i])
+        current.year$QP75[current.year$dayofyear==i] <- unique(level_df$QP75[level_df$dayofyear==i])
+        current.year$QP50[current.year$dayofyear==i] <- unique(level_df$QP50[level_df$dayofyear==i])
+        current.year$QP25[current.year$dayofyear==i] <- unique(level_df$QP25[level_df$dayofyear==i])
+        current.year$QP10[current.year$dayofyear==i] <- unique(level_df$QP10[level_df$dayofyear==i])
+      }
+      level_df <- dplyr::bind_rows(level_df, current.year)#add in the current year
+      
   } else {
     level_df <- level_df %>%
       dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
                                        ifelse(lubridate::month(Date) <= 2,
                                               lubridate::yday(Date),
                                               lubridate::yday(Date) - 1),
-                                       lubridate::yday(Date))) %>%
+                                       lubridate::yday(Date)))
+    
+    current.year <- dplyr::filter(level_df, Date == seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) #set the current year aside
+    
+      level_df <- dplyr::filter(level_df, Date!=seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) %>% #remove current year so it doesn't mess with the stats
       dplyr::filter(!is.na(Level_masl)) %>%  #remove na values in Level_masl so that stats::ecdf can work below - they're added in after
       dplyr::group_by(dayofyear) %>%
       dplyr::mutate(prctile = (stats::ecdf(Level_masl)(Level_masl)) * 100) %>%
@@ -143,6 +171,25 @@ utils_level_data <- function(
                     QP10 = quantile(Level_masl, 0.10, na.rm = TRUE)) %>%
       dplyr::ungroup() %>%
       hablar::rationalize() #rationalize replaces Inf values with NA
+      
+      current.year$Max <- as.numeric(NA)
+      current.year$Min <- as.numeric(NA)
+      current.year$QP90 <- as.numeric(NA)
+      current.year$QP75 <- as.numeric(NA)
+      current.year$QP50 <- as.numeric(NA)
+      current.year$QP25 <- as.numeric(NA)
+      current.year$QP10 <- as.numeric(NA)
+      
+      for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats
+        current.year$Max[current.year$dayofyear==i] <- unique(level_df$Max[level_df$dayofyear==i])
+        current.year$Min[current.year$dayofyear==i] <- unique(level_df$Min[level_df$dayofyear==i])
+        current.year$QP90[current.year$dayofyear==i] <- unique(level_df$QP90[level_df$dayofyear==i])
+        current.year$QP75[current.year$dayofyear==i] <- unique(level_df$QP75[level_df$dayofyear==i])
+        current.year$QP50[current.year$dayofyear==i] <- unique(level_df$QP50[level_df$dayofyear==i])
+        current.year$QP25[current.year$dayofyear==i] <- unique(level_df$QP25[level_df$dayofyear==i])
+        current.year$QP10[current.year$dayofyear==i] <- unique(level_df$QP10[level_df$dayofyear==i])
+      }
+      level_df <- dplyr::bind_rows(level_df, current.year)#add in the current year
   }
   
   last_year <- lubridate::year(max(level_df$Date))
