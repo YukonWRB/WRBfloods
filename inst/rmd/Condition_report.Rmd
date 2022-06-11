@@ -522,7 +522,7 @@ precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day", "Two days", "Three days", "Four days", "One week")
   
   knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time for selected stations."))
-}error = function(e){cat("  \nThe HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
+}, error = function(e){cat("  \nThe HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
 ```
 
 \newpage
