@@ -1,0 +1,73 @@
+#' Download and process ECCC flow or level data
+#' 
+#' Neatly packages the output from utils_flow_data into a list with an element for each station requested. 
+#'
+#' @param stations The stations for which you want to download data.
+#' @param level_flow Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both".
+#' @param years The years for which you want easy-to-plot daily means. The resultant data.frame includes calculated To simplify plotting multiple years together, each daily mean data point is dated as if it was collected in the year 2022. Individual years are identified by the Year_Real column. Defaults to the current year.
+#' @param recent_percentile Should the percent of historical max flows be calculated for recent data? Adds about 30 seconds per station.
+#' @param filter Should the recent_data (if requested) be filtered to remove spikes? Adds about a minute of processing time per station.
+#'
+#' @return A list with an element for each station requested.
+#' @export
+#'
+ECCCdata <- function(
+    stations, 
+    level_flow = "Both",
+    years = lubridate::year(Sys.Date()), 
+    recent_percentile = FALSE,
+    filter = TRUE
+) {
+  
+  data <- list()
+  if (level_flow %in% c("Both", "both")){
+    for (i in stations){
+      level <- list()
+      tryCatch({
+        level <- utils_level_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
+        names(level) <- c("historical", "requested_years", "recent_5_minute")
+      }, error=function(e) {}
+      )
+      
+      flow <- list()
+      tryCatch({
+        flow <- utils_flow_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
+        names(flow) <- c("historical", "requested_years", "recent_5_minute")
+      }, error=function(e) {}
+      )
+      
+      data[[i]] <- list(level=level, flow=flow)
+    }
+  }
+  
+  if (level_flow %in% c("level", "Level")){
+    for (i in stations){
+      level <- list()
+      tryCatch({
+        level <- utils_level_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
+        names(level) <- c("historical", "requested_years", "recent_5_minute")
+      }, error=function(e) {}
+      )
+      data[[i]] <- list(level=level)
+      
+    }
+  }
+  
+  if (level_flow %in% c("flow", "Flow")){
+    for (i in stations){
+      
+      flow <- list()
+      tryCatch({
+        flow <- utils_flow_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
+        names(flow) <- c("historical", "requested_years", "recent_5_minute")
+      }, error=function(e) {}
+      )
+      
+      data[[i]] <- list(level=level, flow=flow)
+    }
+  }
+  
+  return(data)
+}
+
+  
