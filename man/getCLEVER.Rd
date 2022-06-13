@@ -7,17 +7,20 @@
 getCLEVER(
   stations = c("10AA006", "10AB001", "10AA004", "10AA001", "10AD002", "99FK100",
     "09AE003", "09AA013"),
-  output_folder = "choose"
+  output_folder = "choose",
+  types = c("PDF", "CSV")
 )
 }
 \arguments{
 \item{stations}{The station(s) for which you want CLEVER pdf outputs.}
 
 \item{output_folder}{The folder where you wish to have the outputs saved.}
+
+\item{types}{The type of files you wish to download. Graphical products are in PDF format, but the underlying data is available as a CSV. Can specify one or both.}
 }
 \value{
 A .pdf file for each station you specify, unless that station cannot be found.
 }
 \description{
-Download CLEVER outputs
+Downloads model outputs from BC's CLEVER model.
 }
