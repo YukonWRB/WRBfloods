@@ -484,7 +484,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   print(knitr::kable(flowTable, digits=0))
   
-  if (NA %in% stringr::str_detect(flowTable$Current_flow, "NA")){
+  if (NA %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
     cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
   }
 }

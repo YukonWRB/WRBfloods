@@ -190,7 +190,7 @@ floodReport <-
       
       ### Generate a report for Pelly/Ross###
       if (report_name %in% c("Pelly", "pelly", "Pelly Crossing", "Pelly crossing", "Ross", "ross", "Ross River", "ross river", "Ross river", "Ross/Pelly", "Pelly/Ross", "Pelly River/Ross River", "Pelly/Ross River", "Ross/Pelly River", "Pelly/Ross Rivers", "Ross/Pelly Rivers")) {
-        stations <-c ("09BA001", "09BB001", "09BC001", "09BC002", "09BC004")
+        stations <- c("09BA001", "09BB001", "09BC001", "09BC002", "09BC004")
         preset_extras <- "09BC002:2013,1992,1972"
         
         if (preset_extra_years==TRUE){
