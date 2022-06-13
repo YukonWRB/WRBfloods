@@ -27,4 +27,6 @@ getCLEVER <- function(stations = c("10AA006", "10AB001", "10AA004", "10AA001" ,"
       print(paste0("Station ", i, " could not be downloaded. Are you sure it exists?"))
     })
   }
+  print(paste0("CLEVER outputs for stations ", paste0(stations, collapse=" "), " have been downloaded and placed in this folder: ", output, "."))
+  
 }
