@@ -14,6 +14,7 @@
 #' @param select_years The years for which you want data.
 #' @param flow_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
+#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical flows calculated? Adds about 30 seconds.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
@@ -23,7 +24,8 @@ utils_flow_data <- function(
 	station_number,
 	select_years,
 	flow_zoom = TRUE,
-	filter=FALSE
+	filter = FALSE,
+	recent_prctile = FALSE
 ){
 	
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
@@ -113,6 +115,7 @@ utils_flow_data <- function(
 	current.year$QP50 <- as.numeric(NA)
 	current.year$QP25 <- as.numeric(NA)
 	current.year$QP10 <- as.numeric(NA)
+	current.year$prctile <- as.numeric(NA)
 	
 	for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats
 	  current.year$Max[current.year$dayofyear==i] <- unique(flow_df$Max[flow_df$dayofyear==i])
@@ -122,6 +125,7 @@ utils_flow_data <- function(
 	  current.year$QP50[current.year$dayofyear==i] <- unique(flow_df$QP50[flow_df$dayofyear==i])
 	  current.year$QP25[current.year$dayofyear==i] <- unique(flow_df$QP25[flow_df$dayofyear==i])
 	  current.year$QP10[current.year$dayofyear==i] <- unique(flow_df$QP10[flow_df$dayofyear==i])
+	  current.year$prctile[current.year$dayofyear==i] <- ((current.year$Flow[current.year$dayofyear==i] - unique(flow_df$Min[flow_df$dayofyear==i])) / (unique(flow_df$Max[flow_df$dayofyear==i]) - unique(flow_df$Min[flow_df$dayofyear==i]))) * 100
 	}
 	flow_df <- dplyr::bind_rows(flow_df, current.year)#add in the current year
 	
@@ -144,6 +148,22 @@ utils_flow_data <- function(
 	  flow_years <- dplyr::bind_rows(flow_years, single_year)
 	}
 	flow_years$Year_Real <- as.numeric(flow_years$Year_Real)
+	
+	#Calculate a percent historic for the 5 minute data too
+	recent_flow$prct_max_hist <- as.numeric(NA)
+	if(recent_prctile == TRUE){
+	  recent_flow <- recent_flow %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
+	                                                                  ifelse(lubridate::month(Date) <=2,
+	                                                                         lubridate::yday(Date),
+	                                                                         lubridate::yday(Date) - 1),
+	                                                                  lubridate::yday(Date)))
+	  
+	  for (i in 1:nrow(recent_flow)){
+	    recent_flow$prct_max_hist[i] <- ((recent_flow$Flow[i] - unique(flow_df$Min[flow_df$dayofyear == recent_flow$dayofyear[i]])) / (unique(flow_df$Max[flow_df$dayofyear == recent_flow$dayofyear[i]]) - unique(flow_df$Min[flow_df$dayofyear == recent_flow$dayofyear[i]]))) * 100
+	  }
+	}
+	  
+
 	
 	#TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
 	if (filter==TRUE){

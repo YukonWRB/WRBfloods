@@ -4,7 +4,13 @@
 \alias{utils_flow_data}
 \title{Download flow data}
 \usage{
-utils_flow_data(station_number, select_years, flow_zoom = TRUE, filter = FALSE)
+utils_flow_data(
+  station_number,
+  select_years,
+  flow_zoom = TRUE,
+  filter = FALSE,
+  recent_prctile = FALSE
+)
 }
 \arguments{
 \item{station_number}{The WSC station for which you want data.}
@@ -14,6 +20,8 @@ utils_flow_data(station_number, select_years, flow_zoom = TRUE, filter = FALSE)
 \item{flow_zoom}{TRUE/FALSE, should high-res data be kept for zoomed-in plots?}
 
 \item{filter}{TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.}
+
+\item{recent_prctile}{TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical flows calculated? Adds about 30 seconds.}
 }
 \value{
 A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.

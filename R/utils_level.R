@@ -14,6 +14,7 @@
 #' @param select_years The year(s) for which you want data
 #' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
+#' #' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
@@ -23,7 +24,8 @@ utils_level_data <- function(
     station_number,
     select_years,
     level_zoom = TRUE,
-    filter = FALSE
+    filter = FALSE,
+    recent_prctile = FALSE
 ){
   
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
@@ -179,6 +181,7 @@ utils_level_data <- function(
       current.year$QP50 <- as.numeric(NA)
       current.year$QP25 <- as.numeric(NA)
       current.year$QP10 <- as.numeric(NA)
+      current.year$prctile <- as.numeric(NA)
       
       for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats
         current.year$Max[current.year$dayofyear==i] <- unique(level_df$Max[level_df$dayofyear==i])
@@ -188,6 +191,7 @@ utils_level_data <- function(
         current.year$QP50[current.year$dayofyear==i] <- unique(level_df$QP50[level_df$dayofyear==i])
         current.year$QP25[current.year$dayofyear==i] <- unique(level_df$QP25[level_df$dayofyear==i])
         current.year$QP10[current.year$dayofyear==i] <- unique(level_df$QP10[level_df$dayofyear==i])
+        current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
       }
       level_df <- dplyr::bind_rows(level_df, current.year)#add in the current year
   }
@@ -211,6 +215,21 @@ utils_level_data <- function(
     level_years <- dplyr::bind_rows(level_years, single_year)
   }
   level_years$Year_Real <- as.numeric(level_years$Year_Real)
+  
+  #Calculate a percent historic for the 5 minute data too
+  recent_level$prct_max_hist <- as.numeric(NA)
+  if (recent_prctile == TRUE){
+    recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
+                                                                      ifelse(lubridate::month(Date) <=2,
+                                                                             lubridate::yday(Date),
+                                                                             lubridate::yday(Date) - 1),
+                                                                      lubridate::yday(Date)))
+    
+    for (i in 1:nrow(recent_level)){
+      recent_level$prct_max_hist[i] <- ((recent_level$Level[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+    }
+  }
+
   
   #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
   if (filter==TRUE){

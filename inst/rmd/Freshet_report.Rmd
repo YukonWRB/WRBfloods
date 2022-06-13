@@ -139,14 +139,16 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           station_number = i,
           select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
           level_zoom = TRUE,
-          filter = TRUE
+          filter = TRUE,
+          recent_prctile = FALSE
         )
       } else{
         levelData <- utils_level_data(
           station_number = i,
           select_years = lubridate::year(Sys.Date()),
           level_zoom = TRUE,
-          filter = TRUE
+          filter = TRUE,
+          recent_prctile = FALSE
         )
       }
       
@@ -315,14 +317,16 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
             station_number = i,
             select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
             flow_zoom = TRUE,
-            filter=TRUE
+            filter = TRUE,
+            recent_prctile = FALSE
           )
         } else {
           flowData <- utils_flow_data(
             station_number = i,
             select_years = lubridate::year(Sys.Date()),
             flow_zoom = TRUE,
-            filter=TRUE
+            filter = TRUE,
+            recent_prctile = FALSE
           )
         }
         
