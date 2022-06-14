@@ -222,29 +222,27 @@ utils_level_data <- function(
   }
   level_years$Year_Real <- as.numeric(level_years$Year_Real)
   
-  #Calculate a percent historic for the 5 minute data too
-  recent_level$prct_max_hist <- as.numeric(NA) #Make the column
-  if (recent_prctile == TRUE){
+  #Calculate a percent historic for the 5 minute data 
+  if (level_zoom==TRUE){
     recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
                                                                       ifelse(lubridate::month(Date) <=2,
                                                                              lubridate::yday(Date),
                                                                              lubridate::yday(Date) - 1),
-                                                                      lubridate::yday(Date)))
+                                                                      lubridate::yday(Date))) %>%
+      dplyr::mutate(prct_max_hist= as.numeric(NA))
     
-    for (i in 1:nrow(recent_level)){
-      if (datum_na==TRUE){
-        recent_level$prct_max_hist[i] <- ((recent_level$Level[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
-      } else {
-        recent_level$prct_max_hist[i] <- ((recent_level$Level_masl[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+    if (recent_prctile == TRUE){  
+      for (i in 1:nrow(recent_level)){
+        if (datum_na==TRUE){
+          recent_level$prct_max_hist[i] <- ((recent_level$Level[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+        } else {
+          recent_level$prct_max_hist[i] <- ((recent_level$Level_masl[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+        }
       }
     }
-  }
-
-  
-  #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
-  if (filter==TRUE){
-    #Filter out data spikes
-    if (level_zoom == TRUE){ #If requesting zoomed-in plot, remove spikes by using historical (and thus QC'd) daily min/max values.
+    
+    #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
+    if (filter==TRUE){ #Filter out data spikes
       level_df$dayofyear <- lubridate::yday(level_df$Date)  #repopulate dayofyear in level_df in case of leap year
       recent_level$dayofyear <- lubridate::yday(recent_level$Date) # create matching column
       

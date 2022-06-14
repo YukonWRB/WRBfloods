@@ -16,7 +16,7 @@
 #' @export
 #'
 
-levelPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_days=30, recent_percentile=FALSE, save_path="choose") {
+levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filter=FALSE, save_path="choose") {
   
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
@@ -29,7 +29,7 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom
       select_years = years,
       level_zoom = zoom,
       filter = filter,
-      recent_prctile = recent_percentile
+      recent_prctile = FALSE
     )
   
   # Plot the data
