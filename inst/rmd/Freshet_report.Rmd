@@ -440,7 +440,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
   
-  knitr::kable(levelTable, digits=2)
+  knitr::kable(levelTable, digits=2, align="c")
 }
 ```
 
@@ -484,7 +484,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
     colnames(flowTable) <- c("Community", "Station name (number)", "Current flow (m^3^/s)", "Current percent of historic max", "24 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
   
-  print(knitr::kable(flowTable, digits=0))
+  print(knitr::kable(flowTable, digits=0, align="c"))
   
   if (NA %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
     cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
@@ -696,7 +696,7 @@ tryCatch({
   
   colnames(precipTable) <- c("Station name", "ID", "One day", "Three days", "One week")
   
-  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time where available."))}, error=function(e) {cat("  \nPrecipitation shapefiles could not be downloaded of processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
+  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time where available."), align="c")}, error=function(e) {cat("  \nPrecipitation shapefiles could not be downloaded of processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
 
   
   
@@ -839,7 +839,7 @@ for (i in datums){
 
 
 
-knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
+knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:", align="c")
 
 cat("**Notes:**  \n")
 for (i in 1:length(notes)){
