@@ -72,7 +72,7 @@ utils_level_data <- function(
                        .groups = "drop")
     level_real_time <- level_real_time[,-c(2,3)]
     
-    if (datum_na == FALSE){ #Generate new column to hold masl levels
+    if (datum_na == FALSE){ #Generate new column to hold masl levels in level_real_time and recent_level
       level_real_time$Level_masl <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
       recent_level$Level_masl <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
     } else {
@@ -223,7 +223,7 @@ utils_level_data <- function(
   level_years$Year_Real <- as.numeric(level_years$Year_Real)
   
   #Calculate a percent historic for the 5 minute data too
-  recent_level$prct_max_hist <- as.numeric(NA)
+  recent_level$prct_max_hist <- as.numeric(NA) #Make the column
   if (recent_prctile == TRUE){
     recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
                                                                       ifelse(lubridate::month(Date) <=2,

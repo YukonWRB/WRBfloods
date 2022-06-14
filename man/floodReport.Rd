@@ -10,6 +10,7 @@ floodReport(
   extra_years = NULL,
   preset_extra_years = FALSE,
   report_type = "Both",
+  plot_titles = FALSE,
   level_zoom = TRUE,
   flow_zoom = NULL,
   zoom_days = 30,
@@ -19,36 +20,71 @@ floodReport(
 )
 }
 \arguments{
-\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.}
+\item{report_name}{The name of the report you wish to generate. One of
+"Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly",
+"Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for
+an overview of the territory with fewer stations). Most minor spelling
+variations should work. Leave as NULL (default) if specifying stations
+under custom_report_stations.}
 
-\item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
+\item{custom_report_stations}{A user-specified list of stations for which to
+generate a report. Defaults to NULL to operate on the report_name parameter
+instead. Input must be a character vector of station IDs, as in
+c("station1", "station2"). Reminder: you can create a character vector from
+a column of a data.frame, and you can reference an environment object
+instead of typing in the vector!}
 
-\item{extra_years}{Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years}
+\item{extra_years}{Specify extra years of data to plot for one or multiple
+stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if
+more than one station. Can be used together with preset_extra_years}
 
-\item{preset_extra_years}{TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.}
+\item{preset_extra_years}{TRUE or FALSE, defaults to FALSE. Can be used
+together with extra_years.}
 
-\item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
+\item{report_type}{What do you want your report to contain? Choose from
+"Level", "Flow", or "Both." Defaults to Both.}
 
-\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.}
+\item{plot_titles}{Do you want the plots to have a title?}
 
-\item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.}
+\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or
+FALSE. Defaults to TRUE.}
 
-\item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
+\item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL,
+defaults to NULL which copies the setting for level_zoom.}
 
-\item{meteogram}{Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.}
+\item{zoom_days}{The number of days to plot for zoomed in level plots.
+Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
-\item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.}
+\item{meteogram}{Should meteograms relevant to the stations in the report be
+generated? TRUE or FALSE.}
 
-\item{save_path}{The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.}
+\item{image_path}{The path to the directory (folder) containing the images
+you wish to include. Default to NULL to not include any extra images. Set
+to "choose" to navigate to the folder, or enter the folder path directly as
+a character string. Some reports automatically include web-hosted images,
+do not include them here.}
+
+\item{save_path}{The path to the directory (folder) where the report should
+be saved. Default "choose" lets you select your folder, otherwise enter the
+path as a character string.}
 }
 \value{
-A flood report containing flow and water level information in Microsoft Word format.
+A flood report containing flow and water level information in
+Microsoft Word format.
 }
 \description{
-This function generates condition reports for preset or user-specified Water Survey of Canada stations. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
+This function generates condition reports for preset or user-specified Water
+Survey of Canada stations. In addition to water level and flow, precipitation
+data, still images, and weather forecasts are incorporated. The output is a
+Microsoft Word document on a Yukon Government template.
 }
 \details{
-To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+To download real-time WSC data, you MUST have your hydat credentials loaded
+into your .Renviron profile as values pairs of WS_USRNM=”your_username” and
+WS_PWD=”your_password”.
 
-To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
+To download WSC images, you MUST have your ECCC credentials loaded into your
+.Renviron profile as value pairs of ECCCUSER="your_username" and
+ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word
+document for more information.
 }

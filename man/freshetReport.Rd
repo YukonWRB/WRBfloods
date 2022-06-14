@@ -10,6 +10,7 @@ freshetReport(
   extra_years = NULL,
   preset_extra_years = FALSE,
   report_type = "Level",
+  plot_titles = FALSE,
   level_zoom = TRUE,
   flow_zoom = NULL,
   zoom_days = 20,
@@ -30,6 +31,8 @@ freshetReport(
 \item{preset_extra_years}{TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.}
 
 \item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
+
+\item{plot_titles}{Do you want the plots to have a title?}
 
 \item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.}
 

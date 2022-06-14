@@ -20,6 +20,8 @@
 #' 
 #' @param report_type What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
 #' 
+#' @param plot_titles Do you want the plots to have a title?
+#' 
 #' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.
 #' 
 #' @param flow_zoom Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.
@@ -48,6 +50,7 @@ freshetReport <-
            extra_years = NULL,
            preset_extra_years = FALSE,
            report_type = "Level",
+           plot_titles = FALSE,
            level_zoom = TRUE,
            flow_zoom = NULL,
            zoom_days = 20,
@@ -100,7 +103,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Yukon Freshet Report ", Sys.Date()),
+          output_file = paste0(Sys.Date(), "_Yukon-Hydrometric-Conditions-Report", ),
           output_dir = save_path,
           params = list(
             stations = stations,
@@ -113,7 +116,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of territory report
       
@@ -143,7 +147,8 @@ freshetReport <-
               zoom_days = zoom_days,
               precip = precip,
               meteogram = meteogram,
-              WSC_images = WSC_images)
+              WSC_images = WSC_images,
+              plot_titles = plot_titles)
           )
       } #End of Dawson report
       
@@ -173,7 +178,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Carmacks report
       
@@ -203,7 +209,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Carmacks report
       
@@ -233,7 +240,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Pelly report
       
@@ -263,7 +271,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Old Crow report
     
@@ -293,7 +302,8 @@ freshetReport <-
           zoom_days = zoom_days,
           precip = precip,
           meteogram = meteogram,
-          WSC_images = WSC_images)
+          WSC_images = WSC_images,
+          plot_titles = plot_titles)
       )
     } #End of Liard/Watson report
 
@@ -323,7 +333,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Mayo/Stewart report
       
@@ -353,7 +364,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Southern Lakes report
     
@@ -383,7 +395,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
         )
       } #End of Whitehorse/Laberge report
     }
@@ -414,7 +427,8 @@ freshetReport <-
             zoom_days = zoom_days,
             precip = precip,
             meteogram = meteogram,
-            WSC_images = WSC_images)
+            WSC_images = WSC_images,
+            plot_titles = plot_titles)
           )
       } #End of custom report
     }
