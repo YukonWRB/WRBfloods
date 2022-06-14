@@ -17,6 +17,7 @@ params:
   precip: precip
   meteogram: meteogram
   WSC_images: WSC_images
+  plot_titles: plot_titles
 ---
 
 ```{r setup, include=FALSE}
@@ -25,9 +26,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat.ws)
 ```
 
-Record-setting May 1 snowpack in many Yukon watersheds creates a high potential for flooding driven by spring snowmelt in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in lakes and rivers. 
+Record-setting May 1 snowpack in many Yukon watersheds creates a high potential for flooding driven by spring snowmelt in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in lakes and rivers.
 
-The Government of Yukon partners with the Government of Canada to maintain maintains water monitoring stations at locations across the Yukon, allowing the tracking of water water levels and flow rates in areas that inform potential flood risk for communities.
+The Government of Yukon partners with the Government of Canada to maintain water monitoring stations at locations across the Yukon, allowing the tracking of water levels and flow rates in areas that inform potential flood risk for communities.
 
 This report provides current conditions, outlook, and technical data.
 
@@ -67,19 +68,17 @@ This report provides current conditions, outlook, and technical data.
 
 # Contact
 
-For water level and flow conditions: Water Resources Branch: [waterlevels\@yukon.ca](mailto:waterlevels@yukon.ca){.email} 
+For water level and flow conditions: Water Resources Branch: [waterlevels\@yukon.ca](mailto:waterlevels@yukon.ca){.email}
 
 For flood response: Yukon Emergency Measures Organization: 867-667-5220 or [EMO.yukon\@yukon.ca](mailto:EMO.yukon@yukon.ca){.email}
 
 <br>
 
 # Disclaimer and Limitation of Liability
-The User understands and acknowledges that the use of the data is solely at their own risk. The User is solely responsible for confirming the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data.
-The User accepts the data “as is” and acknowledges that the Government of Yukon makes no warranties or representations (express or implied) with respect to the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data, including, without limitation, implied warranties for merchantability, fitness for a particular purpose, and non-infringement. 
-In consideration of access to the data, the User also agrees that in no event will the Government of Yukon be liable (in tort or contract) or responsible whatsoever to the User or any other legal entity for the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data, including, without limitation, any loss of revenue or profit, or for direct, indirect, special, incidental, or consequential damages arising from or related to the data.
+
+The User understands and acknowledges that the use of the data is solely at their own risk. The User is solely responsible for confirming the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data. The User accepts the data "as is" and acknowledges that the Government of Yukon makes no warranties or representations (express or implied) with respect to the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data, including, without limitation, implied warranties for merchantability, fitness for a particular purpose, and non-infringement. In consideration of access to the data, the User also agrees that in no event will the Government of Yukon be liable (in tort or contract) or responsible whatsoever to the User or any other legal entity for the accuracy, availability, suitability, reliability, usability, completeness or timeliness of the data, including, without limitation, any loss of revenue or profit, or for direct, indirect, special, incidental, or consequential damages arising from or related to the data.
 
 \newpage
-
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 
@@ -370,7 +369,6 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
 ```
 
-
 ```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
 
 stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
@@ -511,6 +509,13 @@ for(i in stations) {
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
                                         level_years = levelDataList[[n]][[2]])
+          
+          if (plot_titles == TRUE){
+            levelPlot <- levelPlot +
+              ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+              ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+          }
+          
           print(levelPlot)
           cat("  \n")
           
@@ -521,6 +526,13 @@ for(i in stations) {
                                         level_years = levelDataList[[n]][[2]],
                                         zoom_data = levelDataList[[n]][[3]],
                                         zoom_days = zoom_days)
+            
+            if (plot_titles == TRUE){
+              zoomLevelPlot <- zoomLevelPlot +
+                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+            }
+            
             tryCatch({
               print(zoomLevelPlot)
               cat("  \n")
@@ -539,6 +551,13 @@ for(i in stations) {
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
                                   flow_years = flowDataList[[n]][[2]])
+            
+            if (plot_titles == TRUE){
+              flowPlot <- flowPlot +
+                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+            }
+            
             print(flowPlot)
             cat("  \n")
             
@@ -548,6 +567,13 @@ for(i in stations) {
                                                    flow_years = flowDataList[[n]][[2]],
                                                    zoom_data = flowDataList[[n]][[3]],
                                                    zoom_days = zoom_days)
+              
+              if (plot_titles == TRUE){
+              zoomFlowPlot <- zoomFlowPlot +
+                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+              }
+              
               tryCatch({
                 print(zoomFlowPlot)
                 cat ("  \n")
@@ -786,7 +812,7 @@ if (is.null(image_path)!=TRUE){
 
 # Hydrometric station information
 
-Hydrometric stations are maintained by the Water Survey of Canada and funded in partnership with the Government of Yukon. Additional station information, including on vertical datums can be found at [https://wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca). To learn more about hydrometric data in general please see [https://wateroffice.ec.gc.ca/contactus/faq_e.html](https://wateroffice.ec.gc.ca/contactus/faq_e.html).
+Hydrometric stations are maintained by the Water Survey of Canada and funded in partnership with the Government of Yukon. Additional station information, including on vertical datums can be found at <https://wateroffice.ec.gc.ca>. To learn more about hydrometric data in general please see <https://wateroffice.ec.gc.ca/contactus/faq_e.html>.
 
 ```{r Station info table, echo=FALSE, results='asis', message=FALSE}
 datums <- unique(stationInfo$Datum)

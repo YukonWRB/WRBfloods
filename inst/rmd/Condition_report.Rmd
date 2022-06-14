@@ -15,6 +15,7 @@ params:
   flow_zoom: flow_zoom
   zoom_days: zoom_days
   meteogram: meteogram
+  plot_titles: plot_titles
 ---
 
 ```{r setup, include=FALSE}
@@ -351,7 +352,7 @@ for (i in 1:length(stations)){
 if (report_type %in% c("Level", "level")){
   stationInfo$`Start year (level)` <- starts
 } else {
-  stationInfo$Start_year <- starts
+  stationInfo$`Start year` <- starts
 }
 
 stationInfo$links <- links #bring in the links created in earlier code chunk
@@ -446,7 +447,10 @@ for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
-  cat("  \n# Summary of levels and level changes \n")
+  
+  cat("  \n# Summary of water levels and level changes \n")
+  cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
+  
   levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 10, 12, 19, 20)] #select columns of level m, level masl, today percent historic, 24 hour change, 48 hour change, 72 hour change, current return period, and flags.
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
@@ -470,6 +474,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 
 if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   cat( "  \n# Summary of flows and flow changes in m^3^/s  \n")
+  cat("Flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
   
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
@@ -524,47 +529,8 @@ precip1wk <- 0
 precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]$StationNam), precip12hr, precip24hr, precip48hr, precip72hr, precip96hr, precip1wk)
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day", "Two days", "Three days", "Four days", "One week")
   
-  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time for selected stations."))
+  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time where available. Precipitation totals are generated from Environment and Climate Change Canada's HRDPA model: for more information, click [here.] (https://eccc-msc.github.io/open-data/msc-data/nwp_hrdpa/readme_hrdpa_en/"))
 }, error = function(e){cat("  \nThe HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
-```
-
-\newpage
-
-# Hydrometric Station Data and Graphs
-
-Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Government of Canada. Return intervals are plotted where available, representing two, ten, one hundred, and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 1928 (CGVD28).
-
-```{r Station info table, echo=FALSE, results='asis', message=FALSE}
-datums <- unique(stationInfo$Datum)
-
-#Make a table with the necessary notes and their associated datums
-note_table <- data.frame(datum = c("CGVD28 (approximate)", 
-             "CGVD28 (assumed)", 
-             "CGVD2013:2010", 
-             "CGVD28", 
-             "Local datum"), 
-           note = c("Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).", 
-             "Vertical datum not specified in historical records, but implementation date indicates use of [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
-             "Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
-             "Vertical datum in Canadian Geodetic Vertical Datum of 1928 [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).", 
-             "Arbitrary datum relative to station or other nearby fixed point."))
-
-
-#Add a number to each datum and populate notes with the required notes
-notes <- vector()
-for (i in datums){
-  stationInfo$Datum <- gsub(i, paste0(i, " [", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
-  notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
-}
-
-
-
-knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
-
-cat("**Notes:**  \n")
-for (i in 1:length(notes)){
-  cat(notes[[i]], "  \n")
-}
 ```
 
 \newpage
@@ -583,7 +549,14 @@ for(i in stations) {
           cat("  \n### Level  \n")
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
-                                        level_years = levelDataList[[n]][[2]])
+                                              level_years = levelDataList[[n]][[2]])
+          
+          if (plot_titles == TRUE){
+            levelPlot <- levelPlot +
+              ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+              ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+          }
+          
           print(levelPlot)
           cat("  \n")
           
@@ -591,9 +564,16 @@ for(i in stations) {
             
             cat("  \n### Level (last", zoom_days, " days) \n")
             zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
-                                        level_years = levelDataList[[n]][[2]],
-                                        zoom_data = levelDataList[[n]][[3]],
-                                        zoom_days = zoom_days)
+                                                   level_years = levelDataList[[n]][[2]],
+                                                   zoom_data = levelDataList[[n]][[3]],
+                                                   zoom_days = zoom_days)
+            
+            if (plot_titles == TRUE){
+              zoomLevelPlot <- zoomLevelPlot +
+                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+            }
+            
             tryCatch({
               print(zoomLevelPlot)
               cat("  \n")
@@ -612,6 +592,13 @@ for(i in stations) {
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
                                   flow_years = flowDataList[[n]][[2]])
+            
+            if (plot_titles == TRUE){
+              flowPlot <- flowPlot +
+                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+            }
+            
             print(flowPlot)
             cat("  \n")
             
@@ -621,6 +608,13 @@ for(i in stations) {
                                                    flow_years = flowDataList[[n]][[2]],
                                                    zoom_data = flowDataList[[n]][[3]],
                                                    zoom_days = zoom_days)
+              
+              if (plot_titles == TRUE){
+              zoomFlowPlot <- zoomFlowPlot +
+                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+              }
+              
               tryCatch({
                 print(zoomFlowPlot)
                 cat ("  \n")
@@ -723,12 +717,13 @@ if (meteogram==TRUE){
 
 ```
 
-\newpage
+
 
 ```{r Fixed camera images, eval=TRUE, echo=FALSE, fig.height=4, fig.width=7, message=FALSE, warning=FALSE, fig.height=4, fig.width=7, results='asis'}
 #This section will contain auto-generated images, selected based on the stations(s) selected.
 
 tryCatch({
+  cat("  \newpage")
   images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))[[1]]
   images <- images[c(-1,-2),-1] #first two rows are not files and first column is nothing
   images <- images[grep(paste(stations, collapse="|"), images$Name), ] #subset only the images that match stations requested
@@ -751,7 +746,7 @@ tryCatch({
       cat("  \n")
     }
   }
-}, error=function(e){cat("  \nFetching images failed. Do you have login credentials in your .Renviron file? Check the function notes for details.")})
+}, error=function(e){cat("  \n  \newpage Fetching images failed. Do you have login credentials in your .Renviron file? Check the function notes for details.")})
 
 
 ```
@@ -767,4 +762,43 @@ if (is.null(image_path)!=TRUE){
   }
 }
 
+```
+
+\newpage
+
+# Hydrometric station information
+
+Water level and/or flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by the Government of Canada. Return intervals are plotted where available, representing two, ten, one hundred, and two hundred year return intervals. All datum elevations are in reference to the Canadian Geodetic Vertical Datum of 1928 (CGVD28).
+
+```{r Station info table, echo=FALSE, results='asis', message=FALSE}
+datums <- unique(stationInfo$Datum)
+
+#Make a table with the necessary notes and their associated datums
+note_table <- data.frame(datum = c("CGVD28 (approximate)", 
+             "CGVD28 (assumed)", 
+             "CGVD2013:2010", 
+             "CGVD28", 
+             "Local datum"), 
+           note = c("Derived from a digital elevation model with vertical datum in Canadian Geodetic Vertical Datum of 1928 ([CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)); uncertainty in accordance with the [Canadian Digital Elevation Model](https://ftp.maps.canada.ca/pub/nrcan_rncan/elevation/cdem_mnec/doc/CDEM_product_specs.pdf).", 
+             "Vertical datum not specified in historical records, but implementation date indicates use of [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 2013, epoch 2010 [(CGVD2013:2010](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).",
+             "Vertical datum in Canadian Geodetic Vertical Datum of 1928 [(CGVD28](https://cgrsc.ca/resources/geodetic-control-networks/vertical-control-networks/)).", 
+             "Arbitrary datum relative to station or other nearby fixed point."))
+
+
+#Add a number to each datum and populate notes with the required notes
+notes <- vector()
+for (i in datums){
+  stationInfo$Datum <- gsub(i, paste0(i, " [", which(datums==i), "]"), stationInfo$Datum, fixed=TRUE)
+  notes <- c(notes, paste0("[", which(datums==i), "] ", dplyr::filter(note_table, datum==i)[,2]))
+}
+
+
+
+knitr::kable(stationInfo, digits=2, caption="These are the stations contained in this report:")
+
+cat("**Notes:**  \n")
+for (i in 1:length(notes)){
+  cat(notes[[i]], "  \n")
+}
 ```
