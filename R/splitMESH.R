@@ -32,7 +32,7 @@ splitMESH <- function(file = "choose", output_folder = "choose") {
     name <- gsub("Kilometre", "km", name)
     name <- gsub("Kilometer", "km", name)
     name <- gsub("Highway", "Hwy", name)
-    qpdf::pdf_subset(targetFile, pages = i, output=paste0(output, "/", titles[i], "_", name, ".pdf"))
+    qpdf::pdf_subset(targetFile, pages = i, output=paste0(output, "/", Sys.Date(), "_", titles[i], "_", name, ".pdf"))
   }
   
   print(paste0("Your PDF has been split and the result is in the folder ", output, "."))
