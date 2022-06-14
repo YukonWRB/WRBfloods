@@ -18,7 +18,7 @@
 #' @export
 #'
 
-flowPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_days=30, save_path="choose") {
+flowPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_days=30, recent_percentile=FALSE, save_path="choose") {
   
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
@@ -30,7 +30,8 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, filter=FALSE, zoom_
     station_number = station,
     select_years = years,
     flow_zoom = TRUE,
-    filter= filter
+    filter = filter,
+    recent_prctile = recent_percentile
   )
   
   # Plot the data

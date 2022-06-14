@@ -62,7 +62,7 @@ utils_level_data <- function(
     if (level_zoom == TRUE){ #If requesting zoomed-in plot
       recent_level <- level_real_time %>% plyr::rename(c("Value"="Level"))
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
-      recent_level <- recent_level[,-c(3,5:10)]      
+      recent_level <- recent_level[,-c(3,5:10)]
     }
     
     level_real_time <- level_real_time %>%
@@ -74,8 +74,10 @@ utils_level_data <- function(
     
     if (datum_na == FALSE){ #Generate new column to hold masl levels
       level_real_time$Level_masl <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
+      recent_level$Level_masl <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
     } else {
       level_real_time$Level_masl <- as.numeric(NA)
+      recent_level$Level_masl <- as.numeric(NA)
     }
     
     # Need to add NaN for blank days
@@ -191,7 +193,11 @@ utils_level_data <- function(
         current.year$QP50[current.year$dayofyear==i] <- unique(level_df$QP50[level_df$dayofyear==i])
         current.year$QP25[current.year$dayofyear==i] <- unique(level_df$QP25[level_df$dayofyear==i])
         current.year$QP10[current.year$dayofyear==i] <- unique(level_df$QP10[level_df$dayofyear==i])
-        current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
+        if (datum_na == TRUE){
+          current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
+        } else {
+          current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level_masl[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
+        }
       }
       level_df <- dplyr::bind_rows(level_df, current.year)#add in the current year
   }
@@ -226,7 +232,11 @@ utils_level_data <- function(
                                                                       lubridate::yday(Date)))
     
     for (i in 1:nrow(recent_level)){
-      recent_level$prct_max_hist[i] <- ((recent_level$Level[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+      if (datum_na==TRUE){
+        recent_level$prct_max_hist[i] <- ((recent_level$Level[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+      } else {
+        recent_level$prct_max_hist[i] <- ((recent_level$Level_masl[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
+      }
     }
   }
 
@@ -248,11 +258,6 @@ utils_level_data <- function(
         try (recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA)
       }
     }
-  }
-  
-  if (datum_na == FALSE){ #Create MASL column
-    recent_level$`Level_masl` <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
-  } else {recent_level$`Level_masl` <- NA #Creating the empty column for consistency in output
   }
   
   tidyData <- list(level_df, level_years, recent_level)
