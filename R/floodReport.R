@@ -143,7 +143,7 @@ floodReport <-
       
       ### Generate a report for Dawson###
       if (report_name %in% c("Dawson", "dawson", "Dawson City", "Dawson city")) {
-        stations <- c("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09CD001", "09CB001")
+        stations <- c("09EA003", "09EA006", "09EA004", "09EA005", "09EB001", "09EB003", "09EB004", "09DD003", "09CD001", "09CB001")
         preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964")
         
         if (preset_extra_years==TRUE){
@@ -201,7 +201,7 @@ floodReport <-
       
       ### Generate a report for Teslin###
       if (report_name %in% c("Teslin", "teslin")) {
-        stations <-c ("09AE002", "09AE006", "09AE003", "10AC005")
+        stations <-c ("09AE002", "09AE006", "09AE003", "09AD002", "10AC005")
         preset_extras <- "09EA002:1962,1992,2021"
         
         if (preset_extra_years==TRUE){
