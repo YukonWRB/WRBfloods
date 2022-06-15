@@ -702,7 +702,7 @@ if (meteogram==TRUE){
 #This section will contain auto-generated images, selected based on the stations(s) selected.
 
 tryCatch({
-  cat("  \newpage")
+  cat("  \n  \newpage")
   images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))[[1]]
   images <- images[c(-1,-2),-1] #first two rows are not files and first column is nothing
   images <- images[grep(paste(stations, collapse="|"), images$Name), ] #subset only the images that match stations requested
