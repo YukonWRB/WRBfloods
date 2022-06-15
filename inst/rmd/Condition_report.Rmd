@@ -473,7 +473,8 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
-  cat( "  \n# Summary of flows and flow changes in m^3^/s  \n")
+  cat("  \n <br>  \n")
+  cat("# Summary of flows and flow changes in m^3^/s  \n")
   cat("Flow data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
   
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
@@ -529,7 +530,7 @@ precip1wk <- 0
 precipTable <- data.frame(all6hr[[1]]$Station, stringr::str_to_title(all6hr[[1]]$StationNam), precip12hr, precip24hr, precip48hr, precip72hr, precip96hr, precip1wk)
 colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day", "Two days", "Three days", "Four days", "One week")
   
-  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time where available. Precipitation totals are generated from Environment and Climate Change Canada's HRDPA model: for more information, click [here.] (https://eccc-msc.github.io/open-data/msc-data/nwp_hrdpa/readme_hrdpa_en/"), align="c")
+  knitr::kable(precipTable, digits=3, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time where available. Precipitation totals are generated from Environment and Climate Change Canada's HRDPA model: for more information, click [here](https://eccc-msc.github.io/open-data/msc-data/nwp_hrdpa/readme_hrdpa_en/)."), align="c")
 }, error = function(e){cat("  \nThe HRDPA precipitation shapefiles could not be downloaded. Check the URL https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/ first to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
 ```
 
@@ -733,7 +734,7 @@ tryCatch({
     images <- dplyr::arrange(images, desc(images$`Last modified`)) %>% dplyr::mutate(Station = substr(Name, 1,7))  #Sort by descending, make column for station
     
     par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-    cat("# Fixed Camera Images")
+    cat("  \n# Fixed Camera Images")
     for (i in unique(images$Station)){
       last_image <- dplyr::filter(images, Station==i)[1,]
       cat("  \n### ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")

@@ -696,27 +696,14 @@ tryCatch({
   
   colnames(precipTable) <- c("Station name", "ID", "One day", "Three days", "One week")
   
-  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", validdatetime-7*60*60, " Yukon Time where available."), align="c")}, error=function(e) {cat("  \nPrecipitation shapefiles could not be downloaded of processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
+  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time where available. Precipitation totals are generated from Environment and Climate Change Canada's HRDPA model: for more information, click [here](https://eccc-msc.github.io/open-data/msc-data/nwp_hrdpa/readme_hrdpa_en/)."), align="c")
+  }, error=function(e) {cat("  \nPrecipitation shapefiles could not be downloaded or processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
 
   
   
   # And now for some images
   cat("  \n ## Recent Precipitation Images  \n")
   cat(" The following images represent precipitation in and around Yukon. Each image integrates precipitation (from observations and remote sensing) over the 24 hours prior to the image's valid date/time (Yukon time).  \n")
-  
-#using the imager::load.image method instead of the standard knitr::include_graphics because include_graphics just won't work with the network drive. This used to be necessary but stopped working for unknown reason. 
-# tryCatch({
-#   setwd("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/")
-#   wxfiles<- list.files(pattern="\\.png$")
-#   par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-# 
-#   imager::load.image(wxfiles[length(wxfiles)]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-# 
-#   cat("  \n  \n  ")
-#   imager::load.image(wxfiles[length(wxfiles)-2]) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-# }, error=function(e) {
-#   cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
-# })
 
 tryCatch({
   wxfiles<- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", pattern="\\.png$")
