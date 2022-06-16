@@ -371,6 +371,9 @@ sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed)", sub)
 sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010", sub)
 sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 1928", "CGVD28", sub)
 stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
+
+#Fix typos
+stationInfo$Station <- gsub("Morely", "Morley", stationInfo$Station)
 ```
 
 ```{r Get Precip data, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
