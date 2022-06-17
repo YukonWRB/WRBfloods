@@ -31,7 +31,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
     select_years = years,
     flow_zoom = TRUE,
     filter = filter,
-    recent_prctile = recent_percentile
+    recent_prctile = FALSE
   )
   
   # Plot the data
