@@ -371,6 +371,9 @@ sub <- gsub("GEODETIC SURVEY OF CANADA DATUM", "CGVD28 (assumed)", sub)
 sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 2013:EPOCH2010", "CGVD2013:2010", sub)
 sub <- gsub("CANADIAN GEODETIC VERTICAL DATUM 1928", "CGVD28", sub)
 stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
+
+#Fix typos
+stationInfo$Station <- gsub("Morely", "Morley", stationInfo$Station)
 ```
 
 ```{r Get Precip data, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
@@ -702,7 +705,6 @@ if (meteogram==TRUE){
 #This section will contain auto-generated images, selected based on the stations(s) selected.
 
 tryCatch({
-  cat("  \n  \newpage")
   images <- XML::readHTMLTable(httr::content(httr::GET("https://collaboration.cmc.ec.gc.ca/cmc/hydrometric_additionalData/FieldData/YT/", config=httr::authenticate(Sys.getenv("ECCCUSER"), Sys.getenv("ECCCPASS"))), "text"))[[1]]
   images <- images[c(-1,-2),-1] #first two rows are not files and first column is nothing
   images <- images[grep(paste(stations, collapse="|"), images$Name), ] #subset only the images that match stations requested
@@ -712,7 +714,7 @@ tryCatch({
     images <- dplyr::arrange(images, desc(images$`Last modified`)) %>% dplyr::mutate(Station = substr(Name, 1,7))  #Sort by descending, make column for station
     
     par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-    cat("  \n# Fixed Camera Images")
+    cat("  \n# Fixed Camera Images  \n")
     for (i in unique(images$Station)){
       last_image <- dplyr::filter(images, Station==i)[1,]
       cat("  \n### ", stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME), "(", substr(as.character(as.POSIXct(last_image[,2], tz="UTC")-7*60*60), 1, 16), "Yukon Time)  \n")
