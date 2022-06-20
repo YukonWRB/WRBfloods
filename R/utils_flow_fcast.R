@@ -1,3 +1,59 @@
+#Graph CLEVER and MESH outputs together with past levels
+
+#1. get the most recent data as just data.
+#2. Add in the MESH and CLEVER data as columns
+#
+
+
+#WSC data
+data <- ECCCdata("10AA001", "flow", 2022, filter=FALSE)
+
+#CLEVER - times appear to be UTC
+UpperLiardClev <- data.table::fread(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/10AA001.CSV"))
+#Make datetime column as POSIXct
+UpperLiardClev <- tidyr::fill(UpperLiardClev, DATE, .direction="down")
+UpperLiardClev <- dplyr::mutate(UpperLiardClev, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
+UpperLiardClev$datetime <- as.POSIXct(UpperLiardClev$datetime)
+#Combine and sort
+data$`10AA001`$flow$recent_5_minute <- dplyr::full_join(data$`10AA001`$flow$recent_5_minute, UpperLiardClev, by=c("Date"= "datetime")) %>% dplyr::arrange(Date)
+#populate DateOnly for the new forecast data
+data$`10AA001`$flow$recent_5_minute$DateOnly <- as.Date(substr(data$`10AA001`$flow$recent_5_minute$Date, 1, 10))
+
+WRBfloods::utils_zoom_flow_plot("10AA001", data$`10AA001`$flow$requested_years, data$`10AA001`$flow$recent_5_minute)
+
+
+
+#WSC data
+data <- ECCCdata("09AA006", "flow", 2022, filter=FALSE)
+
+#MESH - times are in?
+##MESH outputs might need to be adjusted to real levels
+MESH <- read.csv("data/MESH_output_streamflow_ts.csv")
+# stringr::str_detect(names(MESH), pattern="09AA006")
+# test <- dplyr::bind_cols(MESH[,1:4], MESH[])
+MESH <- dplyr::mutate(MESH, Date = as.Date(JDAY, origin=paste0(lubridate::year(Sys.Date())-1,"-12-31")))
+MESH <- dplyr::mutate(MESH, datetime = paste0(Date, " ", HOUR, ":", MINS, ":00"))
+MESH$datetime <- as.POSIXct(MESH$datetime, tz="UTC")
+MESH <- dplyr::select(MESH, c(contains("09AA006"), "datetime"))
+
+#Match it up to recent data
+#find the last :15 or :45 data point, average half hour before that
+actual <- tail(data$`09AA006`$flow$recent_5_minute)
+#find the MESH value for the corresponding middle of that time, so at either the :30 or :00
+
+#Combine with WSC data
+data$`09AA006`$flow$recent_5_minute <- dplyr::full_join(data$`09AA006`$flow$recent_5_minute, MESH, by=c("Date" = "datetime")) %>% dplyr::arrange(Date)
+
+
+
+
+
+
+#stick the CLEVER output onto the 5-minute WSC data
+
+
+
+
 #' Plot WSC hydrometric flow data for a set number of days using 5 minute data points for the current year, as well as MESH and CLEVER forecast data.
 #' 
 #' This utility function is designed to take the output of the utils_flow_data function. If you're looking for a plot, use the flowPlot function instead.
@@ -112,8 +168,8 @@ utils_zoom_flow_plot <- function(
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Historical Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "Historical 25th-75th %"), na.rm = T)  +
     
-    # ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), colour="pink", size=line_size/2, na.rm=T)+
-    # ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), colour="pink", size=line_size/2, na.rm=T)+
+    ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), colour="pink", size=line_size/2, na.rm=T)+
+    ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), colour="pink", size=line_size/2, na.rm=T)+
     ggplot2::geom_ribbon(ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3)+
     
     ggplot2::geom_line(ggplot2::aes( color="2022 (actual)"), size = line_size, na.rm = T) +
@@ -124,5 +180,6 @@ utils_zoom_flow_plot <- function(
     ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)"="blue", "CLEVER forecast"="black"))+
     ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
   
-  return(plot)
+  Skiseasontheoreturn(plot)
 }
+

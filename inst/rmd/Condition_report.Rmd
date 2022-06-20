@@ -539,6 +539,15 @@ colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day"
 
 \newpage
 
+```{r Get MESH and CLEVER information, echo=FALSE, results='asis', message=FALSE}
+
+#MESH
+list.files()
+
+#CLEVER
+
+```
+
 ```{r Generate plots, echo=FALSE, fig.height=4.2, fig.width=7.5, message=FALSE, warning=FALSE, results='asis'}
 
 for(i in stations) {
