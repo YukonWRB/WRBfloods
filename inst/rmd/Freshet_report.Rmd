@@ -510,8 +510,8 @@ for(i in stations) {
         tryCatch ({
           cat("  \n### Level  \n")
           #Level data plotting
-          levelPlot <- utils_daily_level_plot(station_number = i,
-                                        level_years = levelDataList[[n]][[2]])
+          levelPlot <- utils_daily_level_plot(station_number =i,
+                                              level_years = levelDataList[[n]][[2]])
           
           if (plot_titles == TRUE){
             levelPlot <- levelPlot +
@@ -525,10 +525,10 @@ for(i in stations) {
           if (level_zoom == TRUE){ #Plot zoomed-in level data
             
             cat("  \n### Level (last", zoom_days, " days) \n")
-            zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
-                                        level_years = levelDataList[[n]][[2]],
-                                        zoom_data = levelDataList[[n]][[3]],
-                                        zoom_days = zoom_days)
+            zoomLevelPlot <- utils_zoom_level_plot(station_number =i,
+                                                   level_years = levelDataList[[n]][[2]],
+                                                   zoom_data = levelDataList[[n]][[3]],
+                                                   zoom_days = zoom_days)
             
             if (plot_titles == TRUE){
               zoomLevelPlot <- zoomLevelPlot +
@@ -552,8 +552,8 @@ for(i in stations) {
           tryCatch ({
             cat("  \n### Flow  \n")
             #Flow data plotting
-            flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  flow_years = flowDataList[[n]][[2]])
+            flowPlot <- utils_daily_flow_plot(station_number =i,
+                                              flow_years = flowDataList[[n]][[2]])
             
             if (plot_titles == TRUE){
               flowPlot <- flowPlot +
