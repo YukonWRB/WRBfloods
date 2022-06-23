@@ -417,7 +417,7 @@ floodReport <-
       
       ### Generate a report for Aishihik###
       if (report_name %in% c("Champagne", "Aishihik", "aishihik", "champagne")) {
-        stations <-c ("08AA007", "08AA008", "08AA009", "08AA012", "08AA005", "08AA010", "08AA001")
+        stations <-c ("08AA007", "08AA008", "08AA009", "08AA012", "08AA005", "08AA010", "08AA011")
         preset_extras <- c("08AA007:2020", "08AA008:2020", "08AA005:2020", "08AA010:2020")
         
         if (preset_extra_years==TRUE){
