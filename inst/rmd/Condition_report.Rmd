@@ -596,12 +596,15 @@ if (forecast == TRUE){
   tryCatch({
     CLEVER <- list()
     for (i in CLEVERstns) {
-      stn <- read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", i, ".CSV"), skip=6, na.strings = "")
-      stn <- tidyr::fill(stn, DATE)
-      stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
-      stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
-      stn$DateOnly <- as.Date(substr(stn$datetime, 1, 10))
-      CLEVER[[i]] <- stn
+      tryCatch({
+        stn <- read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", i, ".CSV"), skip=6, na.strings = "")
+        stn <- tidyr::fill(stn, DATE)
+        stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
+        stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
+        stn$DateOnly <- as.Date(substr(stn$datetime, 1, 10))
+        CLEVER[[i]] <- stn
+      }, error = function(e) {}
+      )
     }
   }, error = function(e) {
     CLEVER <- list()  
