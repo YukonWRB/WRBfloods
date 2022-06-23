@@ -27,10 +27,10 @@ utils_fcast_flow_plot <- function(
 )
   
 {
-  extra_days <- round(zoom_days/3, 0)
+  extra_days <- 10 #round(zoom_days/3, 0)
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+ extra_days, "days")
-  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+ extra_days + 2, 'days')
+  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+ extra_days + 1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   flow_years <- flow_years[flow_years$Date %in% ribbon_dates,]
   
@@ -75,7 +75,7 @@ utils_fcast_flow_plot <- function(
   zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
   flow_years <- dplyr::bind_rows(flow_years, zoom_data)
   
-  
+  #Remove NAs and reintegrate ribbon
   flow_years <- flow_years %>%
     dplyr::group_by(Year_Real) %>%
     dplyr::filter(!all(is.na(Flow))) %>%
@@ -120,14 +120,15 @@ utils_fcast_flow_plot <- function(
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Historical Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "Historical 25th-75th %"), na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes( color="2022 (actual)"), size = line_size, na.rm = T)
+    ggplot2::geom_line(ggplot2::aes(color="2022 (actual)"), size = line_size, na.rm = T)
+  
   
   if("UPPER_BOUND" %in% names(flow_years) & !("MESH_prediction" %in% names(flow_years))) {
     plot <- plot + 
       ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
       ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
-      ggplot2::geom_ribbon(ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
-      ggplot2::geom_line(ggplot2::aes(x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T) +
+      ggplot2::geom_ribbon(data = flow_years[!is.na(flow_years$LOWER_BOUND),], ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
+      ggplot2::geom_line(ggplot2::aes(data = flow_years[!is.na(flow_years$FORECAST_DISCHARGE),], x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T) +
       
       ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "CLEVER forecast" = "pink")) +
       ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
@@ -135,7 +136,7 @@ utils_fcast_flow_plot <- function(
   
   if("MESH_prediction" %in% names(flow_years) & !("UPPER_BOUND" %in% names(flow_years))){
     plot <- plot +
-      ggplot2::geom_line(ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T) +
+      ggplot2::geom_line(data = flow_years[!is.na(flow_years$MESH_prediction),], ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T) +
       
       ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "MESH forecast" = "black")) +
       ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65"))
@@ -148,33 +149,17 @@ utils_fcast_flow_plot <- function(
       ggplot2::geom_ribbon(data = flow_years[!is.na(flow_years$LOWER_BOUND),], ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
       ggplot2::geom_line(data = flow_years[!is.na(flow_years$FORECAST_DISCHARGE),], ggplot2::aes(x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T) +
       ggplot2::geom_line(data = flow_years[!is.na(flow_years$MESH_prediction),], ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T) +
-
+      
       ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "CLEVER forecast" = "pink", "MESH forecast" = "black")) +
       ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
+  }
   
-    }
-
-  
-  # ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Historical Min - Max"), na.rm = T) +
-  # ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "Historical 25th-75th %"), na.rm = T)  +
-  # 
-  # ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
-  # ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
-  # ggplot2::geom_ribbon(ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
-  # 
-  # ggplot2::geom_line(ggplot2::aes( color="2022 (actual)"), size = line_size, na.rm = T) +
-  # 
-  # #ggplot2::geom_point(ggplot2::aes(x=Date, y=FORECAST_DISCHARGE), colour="black", size=line_size, na.rm=T)+
-  # ggplot2::geom_line(ggplot2::aes(x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T) +
-  # 
-  # ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)"="blue", "CLEVER forecast"="black")) +
-  # ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
-  # 
   return(plot)
 }
 
 
-
+#################################################################################
+#################################################################################
 
 
 #' Plot WSC hydrometric level data for a set number of days using 5 minute data points for the current year as well as MESH and CLEVER forecast data.
@@ -209,10 +194,10 @@ utils_fcast_level_plot <- function(
   #check if datum exists
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
-  extra_days <- round(zoom_days/3, 0)
+  extra_days <- 10 #round(zoom_days/3, 0)
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
-  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+extra_days + 2, 'days')
+  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+extra_days + 1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   level_years <- level_years[level_years$Date %in% ribbon_dates,]
   
@@ -305,25 +290,39 @@ utils_fcast_level_plot <- function(
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Historical Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "Historical 25th-75th %"), na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes( color="2022 (actual)"), size = line_size, na.rm = T)
+    ggplot2::geom_line(ggplot2::aes(color="2022 (actual)"), size = line_size, na.rm = T)
   
   
-  if("UPPER_BOUND" %in% names(level_years)) {
+  if("UPPER_BOUND" %in% names(level_years) & !("MESH_prediction" %in% names(level_years))) {
     plot <- plot + 
       ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
       ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
-      ggplot2::geom_ribbon(ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
-      ggplot2::geom_line(ggplot2::aes(x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T)
+      ggplot2::geom_ribbon(data = level_years[!is.na(level_years$LOWER_BOUND),], ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
+      ggplot2::geom_line(ggplot2::aes(data = level_years[!is.na(level_years$FORECAST_DISCHARGE),], x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T) +
+      
+      ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "CLEVER forecast" = "pink")) +
+      ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
   }
   
-  if("MESH_prediction" %in% names(level_years)){
+  if("MESH_prediction" %in% names(level_years) & !("UPPER_BOUND" %in% names(level_years))){
     plot <- plot +
-      ggplot2::geom_line(ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T)
+      ggplot2::geom_line(data = level_years[!is.na(level_years$MESH_prediction),], ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T) +
+      
+      ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "MESH forecast" = "black")) +
+      ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65"))
   }
   
-  plot +
-    ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)"="blue", "CLEVER forecast"="pink", "MESH forecast"= "black")) +
-    ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
+  if("MESH_prediction" %in% names(level_years) & "UPPER_BOUND" %in% names(level_years)){
+    plot <- plot +
+      # ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), color="CLEVER lower", size=line_size/2, na.rm=T) +
+      # ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), color="CLEVER upper", size=line_size/2, na.rm=T) +
+      ggplot2::geom_ribbon(data = level_years[!is.na(level_years$LOWER_BOUND),], ggplot2::aes(ymin = LOWER_BOUND, ymax=UPPER_BOUND, fill="CLEVER Min - Max"), alpha=0.3) +
+      ggplot2::geom_line(data = level_years[!is.na(level_years$FORECAST_DISCHARGE),], ggplot2::aes(x=Date, y=FORECAST_DISCHARGE, color="CLEVER forecast"), size=line_size, na.rm=T) +
+      ggplot2::geom_line(data = level_years[!is.na(level_years$MESH_prediction),], ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T) +
+      
+      ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "CLEVER forecast" = "pink", "MESH forecast" = "black")) +
+      ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
+  }
   
   #Add return periods if they exist for this station
   if (station_number %in% data$return_periods$ID==TRUE){
