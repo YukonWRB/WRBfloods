@@ -14,6 +14,7 @@ floodReport(
   level_zoom = TRUE,
   flow_zoom = NULL,
   zoom_days = 30,
+  forecast = TRUE,
   meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"

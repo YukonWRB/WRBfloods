@@ -16,6 +16,7 @@ params:
   zoom_days: zoom_days
   meteogram: meteogram
   plot_titles: plot_titles
+  forecast: forecast
 ---
 
 ```{r setup, include=FALSE}
@@ -541,10 +542,71 @@ colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day"
 
 ```{r Get MESH and CLEVER information, echo=FALSE, results='asis', message=FALSE}
 
-#MESH
-list.files()
-
-#CLEVER
+if (forecast == TRUE){
+  #MESH
+  #today's files if exists:
+  MESHfiles <- list.files("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", pattern= paste0(".*", gsub("-", "", as.character(Sys.Date())), "*\\.*csv"))
+  
+  #Yesterday's files if that fails:
+  if (length(MESHfiles) == 0) {
+    MESHfiles <- list.files("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", pattern= paste0(".*", gsub("-", "", as.character(Sys.Date()-1)), "*\\.*csv"))
+  }
+  #At this point if there are no MESH files for today or yesterday MESHfiles is a character vector of length 0.
+  
+  #Extract information from the files and stick it into a single data.frame:
+  tryCatch({ #tryCatch in case there is no MESH to get.
+    files <- data.frame(YEAR=NA)
+    for (i in 1:length(MESHfiles)){
+      add <- read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
+      files <- dplyr::full_join(files, add)
+    }
+    files <- dplyr::mutate(files, Date = as.Date(JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
+    files <- dplyr::mutate(files, datetime = paste0(Date, " ", HOUR, ":", MINS, ":00"), .keep = "unused")[-1,-1]
+    files$datetime <- as.POSIXct(files$datetime, tz = "UTC")
+    
+    #Pull apart the two columns for each station, plus datetime, and make them list elements:
+    datetime <- data.frame(datetime = files$datetime)
+    QOSIM <- dplyr::select(files, contains("QOSIM"))
+    names(QOSIM) <- gsub(pattern = "QOSIM_*", replacement = "", names(QOSIM))
+    QOMEAS <- dplyr::select(files, contains("QOMEAS"))
+    names(QOMEAS) <- gsub(pattern = "QOMEAS_*", replacement = "", names(QOMEAS))
+    
+    MESH <- list()
+    for (i in names(QOSIM)){
+      flag <- QOSIM[i]
+      meas <- QOMEAS[i]
+      stn <- dplyr::bind_cols(meas, flag)
+      stn <- dplyr::bind_cols(stn, datetime)
+      stn$DateOnly <- as.Date(substr(stn$datetime, 1, 10))
+      names(stn) <- c("MESH_flag", "MESH_prediction", "datetime", "DateOnly")
+      MESH[[i]] <- stn
+    }
+    
+    #Rename certain stations if necessary
+    MESH <- plyr::rename(MESH, c("Marsh" = "09AB004"))
+  }, error = function(e) {
+    MESH <- list()
+  })
+  
+  
+  
+  #CLEVER
+  CLEVERstns <- c("10AA006", "10AB001", "10AA004", "10AA001" ,"10AD002", "99FK100", "09AE003", "09AA013")
+  
+  tryCatch({
+    CLEVER <- list()
+    for (i in CLEVERstns) {
+      stn <- read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", i, ".CSV"), skip=6, na.strings = "")
+      stn <- tidyr::fill(stn, DATE)
+      stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
+      stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
+      stn$DateOnly <- as.Date(substr(stn$datetime, 1, 10))
+      CLEVER[[i]] <- stn
+    }
+  }, error = function(e) {
+    CLEVER <- list()  
+  }) 
+}
 
 ```
 
@@ -553,7 +615,7 @@ list.files()
 for(i in stations) {
   n <- which(stations==i)
   station_info <- tidyhydat::hy_stations(i)
-  if(is.na(station_info$STATION_NUMBER[1])==FALSE){
+  if(is.na(station_info$STATION_NUMBER[1])==FALSE){ #if the station is in the database, continue!
     tryCatch ( {
       cat("  \n## ", stringr::str_to_title(station_info$STATION_NAME)," (station ", i,")  \n")
       
@@ -573,19 +635,57 @@ for(i in stations) {
           print(levelPlot)
           cat("  \n")
           
+          
+          
           if (level_zoom == TRUE){ #Plot zoomed-in level data
-            
             cat("  \n### Level (last", zoom_days, " days) \n")
-            zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
-                                                   level_years = levelDataList[[n]][[2]],
-                                                   zoom_data = levelDataList[[n]][[3]],
-                                                   zoom_days = zoom_days)
             
+            # #Lines below will be useful if and when lake levels are part of the MESH or CLEVER outputs. In the meantime it is not functional. 
+            # if (i %in% names(MESH) & i %in% names(CLEVER)){
+            #   #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
+            #   levelDataList[[n]][[3]] <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime"))
+            #   levelDataList[[n]][[3]] <- dplyr::full_join(levelDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime"))
+            #   
+            # NUDGE THE MESH DATA BEFORE NEXT STEP IF NECESSARY
+            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
+            #                                       level_years = levelDataList[[n]][[2]],
+            #                                       zoom_data = levelDataList[[n]][[3]],
+            #                                       zoom_days = zoom_days)
+            #   
+            # } else if (i %in% names(MESH)){
+            #   #Add in the MESH data, nudge it to match WSC at forecast time.
+            #   levelDataList[[n]][[3]] <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime"))
+            #   
+            #   
+            # zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
+            #                                       level_years = levelDataList[[n]][[2]],
+            #                                       zoom_data = levelDataList[[n]][[3]],
+            #                                       zoom_days = zoom_days)
+            #   
+            # } else if (i %in% names(CLEVER)) {
+            #   #Add in CLEVER data, nudge it to match wSC at forecast time.
+            #   levelDataList[[n]][[3]] <- dplyr::full_join(levelDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime"))
+            #   
+            # zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
+            #                                       level_years = levelDataList[[n]][[2]],
+            #                                       zoom_data = levelDataList[[n]][[3]],
+            #                                       zoom_days = zoom_days)
+            #   
+            # } else { #if no MESH or CLEVER, just give a regular plot
+              zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
+                                                     level_years = levelDataList[[n]][[2]],
+                                                     zoom_data = levelDataList[[n]][[3]],
+                                                     zoom_days = zoom_days)
+            #}
+            
+
             if (plot_titles == TRUE){
               zoomLevelPlot <- zoomLevelPlot +
                 ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
                 ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
             }
+            
+            
             
             tryCatch({
               print(zoomLevelPlot)
@@ -617,15 +717,47 @@ for(i in stations) {
             
             if (flow_zoom == TRUE) { #plot zoomed-in flow data as well
               cat("  \n### Flow (last", zoom_days, " days)  \n")
-              zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
-                                                   flow_years = flowDataList[[n]][[2]],
-                                                   zoom_data = flowDataList[[n]][[3]],
-                                                   zoom_days = zoom_days)
+              
+              if (i %in% names(MESH) & i %in% names(CLEVER)){
+                #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
+                zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
+                zoom <- dplyr::full_join(flowDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
+                
+                zoomflowPlot <- utils_fcast_flow_plot(station_number = i,
+                                                      flow_years = flowDataList[[n]][[2]],
+                                                      zoom_data = flowDataList[[n]][[3]],
+                                                      zoom_days = zoom_days)
+                
+              } else if (i %in% names(MESH)){
+                #Add in the MESH data, nudge it to match WSC at forecast time.
+                zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
+                
+                
+                zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
+                                                      flow_years = flowDataList[[n]][[2]],
+                                                      zoom_data = zoom,
+                                                      zoom_days = zoom_days)
+                
+              } else if (i %in% names(CLEVER)) {
+                #Add in CLEVER data, nudge it to match wSC at forecast time.
+                zoom <- dplyr::full_join(flowDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
+                
+                zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
+                                                      flow_years = flowDataList[[n]][[2]],
+                                                      zoom_data = zoom,
+                                                      zoom_days = zoom_days)
+                
+              } else { #if no MESH or CLEVER, just give a regular plot
+                zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
+                                                     flow_years = flowDataList[[n]][[2]],
+                                                     zoom_data = flowDataList[[n]][[3]],
+                                                     zoom_days = zoom_days)
+              }
               
               if (plot_titles == TRUE){
-              zoomFlowPlot <- zoomFlowPlot +
-                ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
-                ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
+                zoomFlowPlot <- zoomFlowPlot +
+                  ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
+                  ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
               }
               
               tryCatch({
