@@ -19,8 +19,9 @@ utils_level_data(
 
 \item{level_zoom}{TRUE/FALSE, should high-res data be kept for zoomed-in plots?}
 
-\item{filter}{TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
-#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds.}
+\item{filter}{TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.}
+
+\item{recent_prctile}{TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds.}
 }
 \value{
 A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.

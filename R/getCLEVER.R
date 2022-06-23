@@ -6,7 +6,7 @@
 #' @param output_folder The folder where you wish to have the outputs saved.
 #' @param types The type of files you wish to download. Graphical products are in PDF format, but the underlying data is available as a CSV. Can specify one or both.
 #'
-#' @return A .pdf file for each station you specify, unless that station cannot be found.
+#' @return A .pdf, .csv, or both types of files for each station you specify, unless a station cannot be found.
 #' @export
 #'
 

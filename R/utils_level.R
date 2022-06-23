@@ -14,7 +14,7 @@
 #' @param select_years The year(s) for which you want data
 #' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
-#' #' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds.
+#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
@@ -32,6 +32,11 @@ utils_level_data <- function(
   
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
+  
+  #Truncate the Yukon at Whitehorse at 2014, since data before that is garbage (much predates the dam for level)
+  if (station_number == "09AB001") {
+    level_historic <- level_historic[level_historic$Date > "2014-01-01",]
+  }
   
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   

@@ -17,7 +17,7 @@
 #'
 #' @param report_name The name of the report you wish to generate. One of
 #'   "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly",
-#'   "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for
+#'   "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Aishihik", Territory" (for
 #'   an overview of the territory with fewer stations). Most minor spelling
 #'   variations should work. Leave as NULL (default) if specifying stations
 #'   under custom_report_stations.
@@ -49,6 +49,8 @@
 #'
 #' @param zoom_days The number of days to plot for zoomed in level plots.
 #'   Defaults to 30, but not used unless level_zoom is set to TRUE.
+#'   
+#' @param forecast Should forecasts be incorporated into the graphs? Applies to MESH and CLEVER forecasts where available.
 #'
 #' @param meteogram Should meteograms relevant to the stations in the report be
 #'   generated? TRUE or FALSE.
@@ -82,6 +84,7 @@ floodReport <-
            level_zoom = TRUE,
            flow_zoom = NULL,
            zoom_days = 30,
+           forecast = TRUE,
            meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {
@@ -136,6 +139,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -165,6 +169,7 @@ floodReport <-
               level_zoom = level_zoom,
               flow_zoom = flow_zoom,
               zoom_days = zoom_days,
+              forecast = forecast,
               meteogram = meteogram,
               plot_titles = plot_titles)
           )
@@ -194,6 +199,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -223,6 +229,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -230,7 +237,7 @@ floodReport <-
       
       ### Generate a report for Pelly/Ross###
       if (report_name %in% c("Pelly", "pelly", "Pelly Crossing", "Pelly crossing", "Ross", "ross", "Ross River", "ross river", "Ross river", "Ross/Pelly", "Pelly/Ross", "Pelly River/Ross River", "Pelly/Ross River", "Ross/Pelly River", "Pelly/Ross Rivers", "Ross/Pelly Rivers")) {
-        stations <- c("09BA001", "09BB001", "09BC001", "09BC002", "09BC004")
+        stations <- c("09BB001", "09BA001", "09BC002", "09BC004", "09BC001")
         preset_extras <- "09BC002:2013,1992,1972"
         
         if (preset_extra_years==TRUE){
@@ -252,6 +259,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -281,6 +289,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -310,6 +319,7 @@ floodReport <-
           level_zoom = level_zoom,
           flow_zoom = flow_zoom,
           zoom_days = zoom_days,
+          forecast = forecast,
           meteogram = meteogram,
           plot_titles = plot_titles)
       )
@@ -339,6 +349,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -368,6 +379,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -397,10 +409,42 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
       } #End of Whitehorse/Laberge report
+      
+      ### Generate a report for Aishihik###
+      if (report_name %in% c("Champagne", "Aishihik", "aishihik", "champagne")) {
+        stations <-c ("08AA007", "08AA008", "08AA009", "08AA012", "08AA005", "08AA010", "08AA001")
+        preset_extras <- c("08AA007:2020", "08AA008:2020", "08AA005:2020", "08AA010:2020")
+        
+        if (preset_extra_years==TRUE){
+          extra_years <- c(preset_extras, extra_years) 
+        } else {
+          extra_years <- extra_years
+        }
+        
+        rmarkdown::render(
+          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          output_file = paste0("Whitehorse.Laberge Condition Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Whitehorse/Lake Laberge Condition Report",
+            extra_years = extra_years,
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
+            zoom_days = zoom_days,
+            forecast = forecast,
+            meteogram = meteogram,
+            plot_titles = plot_titles)
+        )
+      } #End of Aishihik report
+      
     }
       
     ### Generate a custom report ###
@@ -427,6 +471,7 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            forecast = forecast,
             meteogram = meteogram,
             plot_titles = plot_titles)
           )

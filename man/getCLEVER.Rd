@@ -19,7 +19,7 @@ getCLEVER(
 \item{types}{The type of files you wish to download. Graphical products are in PDF format, but the underlying data is available as a CSV. Can specify one or both.}
 }
 \value{
-A .pdf file for each station you specify, unless that station cannot be found.
+A .pdf, .csv, or both types of files for each station you specify, unless a station cannot be found.
 }
 \description{
 Downloads model outputs from BC's CLEVER model.

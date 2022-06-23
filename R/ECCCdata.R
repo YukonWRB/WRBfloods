@@ -55,7 +55,6 @@ ECCCdata <- function(
   
   if (level_flow %in% c("flow", "Flow")){
     for (i in stations){
-      
       flow <- list()
       tryCatch({
         flow <- utils_flow_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
@@ -63,7 +62,7 @@ ECCCdata <- function(
       }, error=function(e) {}
       )
       
-      data[[i]] <- list(level=level, flow=flow)
+      data[[i]] <- list(flow=flow)
     }
   }
   
