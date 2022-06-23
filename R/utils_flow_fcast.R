@@ -51,6 +51,9 @@ utils_fcast_flow_plot <- function(
   if ("MESH_prediction" %in% names(zoom_data)){
     minMESH <- min(zoom_data$MESH_prediction, na.rm=TRUE)
     maxMESH <- max(zoom_data$MESH_prediction, na.rm=TRUE)
+  } else {
+    minMESH <- NA
+    maxMESH <- NA
   }
   
   min <- if (minHist < minZoom) minHist else minZoom
