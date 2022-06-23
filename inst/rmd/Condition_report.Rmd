@@ -721,11 +721,11 @@ for(i in stations) {
               if (i %in% names(MESH) & i %in% names(CLEVER)){
                 #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-                zoom <- dplyr::full_join(flowDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
+                zoom <- dplyr::full_join(zoom, CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 
-                zoomflowPlot <- utils_fcast_flow_plot(station_number = i,
+                zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
-                                                      zoom_data = flowDataList[[n]][[3]],
+                                                      zoom_data = zoom,
                                                       zoom_days = zoom_days)
                 
               } else if (i %in% names(MESH)){

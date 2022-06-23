@@ -49,6 +49,8 @@
 #'
 #' @param zoom_days The number of days to plot for zoomed in level plots.
 #'   Defaults to 30, but not used unless level_zoom is set to TRUE.
+#'   
+#' @param forecast Should forecasts be incorporated into the graphs? Applies to MESH and CLEVER forecasts where available.
 #'
 #' @param meteogram Should meteograms relevant to the stations in the report be
 #'   generated? TRUE or FALSE.
