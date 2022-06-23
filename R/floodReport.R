@@ -428,11 +428,11 @@ floodReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Whitehorse.Laberge Condition Report ", Sys.Date()),
+          output_file = paste0("Aishihik Condition Report ", Sys.Date()),
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = "Whitehorse/Lake Laberge Condition Report",
+            report_name = "Aishihik Condition Report",
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
