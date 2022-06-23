@@ -123,7 +123,7 @@ utils_fcast_flow_plot <- function(
     ggplot2::geom_line(ggplot2::aes(color="2022 (actual)"), size = line_size, na.rm = T)
   
   
-  if("UPPER_BOUND" %in% names(flow_years) & !("MESH_prediction" %in% names(flow_years))) {
+  if("UPPER_BOUND" %in% names(flow_years) & !("MESH_prediction" %in% names(flow_years))) { #Only CLEVER
     plot <- plot + 
       # ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
       # ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), colour="pink", size=line_size/2, na.rm=T) +
@@ -134,7 +134,7 @@ utils_fcast_flow_plot <- function(
       ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
   }
   
-  if("MESH_prediction" %in% names(flow_years) & !("UPPER_BOUND" %in% names(flow_years))){
+  if("MESH_prediction" %in% names(flow_years) & !("UPPER_BOUND" %in% names(flow_years))){ #Only MESH
     plot <- plot +
       ggplot2::geom_line(data = flow_years[!is.na(flow_years$MESH_prediction),], ggplot2::aes(x=Date, y=MESH_prediction, color="MESH forecast"), size=line_size, na.rm=T) +
       
@@ -142,7 +142,7 @@ utils_fcast_flow_plot <- function(
       ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65"))
   }
   
-  if("MESH_prediction" %in% names(flow_years) & "UPPER_BOUND" %in% names(flow_years)){
+  if("MESH_prediction" %in% names(flow_years) & "UPPER_BOUND" %in% names(flow_years)){ #MESH and CLEVER
     plot <- plot +
       # ggplot2::geom_line(ggplot2::aes(x=Date, y = LOWER_BOUND), color="CLEVER lower", size=line_size/2, na.rm=T) +
       # ggplot2::geom_line(ggplot2::aes(x=Date, y = UPPER_BOUND), color="CLEVER upper", size=line_size/2, na.rm=T) +
