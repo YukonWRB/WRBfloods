@@ -33,6 +33,11 @@ utils_level_data <- function(
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
   
+  #Truncate the Yukon at Whitehorse at 2014, since data before that is garbage (much predates the dam for level)
+  if (station_number == "09AB001") {
+    level_historic <- level_historic[level_historic$Date > "2014-01-01",]
+  }
+  
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
   level_historic$Level_masl <- level_historic$Level #create col here so we end up with two cols filled out
