@@ -23,7 +23,7 @@ floodReport(
 \arguments{
 \item{report_name}{The name of the report you wish to generate. One of
 "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly",
-"Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for
+"Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Aishihik", Territory" (for
 an overview of the territory with fewer stations). Most minor spelling
 variations should work. Leave as NULL (default) if specifying stations
 under custom_report_stations.}
