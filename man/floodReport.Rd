@@ -14,7 +14,8 @@ floodReport(
   level_zoom = TRUE,
   flow_zoom = NULL,
   zoom_days = 30,
-  forecast = TRUE,
+  MESH = TRUE,
+  CLEVER = TRUE,
   meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"
@@ -56,7 +57,9 @@ defaults to NULL which copies the setting for level_zoom.}
 \item{zoom_days}{The number of days to plot for zoomed in level plots.
 Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
-\item{forecast}{Should forecasts be incorporated into the graphs? Applies to MESH and CLEVER forecasts where available.}
+\item{MESH}{Should MESH forecasts be incorporated into the graphs?}
+
+\item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
 
 \item{meteogram}{Should meteograms relevant to the stations in the report be
 generated? TRUE or FALSE.}

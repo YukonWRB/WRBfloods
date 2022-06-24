@@ -32,6 +32,10 @@
 #' 
 #' @param meteogram Should meteograms relevant to the stations in the report be included? TRUE or FALSE.
 #' 
+#' @param MESH Should MESH forecasts be incorporated into the graphs?
+#' 
+#' @param CLEVER Should CLEVER forecasts be incorporated into the graphs?
+#' 
 #' @param WSC_images Should images from WSC fixed cameras be included? TRUE or FALSE.
 #' 
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
@@ -54,6 +58,8 @@ freshetReport <-
            level_zoom = TRUE,
            flow_zoom = NULL,
            zoom_days = 20,
+           MESH = TRUE,
+           CLEVER = TRUE,
            precip = FALSE,
            meteogram = FALSE,
            WSC_images = FALSE,
@@ -114,6 +120,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -145,6 +153,8 @@ freshetReport <-
               level_zoom = level_zoom,
               flow_zoom = flow_zoom,
               zoom_days = zoom_days,
+              MESH = MESH,
+              CLEVER = CLEVER,
               precip = precip,
               meteogram = meteogram,
               WSC_images = WSC_images,
@@ -176,6 +186,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -207,6 +219,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -238,6 +252,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -269,6 +285,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -300,6 +318,8 @@ freshetReport <-
           level_zoom = level_zoom,
           flow_zoom = flow_zoom,
           zoom_days = zoom_days,
+          MESH = MESH,
+          CLEVER = CLEVER,
           precip = precip,
           meteogram = meteogram,
           WSC_images = WSC_images,
@@ -331,6 +351,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -362,6 +384,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -393,6 +417,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
@@ -425,6 +451,8 @@ freshetReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,

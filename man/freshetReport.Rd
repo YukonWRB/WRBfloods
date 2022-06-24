@@ -14,6 +14,8 @@ freshetReport(
   level_zoom = TRUE,
   flow_zoom = NULL,
   zoom_days = 20,
+  MESH = TRUE,
+  CLEVER = TRUE,
   precip = FALSE,
   meteogram = FALSE,
   WSC_images = FALSE,
@@ -39,6 +41,10 @@ freshetReport(
 \item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.}
 
 \item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
+
+\item{MESH}{Should MESH forecasts be incorporated into the graphs?}
+
+\item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
 
 \item{precip}{Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE}
 

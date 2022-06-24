@@ -695,14 +695,11 @@ for(i in stations) {
                                                      zoom_days = zoom_days)
             #}
             
-
             if (plot_titles == TRUE){
               zoomLevelPlot <- zoomLevelPlot +
                 ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
                 ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
             }
-            
-            
             
             tryCatch({
               print(zoomLevelPlot)
@@ -744,7 +741,6 @@ for(i in stations) {
                 diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range compasses two points
                 MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
                 
-                #TODO: Confirm no need for adjustment to CLEVER
                 #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
                 
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
