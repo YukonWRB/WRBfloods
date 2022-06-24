@@ -84,7 +84,8 @@ floodReport <-
            level_zoom = TRUE,
            flow_zoom = NULL,
            zoom_days = 30,
-           forecast = TRUE,
+           MESH = TRUE,
+           CLEVER = TRUE,
            meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {
@@ -139,7 +140,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -169,7 +171,8 @@ floodReport <-
               level_zoom = level_zoom,
               flow_zoom = flow_zoom,
               zoom_days = zoom_days,
-              forecast = forecast,
+              MESH = MESH,
+              CLEVER = CLEVER,
               meteogram = meteogram,
               plot_titles = plot_titles)
           )
@@ -199,7 +202,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -229,7 +233,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -259,7 +264,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -289,7 +295,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -319,7 +326,8 @@ floodReport <-
           level_zoom = level_zoom,
           flow_zoom = flow_zoom,
           zoom_days = zoom_days,
-          forecast = forecast,
+          MESH = MESH,
+          CLEVER = CLEVER,
           meteogram = meteogram,
           plot_titles = plot_titles)
       )
@@ -349,7 +357,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -379,7 +388,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -409,7 +419,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -439,7 +450,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -471,7 +483,8 @@ floodReport <-
             level_zoom = level_zoom,
             flow_zoom = flow_zoom,
             zoom_days = zoom_days,
-            forecast = forecast,
+            MESH = MESH,
+            CLEVER = CLEVER,
             meteogram = meteogram,
             plot_titles = plot_titles)
           )

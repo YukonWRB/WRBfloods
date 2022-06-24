@@ -16,7 +16,8 @@ params:
   zoom_days: zoom_days
   meteogram: meteogram
   plot_titles: plot_titles
-  forecast: forecast
+  MESH: MESH
+  CLEVER: CLEVER
 ---
 
 ```{r setup, include=FALSE}
@@ -542,8 +543,7 @@ colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day"
 
 ```{r Get MESH and CLEVER information, echo=FALSE, results='asis', message=FALSE}
 
-if (forecast == TRUE){
-  #MESH
+if (MESH == TRUE){
   #today's files if exists:
   MESHfiles <- list.files("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", pattern= paste0(".*", gsub("-", "", as.character(Sys.Date())), "*\\.*csv"))
   
@@ -587,10 +587,9 @@ if (forecast == TRUE){
   }, error = function(e) {
     MESH <- list()
   })
-  
-  
-  
-  #CLEVER
+} else { MESH <- list()}
+
+if (CLEVER == TRUE){
   CLEVERstns <- c("10AA006", "10AB001", "10AA004", "10AA001" ,"10AD002", "99FK100", "09AE003", "09AA013")
   
   tryCatch({
@@ -609,7 +608,7 @@ if (forecast == TRUE){
   }, error = function(e) {
     CLEVER <- list()  
   }) 
-}
+} else {CLEVER <- list()}
 
 ```
 
