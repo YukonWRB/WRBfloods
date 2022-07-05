@@ -761,7 +761,9 @@ for(i in stations) {
             cat("  \n### Flow  \n")
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  flow_years = flowDataList[[n]][[2]])
+                                  flow_years = flowDataList[[n]][[2]],
+                                               returns = flow_returns,
+                                               complete_df = flowDataList[[n]][[1]])
             
             if (plot_titles == TRUE){
               flowPlot <- flowPlot +
@@ -784,7 +786,7 @@ for(i in stations) {
                 diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range compasses two points
                 MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
                 
-                #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
+                #CLEVER seems to be well adjusted so far! If that changes the adjustment should take place here.
                 
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 zoom <- dplyr::full_join(zoom, CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
@@ -810,7 +812,9 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(CLEVER)) {
                 #Add in CLEVER data, nudge it to match wSC at forecast time.
@@ -819,13 +823,17 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else { #if no MESH or CLEVER, just give a regular plot
                 zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
                                                      flow_years = flowDataList[[n]][[2]],
                                                      zoom_data = flowDataList[[n]][[3]],
-                                                     zoom_days = zoom_days)
+                                                     zoom_days = zoom_days,
+                                                     returns = flow_returns,
+                                                     complete_df = flowDataList[[n]][[1]])
               }
               
               if (plot_titles == TRUE){

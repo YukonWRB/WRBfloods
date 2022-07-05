@@ -23,7 +23,9 @@ utils_fcast_flow_plot <- function(
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
-    point_size = 0.75
+    point_size = 0.75,
+    returns = TRUE,
+    complete_df = NULL
 )
   
 {
@@ -155,6 +157,28 @@ utils_fcast_flow_plot <- function(
       
       ggplot2::scale_colour_manual(name = "", values = c("2022 (actual)" = "blue", "CLEVER forecast" = "brown1", "MESH forecast" = "black")) +
       ggplot2::scale_fill_manual(name = "", values = c("Historical Min - Max" = "gray85", "Historical 25th-75th %" = "gray65", "CLEVER Min - Max" = "pink"))
+  }
+  
+  #calculate return periods if requested
+  if (returns == TRUE & is.null(complete_df) == FALSE){
+    peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
+    peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+    peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+    flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+    
+    plot <- plot +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[10,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[9,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[8,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[7,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[6,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[5,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[4,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[3,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
+      
+      ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
   }
   
   return(plot)
