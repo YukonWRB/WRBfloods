@@ -200,6 +200,8 @@ utils_flow_data <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
+#' @param returns Should returns be plotted? Calculated from up-to-date WSC data. TRUE/FALSE, default TRUE.
+#' @param complete_df If returns=TRUE, specify here the DF containing combined historical and recent data as daily means.
 #'
 #' @return A plot of flow volumes for a WSC station.
 #' @export 
@@ -211,7 +213,9 @@ utils_daily_flow_plot <- function(
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
-  point_size = 0.75
+  point_size = 0.75,
+  returns = TRUE,
+  complete_df = NULL
 )
 
 {
@@ -236,6 +240,14 @@ utils_daily_flow_plot <- function(
   
   legend_length <- length(unique(na.omit(flow_years$Year_Real)))
   
+  #calculate return periods
+  if (returns == TRUE & is.null(complete_df) == FALSE){
+    peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
+    peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+    peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+    flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+  }
+
   # Generate the plot
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) +
     ggplot2::ylim(min, max) +
@@ -254,6 +266,21 @@ utils_daily_flow_plot <- function(
     ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = rev(unique(flow_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(flow_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
 
+  if (returns == TRUE & is.null(complete_df) == FALSE){
+    plot +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[10,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[9,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[8,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[7,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[6,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[5,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[4,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[3,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
+      
+      ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-07-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+  }
   return(plot)
 }
 
@@ -269,6 +296,8 @@ utils_daily_flow_plot <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
+#' @param returns Should returns be plotted? Calculated from up-to-date WSC data.
+#' @param complete_df If returns=TRUE, specify here the DF containing combined historical and recent data as daily means.
 #'
 #' @return A plot for the station requested and for the duration requested.
 #' @export
@@ -282,7 +311,9 @@ utils_zoom_flow_plot <- function(
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
-    point_size = 0.75
+    point_size = 0.75,
+    returns = TRUE,
+    complete_df = NULL
 )
 
 {
@@ -352,6 +383,15 @@ if (zoom_days > 14) {
   labs=scales::label_time(format="%b %d %H:%M")
 }
 
+#calculate return periods
+if (returns == TRUE & is.null(complete_df) == FALSE){
+  peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
+  peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+  peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+  
+  flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+}
+
   # Generate the plot
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) + 
     ggplot2::ylim(min, max) +
@@ -370,6 +410,22 @@ if (zoom_days > 14) {
     
     ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), rev(unique(flow_years$Year_Real)[1:legend_length-1])), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(na.omit(flow_years$Year_Real))[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
+  
+  if (returns == TRUE & is.null(complete_df) == FALSE){
+    plot +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==2)$`1-Day`, linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==5)$`1-Day`, linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==10)$`1-Day`, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==20)$`1-Day`, linetype="dashed", color = "black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==50)$`1-Day`, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==100)$`1-Day`, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==200)$`1-Day`, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==500)$`1-Day`, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==1000)$`1-Day`, linetype="dashed", color="black") +
+      ggplot2::geom_hline(yintercept=dplyr::filter(flowFreq, `Return Period`==2000)$`1-Day`, linetype="dashed", color="black") +
+      
+      ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-07-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+  }
   
   return(plot)
 }

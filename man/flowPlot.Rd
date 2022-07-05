@@ -11,6 +11,7 @@ flowPlot(
   zoom = FALSE,
   zoom_days = 30,
   filter = FALSE,
+  returns = TRUE,
   save_path = "choose"
 )
 }
@@ -26,6 +27,8 @@ flowPlot(
 \item{zoom_days}{Number from 2 to 365. Not used unless zoom=TRUE.}
 
 \item{filter}{TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.}
+
+\item{returns}{Should returns be plotted? Calculated from up-to-date WSC data. TRUE/FALSE, default TRUE.}
 
 \item{save_path}{Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.}
 }

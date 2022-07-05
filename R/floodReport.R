@@ -53,6 +53,8 @@
 #' @param MESH Should MESH forecasts be incorporated into the graphs?
 #' 
 #' @param CLEVER Should CLEVER forecasts be incorporated into the graphs?
+#' 
+#' @param flow_returns Should flow returns be calculated and plotted?
 #'
 #' @param meteogram Should meteograms relevant to the stations in the report be
 #'   generated? TRUE or FALSE.
@@ -88,6 +90,7 @@ floodReport <-
            zoom_days = 30,
            MESH = TRUE,
            CLEVER = TRUE,
+           flow_returns = TRUE,
            meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {
@@ -144,6 +147,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -175,6 +179,7 @@ floodReport <-
               zoom_days = zoom_days,
               MESH = MESH,
               CLEVER = CLEVER,
+              flow_returns = flow_returns,
               meteogram = meteogram,
               plot_titles = plot_titles)
           )
@@ -206,6 +211,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -237,6 +243,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -268,6 +275,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -299,6 +307,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -330,6 +339,7 @@ floodReport <-
           zoom_days = zoom_days,
           MESH = MESH,
           CLEVER = CLEVER,
+          flow_returns = flow_returns,
           meteogram = meteogram,
           plot_titles = plot_titles)
       )
@@ -361,6 +371,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -392,6 +403,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -423,6 +435,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -454,6 +467,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -487,6 +501,7 @@ floodReport <-
             zoom_days = zoom_days,
             MESH = MESH,
             CLEVER = CLEVER,
+            flow_returns = flow_returns,
             meteogram = meteogram,
             plot_titles = plot_titles)
           )
