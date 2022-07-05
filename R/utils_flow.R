@@ -216,7 +216,7 @@ utils_daily_flow_plot <- function(
     point_size = 0.75,
     returns = TRUE,
     complete_df = NULL
-)
+    )
   
 {
   graph_year <- max(unique(flow_years$Year_Real))
@@ -239,7 +239,7 @@ utils_daily_flow_plot <- function(
     dplyr::arrange(Year_Real)
   
   legend_length <- length(unique(na.omit(flow_years$Year_Real)))
-  
+
   # Generate the plot
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) +
     ggplot2::ylim(min, max) +
@@ -257,7 +257,7 @@ utils_daily_flow_plot <- function(
     
     ggplot2::scale_colour_manual(name = "Flow (daily mean)", labels = rev(unique(flow_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(flow_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
-  
+
   #calculate return periods if requested
   if (returns == TRUE & is.null(complete_df) == FALSE){
     peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
@@ -278,6 +278,7 @@ utils_daily_flow_plot <- function(
       ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
       
       ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+
   }
   return(plot)
 }
