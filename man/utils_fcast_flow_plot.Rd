@@ -13,7 +13,9 @@ utils_fcast_flow_plot(
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
-  point_size = 0.75
+  point_size = 0.75,
+  returns = TRUE,
+  complete_df = NULL
 )
 }
 \arguments{

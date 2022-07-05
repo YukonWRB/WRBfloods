@@ -345,8 +345,8 @@ utils_daily_level_plot <- function(
         ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
         ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-07-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "five year return", "ten year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
-    } 
+        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "five year return", "ten year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+    }
   return(plot)
 }
 

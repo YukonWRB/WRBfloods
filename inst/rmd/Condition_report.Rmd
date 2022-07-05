@@ -18,6 +18,7 @@ params:
   plot_titles: plot_titles
   MESH: MESH
   CLEVER: CLEVER
+  flow_returns: flow_returns
 ---
 
 ```{r setup, include=FALSE}
@@ -173,7 +174,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         )
       }
       
-      #next few lines calculate where we're at for return periods and if there's a flag raised
+      #next few lines calculate where we're at for level return periods and if there's a flag raised
       if (i %in% data$return_periods$ID==TRUE) {
         
         stn <- dplyr::filter(data$return_periods, ID == i)
@@ -224,7 +225,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
 # Get flow data in two lists
 flowDataList <- list()
 flowInfo <- list()
-  
+
 if (report_type %in% c("Both", "Flow", "both", "flow")){
   #parse out the extra years if requested
   if (is.null(extra_years)==FALSE){
@@ -318,11 +319,45 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           One_week_ago = if(length(weekFlow)==0) {as.numeric(NA)} else {weekFlow},
           One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
         )
+        
+      #next few lines calculate flow return periods
+        peaks <- fasstr::calc_annual_peaks(flowData[[1]], values = Flow, months = 5:9, allowed_missing = 5)
+        peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+        peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+        
+        freq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+        freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
+
+        tbl$Current_return_period <- 
+          if (tail(freq, n=1)$`Return Period` < 2) {
+            "<2 year"
+          } else if (tail(freq, n=1)$`Return Period` < 5) {
+            " 2 to 5 year"
+          } else if (tail(freq, n=1)$`Return Period` < 10) {
+            "5 to 10 year"
+          } else if(tail(freq, n=1)$`Return Period` < 20) {
+            "10 to 20 year"
+          } else if (tail(freq, n=1)$`Return Period` < 50) {
+            "20 to 50 year"
+          } else if (tail(freq, n=1)$`Return Period` < 100) {
+            "50 to 100 year"
+          } else if (tail(freq, n=1)$`Return Period` < 200) {
+            "100 to 200 year"
+          } else if (tail(freq, n=1)$`Return Period` < 500) {
+            "200 to 500 year"
+          } else if (tail(freq, n=1)$`Return Period` < 1000) {
+            "500 to 100 year"
+          } else if (tail(freq, n=1)$`Return Period` < 2000) {
+            "1000 to 2000 year"
+          } else if (tail(freq, n=1)$`Return Period` > 2000) {
+            "> 2000 year"
+          }
+        
       }, error=function(e) {}
       ) #End of tryCatch for station existence
     } #End of loop that runs only if it's not a lake
       flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
-      flowDataList[[i]] <- flowData    
+      flowDataList[[i]] <- flowData
   } #End of FLOW for loop
 }# End of if "flow" or "both" selected statement
 
@@ -485,14 +520,22 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
   
-  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17)] #0.0001 is the indicator for lake stations, remove those
+  if (flow_returns == TRUE){
+    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17, 18)] #0.0001 is the indicator for lake stations, remove those
+  } else {
+    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17)]
+  }
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
   names(flowTable) <- gsub("X", "", names(flowTable))
   
   flowTable$Current_percent_historic <- round(flowTable$`Current_percent_historic`, 1)
   
-  colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
+  if ( flow_returns == TRUE){
+    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period")
+  } else {
+    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
+  }
   
   print(knitr::kable(flowTable, digits=1, align="lcccccc"))
   
@@ -718,7 +761,9 @@ for(i in stations) {
             cat("  \n### Flow  \n")
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  flow_years = flowDataList[[n]][[2]])
+                                  flow_years = flowDataList[[n]][[2]],
+                                               returns = flow_returns,
+                                               complete_df = flowDataList[[n]][[1]])
             
             if (plot_titles == TRUE){
               flowPlot <- flowPlot +
@@ -741,7 +786,7 @@ for(i in stations) {
                 diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range compasses two points
                 MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
                 
-                #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
+                #CLEVER seems to be well adjusted so far! If that changes the adjustment should take place here.
                 
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 zoom <- dplyr::full_join(zoom, CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
@@ -749,7 +794,9 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(MESH)){
                 #Add in the MESH data, nudge it to match WSC at forecast time.
@@ -765,7 +812,9 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(CLEVER)) {
                 #Add in CLEVER data, nudge it to match wSC at forecast time.
@@ -774,13 +823,17 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else { #if no MESH or CLEVER, just give a regular plot
                 zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
                                                      flow_years = flowDataList[[n]][[2]],
                                                      zoom_data = flowDataList[[n]][[3]],
-                                                     zoom_days = zoom_days)
+                                                     zoom_days = zoom_days,
+                                                     returns = flow_returns,
+                                                     complete_df = flowDataList[[n]][[1]])
               }
               
               if (plot_titles == TRUE){

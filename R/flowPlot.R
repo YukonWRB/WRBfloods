@@ -12,13 +12,14 @@
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
 #' @param zoom_days Number from 2 to 365. Not used unless zoom=TRUE.
 #' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
+#' @param returns Should returns be plotted? Calculated from up-to-date WSC data. TRUE/FALSE, default TRUE.
 #' @param save_path Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.
 #'
 #' @return A .png file of the plot requested, plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 #' @export
 #'
 
-flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filter=FALSE, save_path="choose") {
+flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filter=FALSE, returns = TRUE, save_path="choose") {
   
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
@@ -37,14 +38,18 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
   # Plot the data
   if (zoom==FALSE) { #plot the whole year
     plot <- utils_daily_flow_plot(station_number = station,
-                             flow_years = flowData[[2]])
+                             flow_years = flowData[[2]],
+                             returns = returns,
+                             complete_df = flowData[[1]])
   }
   
   if (zoom == TRUE){ #Plot zoomed-in flow data
     plot <- utils_zoom_flow_plot(station_number = station,
                             flow_years = flowData[[2]],
                             zoom_data = flowData[[3]],
-                            zoom_days = zoom_days)
+                            zoom_days = zoom_days,
+                            returns = returns,
+                            complete_df = flowData[[1]])
   }
   
   if (title == TRUE){

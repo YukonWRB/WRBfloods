@@ -11,7 +11,9 @@ utils_daily_flow_plot(
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
-  point_size = 0.75
+  point_size = 0.75,
+  returns = TRUE,
+  complete_df = NULL
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ utils_daily_flow_plot(
 \item{line_size}{Self explanatory.}
 
 \item{point_size}{Self explanatory.}
+
+\item{returns}{Should returns be plotted? Calculated from up-to-date WSC data. TRUE/FALSE, default TRUE.}
+
+\item{complete_df}{If returns=TRUE, specify here the DF containing combined historical and recent data as daily means.}
 }
 \value{
 A plot of flow volumes for a WSC station.
