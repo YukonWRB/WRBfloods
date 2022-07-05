@@ -16,6 +16,7 @@ floodReport(
   zoom_days = 30,
   MESH = TRUE,
   CLEVER = TRUE,
+  flow_returns = TRUE,
   meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"
@@ -60,6 +61,8 @@ Defaults to 30, but not used unless level_zoom is set to TRUE.}
 \item{MESH}{Should MESH forecasts be incorporated into the graphs?}
 
 \item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
+
+\item{flow_returns}{Should flow returns be calculated and plotted?}
 
 \item{meteogram}{Should meteograms relevant to the stations in the report be
 generated? TRUE or FALSE.}
