@@ -16,7 +16,7 @@ floodReport(
   zoom_days = 30,
   MESH = TRUE,
   CLEVER = TRUE,
-  flow_returns = TRUE,
+  flow_returns = "both",
   meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"
@@ -62,7 +62,7 @@ Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
 \item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
 
-\item{flow_returns}{Should flow returns be calculated and plotted?}
+\item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
 
 \item{meteogram}{Should meteograms relevant to the stations in the report be
 generated? TRUE or FALSE.}

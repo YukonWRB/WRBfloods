@@ -230,9 +230,9 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       
       
       #next few lines calculate where we're at for return periods
-      if (i %in% data$return_periods$ID==TRUE) {
+      if (i %in% data$level_returns$ID==TRUE) {
         
-       stn <- dplyr::filter(data$return_periods, ID == i)
+       stn <- dplyr::filter(data$level_returns, ID == i)
       
         tbl$Current_return_period <- 
           if (todayLevel < stn$twoyear) {
@@ -254,7 +254,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
             } else if (todayLevel < stn$fivehundredyear) {
               "200 to 500 year" 
             } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
-              ">500 year"
+              "> 500 year"
             } else if (todayLevel < stn$thousandyear) {
               "500 to 1000 year"
             } else if (todayLevel > stn$thousandyear) {

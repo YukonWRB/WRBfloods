@@ -279,7 +279,7 @@ utils_level_data <- function(
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
 #'
-#' @return A plot for the station requested with return intervals, if it exists in the data file data$return_periods.
+#' @return A plot for the station requested with return intervals, if it exists in the data file data$level_returns.
 #' @export
 
 utils_daily_level_plot <- function(
@@ -334,9 +334,9 @@ utils_daily_level_plot <- function(
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
     #Add return periods if they exist for this station
-    if (station_number %in% data$return_periods$ID==TRUE){
+    if (station_number %in% data$level_returns$ID==TRUE){
       levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
-      stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
+      stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
       
       plot <- plot + 
         ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
@@ -472,9 +472,9 @@ utils_zoom_level_plot <- function(
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if they exist for this station
-  if (station_number %in% data$return_periods$ID==TRUE){
+  if (station_number %in% data$level_returns$ID==TRUE){
     levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
-    stn <- dplyr::filter(data$return_periods, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
+    stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
     plot <- plot + 
       ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +

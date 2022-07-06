@@ -28,7 +28,7 @@ utils_daily_level_plot(
 \item{point_size}{Self explanatory.}
 }
 \value{
-A plot for the station requested with return intervals, if it exists in the data file data$return_periods.
+A plot for the station requested with return intervals, if it exists in the data file data$level_returns.
 }
 \description{
 This utility function is designed to take the output of the utils_level_data function. If you're looking for a plot, use the levelPlot function instead.

@@ -11,7 +11,7 @@ flowPlot(
   zoom = FALSE,
   zoom_days = 30,
   filter = FALSE,
-  returns = TRUE,
+  returns = "both",
   save_path = "choose"
 )
 }
@@ -28,7 +28,7 @@ flowPlot(
 
 \item{filter}{TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.}
 
-\item{returns}{Should returns be plotted? Calculated from up-to-date WSC data. TRUE/FALSE, default TRUE.}
+\item{returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
 
 \item{save_path}{Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.}
 }
@@ -36,10 +36,8 @@ flowPlot(
 A .png file of the plot requested, plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 }
 \description{
-Generates plots of water flows from Water Survey of Canada stations, with up to 10 years specified by the user.
+Generates plots of water flows from Water Survey of Canada stations, with up to 10 years specified by the user. Return periods can be added (with a few options), and a plot title is optional.
 }
 \details{
 To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
-
-You must also manually install the dependent package "tidyhydat.ws" as it lives on a github repository. Use install.packages('tidyhydat.ws', repos='https://bcgov.github.io/drat/')
 }

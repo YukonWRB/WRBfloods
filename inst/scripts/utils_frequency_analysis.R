@@ -3,7 +3,7 @@
 #list of stations for which to calculate returns
 stations <- dplyr::filter(data$spatial_stns, Type=="WSC")$WSC_ID
 #data gathering
-dat <- WRBfloods::ECCCdata(stations, filter=FALSE, level_flow="both")
+dat <- WRBfloods::WSCdata(stations, filter=FALSE, level_flow="both")
 
 #Flow frequency analysis
 

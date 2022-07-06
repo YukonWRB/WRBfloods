@@ -38,7 +38,7 @@ for (i in stations){
   links <- c(links, newlink)
   community <- c(community, newcommunity)
 }
-  
+
 if (report_type %in% c("Both", "Level", "both", "level")){
   levelDataList <- list()
   levelInfo <- list()
@@ -81,24 +81,24 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       #Get the level data
       if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
         levelData <- utils_level_data(
-        station_number = i,
-        select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-        level_zoom = TRUE,
-        filter = TRUE,
-        recent_prctile = FALSE
-      )
+          station_number = i,
+          select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
+          level_zoom = TRUE,
+          filter = TRUE,
+          recent_prctile = FALSE
+        )
       } else{
         levelData <- utils_level_data(
-        station_number = i,
-        select_years = lubridate::year(Sys.Date()),
-        level_zoom = TRUE,
-        filter = TRUE,
-        recent_prctile = FALSE
-      )
+          station_number = i,
+          select_years = lubridate::year(Sys.Date()),
+          level_zoom = TRUE,
+          filter = TRUE,
+          recent_prctile = FALSE
+        )
       }
       
       datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))))
-
+      
       #Level data processing
       if (datum_na==TRUE) {
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
@@ -175,9 +175,9 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       }
       
       #next few lines calculate where we're at for level return periods and if there's a flag raised
-      if (i %in% data$return_periods$ID==TRUE) {
+      if (i %in% data$level_returns$ID==TRUE) {
         
-        stn <- dplyr::filter(data$return_periods, ID == i)
+        stn <- dplyr::filter(data$level_returns, ID == i)
         
         tbl$Current_return_period <- 
           if (todayLevel < stn$twoyear) {
@@ -210,7 +210,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         } else {tbl$Flag <- "NA"
         }
       } else {tbl$Current_return_period <- "NA"
-              tbl$Flag <- "NA"
+      tbl$Flag <- "NA"
       }
       
     }, error=function(e) {}
@@ -234,32 +234,32 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
   } else {
     years <- data.frame()
   }
-    
+  
   for(i in stations) {
     station_info <- tidyhydat::hy_stations(i)
-   flowData <- data.frame() #Created to standardize the eventual output of this code block; some stations have no flow
-
+    flowData <- data.frame() #Created to standardize the eventual output of this code block; some stations have no flow
+    
     tbl <- data.frame( #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
-        Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
-        ID = i,
-        `Start year flow` = NA,
-        Current_flow= 0.0001, #this is a number so that lake stations can be removed after.
-        Current_percent_historic = NA,
-        Yesterday = NA,
-        `24_hr_change` = NA,
-        Two_days_ago = NA,
-        `48_hr_change` = NA,
-        Three_days_ago = NA,
-        `72_hr_change` = NA,
-        Four_days_ago = NA,
-        Five_days_ago = NA,
-        Six_days_ago = NA,
-        One_week_ago = NA,
-        One_week_change = NA
-      )    
+      Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
+      ID = i,
+      `Start year flow` = NA,
+      Current_flow= 0.0001, #this is a number so that lake stations can be removed after.
+      Current_percent_historic = NA,
+      Yesterday = NA,
+      `24_hr_change` = NA,
+      Two_days_ago = NA,
+      `48_hr_change` = NA,
+      Three_days_ago = NA,
+      `72_hr_change` = NA,
+      Four_days_ago = NA,
+      Five_days_ago = NA,
+      Six_days_ago = NA,
+      One_week_ago = NA,
+      One_week_change = NA
+    )    
     
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
-
+      
       tbl$Current.flow <- NA #Overwrite 0.0001 so that the reader knows that a station could/should have flow but does not
       
       tryCatch ({
@@ -320,44 +320,84 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
         )
         
-      #next few lines calculate flow return periods
-        peaks <- fasstr::calc_annual_peaks(flowData[[1]], values = Flow, months = 5:9, allowed_missing = 5)
-        peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
-        peaks <- dplyr::mutate(peaks, Measure = "1-Day")
-        
-        freq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
-        freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
-
-        tbl$Current_return_period <- 
-          if (tail(freq, n=1)$`Return Period` < 2) {
-            "<2 year"
-          } else if (tail(freq, n=1)$`Return Period` < 5) {
-            " 2 to 5 year"
-          } else if (tail(freq, n=1)$`Return Period` < 10) {
-            "5 to 10 year"
-          } else if(tail(freq, n=1)$`Return Period` < 20) {
-            "10 to 20 year"
-          } else if (tail(freq, n=1)$`Return Period` < 50) {
-            "20 to 50 year"
-          } else if (tail(freq, n=1)$`Return Period` < 100) {
-            "50 to 100 year"
-          } else if (tail(freq, n=1)$`Return Period` < 200) {
-            "100 to 200 year"
-          } else if (tail(freq, n=1)$`Return Period` < 500) {
-            "200 to 500 year"
-          } else if (tail(freq, n=1)$`Return Period` < 1000) {
-            "500 to 100 year"
-          } else if (tail(freq, n=1)$`Return Period` < 2000) {
-            "1000 to 2000 year"
-          } else if (tail(freq, n=1)$`Return Period` > 2000) {
-            "> 2000 year"
+        if (!(flow_returns %in% c("None", "none"))){ #if flow_returns is "none", the column is simply not created.
+          
+          if (flow_returns %in% c("both", "Both", "Calc", "calc") & i %in% data$flow_returns$ID){ #where possible, plug in the verified value
+            stn <- dplyr::filter(data$flow_returns, ID == i)
+            tbl$Current_return_period <-
+              if (todayFlow < stn$twoyear) {
+                "<2 year"
+              } else if (todayFlow < stn$fiveyear) {
+                "2 to 5 year"
+              } else if (todayFlow < stn$tenyear) {
+                "5 to 10 year" 
+              } else if (todayFlow < stn$twentyyear) {
+                "10 to 20 year" 
+              } else if (todayFlow < stn$fiftyyear) {
+                "20 to 50 year" 
+              } else if (todayFlow < stn$onehundredyear) {
+                "50 to 100 year"
+              } else if (todayFlow < stn$twohundredyear) {
+                "100 to 200 year"
+              } else if (todayFlow > stn$twohundredyear & is.na(stn$fivehundredyear)) {
+                "> 200 year" 
+              } else if (todayFlow < stn$fivehundredyear) {
+                "200 to 500 year" 
+              } else if (todayFlow > stn$fivehundredyear & is.na(stn$thousandyear)) {
+                "> 500 year"
+              } else if (todayFlow < stn$thousandyear) {
+                "500 to 1000 year"
+              } else if (todayFlow > stn$thousandyear & is.na(stn$twothousandyear)) {
+                "> 1000 year"
+              } else if (todayFlow < stn$twothousandyear) {
+                "1000 to 2000 year"
+              } else if (todayFlow > stn$twothousandyear) {
+                "> 2000 year"
+              }
+            
+          } else if (flow_returns %in% c("Calc", "calc") & !(i %in% data$flow_returns$ID)){ #if humnan-verified values only requested but not available, give NA
+            tbl$Current_return_period <- "NA"
+            
+          } else if (flow_returns %in% c("both", "Both", "Auto", "auto")){ #if auto selected, run code OR if both selected and no human-verified value available.
+            peaks <- fasstr::calc_annual_peaks(flowData[[1]], values = Flow, months = 5:9, allowed_missing = 5)
+            peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+            peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+            
+            freq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+            freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
+            
+            tbl$Current_return_period <- 
+              if (tail(freq, n=1)$`Return Period` < 2) {
+                "<2 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 5) {
+                " 2 to 5 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 10) {
+                "5 to 10 year*"
+              } else if(tail(freq, n=1)$`Return Period` < 20) {
+                "10 to 20 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 50) {
+                "20 to 50 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 100) {
+                "50 to 100 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 200) {
+                "100 to 200 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 500) {
+                "200 to 500 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 1000) {
+                "500 to 100 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 2000) {
+                "1000 to 2000 year*"
+              } else if (tail(freq, n=1)$`Return Period` > 2000) {
+                "> 2000 year*"
+              }
           }
+        }
         
       }, error=function(e) {}
       ) #End of tryCatch for station existence
     } #End of loop that runs only if it's not a lake
-      flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
-      flowDataList[[i]] <- flowData
+    flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
+    flowDataList[[i]] <- flowData
   } #End of FLOW for loop
 }# End of if "flow" or "both" selected statement
 
@@ -520,7 +560,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   flowTable <-  dplyr::bind_rows(flowInfo) %>% 
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
   
-  if (flow_returns == TRUE){
+  if (!(flow_returns %in% c("none", "None"))){
     flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17, 18)] #0.0001 is the indicator for lake stations, remove those
   } else {
     flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17)]
@@ -531,7 +571,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   flowTable$Current_percent_historic <- round(flowTable$`Current_percent_historic`, 1)
   
-  if ( flow_returns == TRUE){
+  if (!(flow_returns %in% c("none", "None"))){
     colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period")
   } else {
     colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
@@ -542,6 +582,11 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   if (NA %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
     cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
   }
+  #TODO: check to make sure this line works!
+  if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "*")){
+    cat("*Value obtained programatically by analysing May to September daily mean flows. No human checks were performed on underlying data.")
+  }
+
 }
 ```
 
