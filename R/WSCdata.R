@@ -1,4 +1,4 @@
-#' Download and process ECCC flow or level data
+#' Download and process WSC flow or level data
 #' 
 #' Neatly packages the output from utils_flow_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
 #'
@@ -11,7 +11,7 @@
 #' @return A list with an element for each station requested.
 #' @export
 #'
-ECCCdata <- function(
+WSCdata <- function(
     stations, 
     level_flow = "Both",
     years = lubridate::year(Sys.Date()), 
