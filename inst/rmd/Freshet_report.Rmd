@@ -610,7 +610,6 @@ for(i in stations) {
             #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range compasses two points
             #   MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
             #   
-            #   #TODO: Confirm no need for adjustment to CLEVER
             #   #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
             #   
             #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))

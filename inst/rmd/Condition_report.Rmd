@@ -573,18 +573,20 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   if (!(flow_returns %in% c("none", "None"))){
     colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period")
+    print(knitr::kable(flowTable, digits=1, align="lccccccc"))
+
   } else {
     colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
+    print(knitr::kable(flowTable, digits=1, align="lcccccc"))
   }
   
-  print(knitr::kable(flowTable, digits=1, align="lcccccc"))
   
-  if (NA %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
-    cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
+  if (TRUE %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
+    cat("NOTE: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
   }
-  #TODO: check to make sure this line works!
-  if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "*")){
-    cat("*Value obtained programatically by analysing May to September daily mean flows. No human checks were performed on underlying data.")
+
+    if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
+    cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. No human checks were performed on underlying data.")
   }
 
 }
@@ -740,7 +742,6 @@ for(i in stations) {
             #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range compasses two points
             #   MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
             #   
-            #   #TODO: Confirm no need for adjustment to CLEVER
             #   #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
             #   
             #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
