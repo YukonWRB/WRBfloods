@@ -14,7 +14,7 @@ utils_zoom_flow_plot(
   legend_position = "right",
   line_size = 1,
   point_size = 0.75,
-  returns = "both",
+  returns = "none",
   complete_df = NULL
 )
 }
@@ -35,7 +35,7 @@ utils_zoom_flow_plot(
 
 \item{point_size}{Self explanatory.}
 
-\item{returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".}
 
 \item{complete_df}{If returns="calc" or "both", specify here the DF containing combined historical and recent data as daily means.}
 }

@@ -463,7 +463,7 @@ if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is
 
 ```
 
-Return periods representing 2, 10, 100, and 200 year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
+Return periods representing 2, 10, 20, 50, 100, and 200 year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 

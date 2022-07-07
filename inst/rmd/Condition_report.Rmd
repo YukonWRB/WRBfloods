@@ -863,7 +863,7 @@ for(i in stations) {
                                                       complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(CLEVER)) {
-                #Add in CLEVER data, nudge it to match wSC at forecast time.
+                #Add in CLEVER data, nudge it to match WSC at forecast time.
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,

@@ -6,8 +6,8 @@
 #' @param flow_years A data.frame of plotting data
 #' @param zoom_data The data frame of zoomed-in data.
 #' @param zoom_days The number of days to plot, counting back from the current date.
-#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
-#' @param complete_df A data.frame containing historical data for the relevant station. Used only if paramater "returns" is "auto" or "both".
+#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".
+#' @param complete_df A data.frame containing historical data for the relevant station. Used only if parameter "returns" is "auto" or "both".
 #' @param colours Colour of the lines/points.
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
@@ -26,7 +26,7 @@ utils_fcast_flow_plot <- function(
     legend_position = "right",
     line_size = 1,
     point_size = 0.75,
-    returns = "both",
+    returns = "none",
     complete_df = NULL
 )
   
