@@ -49,18 +49,18 @@ utils_level_data <- function(
   }
 
   if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
-    token_out <- tidyhydat.ws::token_ws()
+    token_out <- suppressMessages(tidyhydat.ws::token_ws())
     
     #TODO: remove line below once tidyhydat.ws is fixed.
     param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
     
-    level_real_time <- tidyhydat.ws::realtime_ws(
+    level_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
       station_number = station_number, 
       parameters = 46, 
       start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), 
       end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
       token = token_out
-      )
+      ))
     
     recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
 
