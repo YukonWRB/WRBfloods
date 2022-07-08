@@ -11,8 +11,8 @@
 #' @param zoom_days Number from 2 to 365. Not used unless zoom=TRUE. Note that if specifying MESH or CLEVER forecasts that the x-axis length will include the full 10 days of forecasts in addition to zoom_days!
 #' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
 #' @param forecast Do you want MESH or CLEVER forecasts, or both? Choose from "MESH", "CLEVER", "both", or "none". Default is "none"
-#' @param returns Should flow returns be added? You have the option of using pre-determined flow only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
-#' @param save_path Default is "none", and the graph will only be visible in RStudio can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
+#' @param returns Should flow returns be added? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param save_path Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
 #'
 #' @return A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 #' @export
@@ -126,8 +126,6 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
       }
   }
   
-  
-  
   if (forecast %in% "CLEVER"){ #get the CLEVER data and add it to flowData[[1]]
     
     exists <- RCurl::url.exists(paste0("bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"))
@@ -159,7 +157,6 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
                                    complete_df = flowData[[1]])
     }
   }
-  
   
   if (forecast %in% c("Both", "both")){
     #Deal with CLEVER first
@@ -251,7 +248,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
   }
   
   #Save it if requested
-  if (save_path != "none"){
+  if (!(save_path %in% c("none", "None"))){
     ggplot2::ggsave(filename=paste0(save_path,"/", station, "_FLOW_", if(zoom==TRUE) "ZOOM_" else "", Sys.Date(), "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), lubridate::minute(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), ".png"), plot=plot, height=8, width=12, units="in", device="png", dpi=500)
   }
   

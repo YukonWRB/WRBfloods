@@ -53,7 +53,9 @@
 #' 
 #' @param CLEVER Should CLEVER forecasts be incorporated into the graphs?
 #' 
-#' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
+#'
+#'@param level_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
 #'
 #' @param meteogram Should meteograms relevant to the stations in the report be
 #'   generated? TRUE or FALSE.
@@ -89,6 +91,7 @@ floodReport <-
            MESH = TRUE,
            CLEVER = TRUE,
            flow_returns = "both",
+           level_returns = "both",
            meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {

@@ -200,8 +200,8 @@ utils_flow_data <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
-#' @param complete_df If returns="calc" or "both", specify here the DF containing combined historical and recent data as daily means.
+#' @param returns Should flow returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table".
 #'
 #' @return A plot of flow volumes for a WSC station.
 #' @export 
@@ -280,7 +280,7 @@ utils_daily_flow_plot <- function(
         
         ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
-    } else if (returns %in% c("calc", "Calc") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
+    } else if (returns %in% c("table", "Table") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
       stn <- dplyr::filter(data$flow_returns, ID == station_number)
       
       plot <- plot + 
@@ -353,8 +353,8 @@ utils_daily_flow_plot <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".
-#' @param complete_df If returns="calc" or "both", specify here the DF containing combined historical and recent data as daily means.
+#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".
+#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means.
 #'
 #' @return A plot for the station requested and for the duration requested.
 #' @export
@@ -481,7 +481,7 @@ if (zoom_days > 14) {
         
         ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
-    } else if (returns %in% c("calc", "Calc") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
+    } else if (returns %in% c("table", "Table") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
       stn <- dplyr::filter(data$flow_returns, ID == station_number)
       
       plot <- plot + 
