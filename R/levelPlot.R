@@ -20,6 +20,9 @@
 
 levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filter=FALSE, forecast=NULL, returns="both", save_path="choose") {
   
+  oldw <- getOption("warn") #get the initial warning state
+  options(warn = -1) #disable warnings so that ggplot doesn't give a whole pile of them
+  
   if (save_path %in% c("Choose", "choose")) {
     print("Select the path to the folder where you want this report saved.")
     save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
@@ -64,6 +67,8 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filt
   }
   
   return(plot)
+  
+  options(warn = oldw) #re-enable warnings
 }
 
 
