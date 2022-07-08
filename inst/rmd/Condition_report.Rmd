@@ -50,7 +50,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
     years <- data.frame()
   }
   
-  for(i in stations) {
+  for (i in stations) {
     
     #tryCatch special here: the error function was not creating any output, so the error data.frames are created here. If successful, it is overwritten in the for loop, otherwise the error output is already created for each i
     tbl <- data.frame(
@@ -207,12 +207,19 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           }
         tbl$Flag <- if (todayLevel >= stn$Flag_Level) {
           stn$Note
-        } else {tbl$Flag <- "NA"
+        } else {
+          tbl$Flag <- "NA"
         }
-      } else {tbl$Current_return_period <- "NA"
-      tbl$Flag <- "NA"
+      } else {
+        tbl$Current_return_period <- "NA"
+        tbl$Flag <- "NA"
       }
       
+    #Determine if the last data point is >6 hours old
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*6)) {
+        tbl[4:17] <- "M"
+      }
+        
     }, error=function(e) {}
     ) #End of tryCatch for station existence
     levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
@@ -322,7 +329,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         
         if (!(flow_returns %in% c("None", "none"))){ #if flow_returns is "none", the column is simply not created.
           
-          if (flow_returns %in% c("both", "Both", "Calc", "calc") & i %in% data$flow_returns$ID){ #where possible, plug in the verified value
+          if (flow_returns %in% c("both", "Both", "Table", "table") & i %in% data$flow_returns$ID){ #where possible, plug in the verified value
             stn <- dplyr::filter(data$flow_returns, ID == i)
             tbl$Current_return_period <-
               if (todayFlow < stn$twoyear) {
@@ -355,7 +362,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
                 "> 2000 year"
               }
             
-          } else if (flow_returns %in% c("Calc", "calc") & !(i %in% data$flow_returns$ID)){ #if humnan-verified values only requested but not available, give NA
+          } else if (flow_returns %in% c("Table", "table") & !(i %in% data$flow_returns$ID)){ #if human-verified values only requested but not available, give NA
             tbl$Current_return_period <- "NA"
             
           } else if (flow_returns %in% c("both", "Both", "Auto", "auto")){ #if auto selected, run code OR if both selected and no human-verified value available.
@@ -392,6 +399,10 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
               }
           }
         }
+       #Determine if the last data point is >6 hours old
+      if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*6)) {
+        tbl[4:16] <- "M"
+      }
         
       }, error=function(e) {}
       ) #End of tryCatch for station existence
@@ -546,7 +557,11 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   levelTable$`48 hr change (cm)` <- round(levelTable$`48 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
   
-  knitr::kable(levelTable, digits=2, align = "lcccccccc")
+  print(knitr::kable(levelTable, digits=2, align = "lcccccccc"))
+  
+ if (TRUE %in% stringr::str_detect(levelTable$`Current level (m)`, "M")){
+    cat("M: Recent level values are missing - all data points are more than 6 hours old.")
+  }
 }
 ```
 
@@ -587,6 +602,9 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
 
     if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
     cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. No human checks were performed on underlying data.")
+    }
+   if (TRUE %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "M")){
+    cat("M: Recent flow values are missing - all data points are more than 6 hours old.")
   }
 
 }
@@ -863,7 +881,7 @@ for(i in stations) {
                                                       complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(CLEVER)) {
-                #Add in CLEVER data, nudge it to match wSC at forecast time.
+                #Add in CLEVER data, nudge it to match WSC at forecast time.
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,

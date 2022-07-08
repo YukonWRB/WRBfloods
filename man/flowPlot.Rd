@@ -11,33 +11,36 @@ flowPlot(
   zoom = FALSE,
   zoom_days = 30,
   filter = FALSE,
+  forecast = "none",
   returns = "both",
-  save_path = "choose"
+  save_path = "none"
 )
 }
 \arguments{
 \item{station}{The WSC station for which you wish to generate a plot.}
 
-\item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector.}
+\item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector. Only the current year can be plotted with MESH or CLEVER forecasts.}
 
 \item{title}{Do you want a title added to the plot? TRUE/FALSE.}
 
 \item{zoom}{TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.}
 
-\item{zoom_days}{Number from 2 to 365. Not used unless zoom=TRUE.}
+\item{zoom_days}{Number from 2 to 365. Not used unless zoom=TRUE. Note that if specifying MESH or CLEVER forecasts that the x-axis length will include the full 10 days of forecasts in addition to zoom_days!}
 
 \item{filter}{TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.}
 
-\item{returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{forecast}{Do you want MESH or CLEVER forecasts, or both? Choose from "MESH", "CLEVER", "both", or "none". Default is "none"}
 
-\item{save_path}{Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.}
+\item{returns}{Should flow returns be added? You have the option of using pre-determined flow only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+
+\item{save_path}{Default is "none", and the graph will only be visible in RStudio can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.}
 }
 \value{
-A .png file of the plot requested, plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
+A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 }
 \description{
-Generates plots of water flows from Water Survey of Canada stations, with up to 10 years specified by the user. Return periods can be added (with a few options), and a plot title is optional.
+Generates plots of water flows from Water Survey of Canada stations, with up to 10 years of data specified by the user. Return periods can be added (with a few options), and a plot title is optional.
 }
 \details{
-To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+To generate zoomed-in plots with real-time data you MUST have your HYDAT credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 }

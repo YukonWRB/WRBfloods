@@ -49,18 +49,18 @@ utils_level_data <- function(
   }
 
   if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
-    token_out <- tidyhydat.ws::token_ws()
+    token_out <- suppressMessages(tidyhydat.ws::token_ws())
     
     #TODO: remove line below once tidyhydat.ws is fixed.
     param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
     
-    level_real_time <- tidyhydat.ws::realtime_ws(
+    level_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
       station_number = station_number, 
       parameters = 46, 
       start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), 
       end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
       token = token_out
-      )
+      ))
     
     recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
 
@@ -278,6 +278,8 @@ utils_level_data <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
+#' @param returns Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"
 #'
 #' @return A plot for the station requested with return intervals, if it exists in the data file data$level_returns.
 #' @export
@@ -288,7 +290,9 @@ utils_daily_level_plot <- function(
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
-    point_size = 0.75
+    point_size = 0.75,
+    returns = "both",
+    complete_df = NULL
 )
   
 {
@@ -364,6 +368,8 @@ utils_daily_level_plot <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
+#' @param returns Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"
 #'
 #' @return A plot for the station requested and for the duration requested.
 #' @export
@@ -377,7 +383,9 @@ utils_zoom_level_plot <- function(
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
-    point_size = 0.75
+    point_size = 0.75,
+    returns = "none",
+    complete_df = NULL
 )
   
 {
@@ -429,8 +437,8 @@ utils_zoom_level_plot <- function(
   legend_length <- length(unique(na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
-  last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
-                    time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
+  # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
+  #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
 
   # x axis settings
   if (zoom_days > 14) {

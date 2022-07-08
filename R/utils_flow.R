@@ -35,17 +35,17 @@ utils_flow_data <- function(
 	
 
 	if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
-	  token_out <- tidyhydat.ws::token_ws()
+	  token_out <- suppressMessages(tidyhydat.ws::token_ws())
 	  
 	  #TODO: remove line below once tidyhydat.ws is fixed.
 	  param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
 	  
-	  flow_real_time <- tidyhydat.ws::realtime_ws(
+	  flow_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
 	    station_number = station_number, 
 	    parameters = 47, 
 	    start_date = ifelse(max(lubridate::year(flow_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
 	    token = token_out
-	    )
+	    ))
 	  
 	  recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	  
@@ -200,8 +200,8 @@ utils_flow_data <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
-#' @param complete_df If returns="calc" or "both", specify here the DF containing combined historical and recent data as daily means.
+#' @param returns Should flow returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table".
 #'
 #' @return A plot of flow volumes for a WSC station.
 #' @export 
@@ -259,60 +259,8 @@ utils_daily_flow_plot <- function(
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
 
   #Add return periods if requested
-  if (returns %in% c("auto", "Auto") & is.null(complete_df) == FALSE){
-    peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
-    peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
-    peaks <- dplyr::mutate(peaks, Measure = "1-Day")
-    flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
-    
-    plot <- plot +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[10,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[9,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[8,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[7,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[6,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[5,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[4,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[3,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
-      
-      ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
-    
-  } else if (returns %in% c("calc", "Calc") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
-    stn <- dplyr::filter(data$flow_returns, ID == station_number)
-    
-    plot <- plot + 
-      ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
-      ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
-    
-  } else if (returns %in% c("both", "Both") & is.null(complete_df) == FALSE){
-    if (station_number %in% data$flow_returns$ID){
-      stn <- dplyr::filter(data$flow_returns, ID == station_number)
-      
-      plot <- plot + 
-        ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
-        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
-      
-    } else {
+  if (!(returns %in% c("none", "None"))){
+    if (returns %in% c("auto", "Auto") & is.null(complete_df) == FALSE){
       peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
       peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
       peaks <- dplyr::mutate(peaks, Measure = "1-Day")
@@ -330,9 +278,66 @@ utils_daily_flow_plot <- function(
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
         
-        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      
+    } else if (returns %in% c("table", "Table") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
+      stn <- dplyr::filter(data$flow_returns, ID == station_number)
+      
+      plot <- plot + 
+        ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
+        
+        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      
+    } else if (returns %in% c("both", "Both") & is.null(complete_df) == FALSE){
+      if (station_number %in% data$flow_returns$ID){
+        stn <- dplyr::filter(data$flow_returns, ID == station_number)
+        
+        plot <- plot + 
+          ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
+          
+          ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        
+      } else {
+        peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
+        peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+        peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+        flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+        
+        plot <- plot +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[10,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[9,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[8,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[7,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[6,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[5,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[4,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[3,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
+          
+          ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      }
     }
   }
+
   return(plot)
 }
 
@@ -348,8 +353,8 @@ utils_daily_flow_plot <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
-#' @param complete_df If returns="calc" or "both", specify here the DF containing combined historical and recent data as daily means.
+#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".
+#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means.
 #'
 #' @return A plot for the station requested and for the duration requested.
 #' @export
@@ -364,7 +369,7 @@ utils_zoom_flow_plot <- function(
     legend_position = "right",
     line_size = 1,
     point_size = 0.75,
-    returns = "both",
+    returns = "none",
     complete_df = NULL
 )
 
@@ -455,60 +460,8 @@ if (zoom_days > 14) {
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if requested
-  if (returns %in% c("auto", "Auto") & is.null(complete_df) == FALSE){
-    peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
-    peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
-    peaks <- dplyr::mutate(peaks, Measure = "1-Day")
-    flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
-    
-    plot <- plot +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[10,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[9,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[8,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[7,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[6,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[5,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[4,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[3,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
-      
-      ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
-    
-  } else if (returns %in% c("calc", "Calc") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
-    stn <- dplyr::filter(data$flow_returns, ID == station_number)
-    
-    plot <- plot + 
-      ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
-      ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
-    
-  } else if (returns %in% c("both", "Both") & is.null(complete_df) == FALSE){
-    if (station_number %in% data$flow_returns$ID){
-      stn <- dplyr::filter(data$flow_returns, ID == station_number)
-      
-      plot <- plot + 
-        ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
-        ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
-        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
-      
-    } else {
+  if (!(returns %in% c("none", "None"))){
+    if (returns %in% c("auto", "Auto") & is.null(complete_df) == FALSE){
       peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
       peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
       peaks <- dplyr::mutate(peaks, Measure = "1-Day")
@@ -527,8 +480,63 @@ if (zoom_days > 14) {
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
         
         ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      
+    } else if (returns %in% c("table", "Table") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
+      stn <- dplyr::filter(data$flow_returns, ID == station_number)
+      
+      plot <- plot + 
+        ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
+        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      
+    } else if (returns %in% c("both", "Both") & is.null(complete_df) == FALSE){
+      if (station_number %in% data$flow_returns$ID){
+        stn <- dplyr::filter(data$flow_returns, ID == station_number)
+        
+        plot <- plot + 
+          ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
+          
+          ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        
+      } else {
+        peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
+        peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+        peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+        flowFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+        
+        plot <- plot +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[10,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[9,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[8,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[7,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[6,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[5,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[4,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[3,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
+          
+          ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      }
     }
   }
-  
+
   return(plot)
 }

@@ -11,6 +11,8 @@ levelPlot(
   zoom = FALSE,
   zoom_days = 30,
   filter = FALSE,
+  forecast = NULL,
+  returns = "both",
   save_path = "choose"
 )
 }
@@ -27,10 +29,14 @@ levelPlot(
 
 \item{filter}{TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.}
 
-\item{save_path}{Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.}
+\item{forecast}{Not currently in use; will eventually work similarly to forecast in flowPlot.}
+
+\item{returns}{Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+
+\item{save_path}{Default is "none", and the graph will only be visible in RStudio or needs to be assigned to an object. Option "choose"  brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.}
 }
 \value{
-A .png file of the plot requested. Assign the function to a variable to also get a plot in your global environment.
+A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 }
 \description{
 Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
