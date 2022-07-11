@@ -8,13 +8,15 @@
 
 #' Download level data
 #' 
-#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use levelData function instead.
+#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::levelData function instead.
 #' 
 #' @param station_number The WSC station number for which you want data.
-#' @param select_years The year(s) for which you want data
-#' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots?
-#' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
-#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds.
+#' @param select_years The year(s) for which you want data.
+#' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
+#' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
+#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
+#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If level_zoom == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
@@ -25,7 +27,9 @@ utils_level_data <- function(
     select_years,
     level_zoom = TRUE,
     filter = FALSE,
-    recent_prctile = FALSE
+    recent_prctile = FALSE,
+    rate = FALSE,
+    rate_days = "all"
 ){
   
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
@@ -227,8 +231,7 @@ utils_level_data <- function(
   }
   level_years$Year_Real <- as.numeric(level_years$Year_Real)
   
-  #Calculate a percent historic for the 5 minute data 
-  if (level_zoom==TRUE){
+  if (level_zoom==TRUE){ # Create a few columns here depending on other options
     recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
                                                                       ifelse(lubridate::month(Date) <=2,
                                                                              lubridate::yday(Date),
@@ -236,7 +239,7 @@ utils_level_data <- function(
                                                                       lubridate::yday(Date))) %>%
       dplyr::mutate(prct_max_hist= as.numeric(NA))
     
-    if (recent_prctile == TRUE){  
+    if (recent_prctile == TRUE){ #Calculate a percent historic for the 5 minute data 
       for (i in 1:nrow(recent_level)){
         if (datum_na==TRUE){
           recent_level$prct_max_hist[i] <- ((recent_level$Level[i] - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]])) / (unique(level_df$Max[level_df$dayofyear == recent_level$dayofyear[i]]) - unique(level_df$Min[level_df$dayofyear == recent_level$dayofyear[i]]))) * 100
@@ -245,7 +248,7 @@ utils_level_data <- function(
         }
       }
     }
-    
+  }
     #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
     if (filter==TRUE){ #Filter out data spikes
       level_df$dayofyear <- lubridate::yday(level_df$Date)  #repopulate dayofyear in level_df in case of leap year
@@ -261,7 +264,43 @@ utils_level_data <- function(
         try (recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA)
       }
     }
+  
+  #Fill missing data points in recent_level: first figure out the recording rate, then fill
+  if (level_zoom == TRUE){
+    diff <- vector()
+    for (i in 1:nrow(recent_level)){
+      diff[i] <- as.numeric(difftime(recent_level$Date[i+1], recent_level$Date[i]))
+    }
+    diff <- as.numeric(names(sort(table(diff),decreasing=TRUE)[1])) #difference between data points in minutes
+    recent_level <- tidyr::complete(recent_level, Date = seq.POSIXt(min(Date), max(Date), by=paste0(diff, " min")))
   }
+
+  if (rate == TRUE) {
+    level_years <- dplyr::arrange(level_years, desc(Date)) %>%
+      dplyr::mutate(rate = as.numeric(NA))
+    earliest_datetime <- tail(level_years, n=1)$Date
+    
+    for (i in 1:(nrow(level_years)-1)){
+      try(level_years$rate[i] <- level_years$Level[i] - level_years$Level[i+1], silent=TRUE)
+    }
+    
+    if (level_zoom == TRUE){
+      recent_level <- dplyr::arrange(recent_level, desc(Date)) %>%
+        dplyr::mutate(rate = as.numeric(NA))
+      if (rate_days == "all"){
+        for (i in 1:(nrow(recent_level)-1)){
+          try(recent_level$rate[i] <- recent_level$Level[i] - recent_level$Level[i+1], silent=TRUE)
+        }
+      } else {
+        last_row <- which(recent_level$Date== (recent_level$Date[1] - rate_days*60*60*24))
+        for (i in 1:last_row){
+          try(recent_level$rate[i] <- recent_level$Level[i] - recent_level$Level[i+1], silent=TRUE)
+        }
+      }
+    }
+  }
+  
+
   
   tidyData <- list(level_df, level_years, recent_level)
   return(tidyData)
@@ -333,10 +372,10 @@ utils_daily_level_plot <- function(
     
     ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
     ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
-    
+
     ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = rev(unique(level_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(level_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
-  
+
     #Add return periods if they exist for this station
     if (station_number %in% data$level_returns$ID==TRUE){
       levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))

@@ -11,7 +11,9 @@ utils_daily_level_plot(
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
-  point_size = 0.75
+  point_size = 0.75,
+  returns = "both",
+  complete_df = NULL
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ utils_daily_level_plot(
 \item{line_size}{Self explanatory.}
 
 \item{point_size}{Self explanatory.}
+
+\item{returns}{Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+
+\item{complete_df}{If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"}
 }
 \value{
 A plot for the station requested with return intervals, if it exists in the data file data$level_returns.

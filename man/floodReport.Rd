@@ -17,6 +17,8 @@ floodReport(
   MESH = TRUE,
   CLEVER = TRUE,
   flow_returns = "both",
+  level_returns = "both",
+  rate = TRUE,
   meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"
@@ -61,7 +63,11 @@ Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
 \item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
 
-\item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".}
+
+\item{level_returns}{Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+
+\item{rate}{Should the 24-hour rate of change be plotted on zoomed-in graphs? Will appear on the right y-axis. TRUE/FALSE, defaults to TRUE.}
 
 \item{meteogram}{Should meteograms relevant to the stations in the report be
 generated? TRUE or FALSE.}
