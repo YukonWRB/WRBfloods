@@ -55,7 +55,9 @@
 #' 
 #' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
 #'
-#'@param level_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#'@param level_returns Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#'
+#'@param rate Should the 24-hour rate of change be plotted on zoomed-in graphs? Will appear on the right y-axis. TRUE/FALSE, defaults to TRUE.
 #'
 #' @param meteogram Should meteograms relevant to the stations in the report be
 #'   generated? TRUE or FALSE.
@@ -92,6 +94,7 @@ floodReport <-
            CLEVER = TRUE,
            flow_returns = "both",
            level_returns = "both",
+           rate = TRUE,
            meteogram = TRUE,
            image_path = NULL,
            save_path = "choose") {
@@ -149,6 +152,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -181,6 +186,8 @@ floodReport <-
               MESH = MESH,
               CLEVER = CLEVER,
               flow_returns = flow_returns,
+              level_returns = level_returns,
+              rate = rate,
               meteogram = meteogram,
               plot_titles = plot_titles)
           )
@@ -213,6 +220,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -245,6 +254,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -277,6 +288,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -309,6 +322,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -341,6 +356,8 @@ floodReport <-
           MESH = MESH,
           CLEVER = CLEVER,
           flow_returns = flow_returns,
+          level_returns = level_returns,
+          rate = rate,
           meteogram = meteogram,
           plot_titles = plot_titles)
       )
@@ -373,6 +390,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -405,6 +424,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -437,10 +458,45 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
       } #End of Whitehorse/Laberge report
+      
+      ### Generate a report for Southern Lakes AND Laberge###
+      if (report_name %in% c("Southern Lakes and Laberge", "Southern Lakes/Laberge", "southern lakes and laberge", "Southern lakes and Laberge", "Southern lakes/Laberge")) {
+        stations <-c ("09AB001", "09AB004", "09AA017", "09AA004", "09AA012", "09AA013", "09AA001", "09AB010", "09AC001", "09AC007")
+        preset_extras <- c("09AB004:2007,2021", "09AB010:2007,2021")
+        
+        if (preset_extra_years==TRUE){
+          extra_years <- c(preset_extras, extra_years) 
+        } else {
+          extra_years <- extra_years
+        }
+        
+        rmarkdown::render(
+          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          output_file = paste0("S Lakes and Laberge Condition Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Southern Lakes and Laberge Condition Report",
+            extra_years = extra_years,
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
+            zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
+            flow_returns = flow_returns,
+            rate=rate,
+            meteogram = meteogram,
+            plot_titles = plot_titles)
+        )
+      } #End of Southern Lakes AND Labergereport
       
       ### Generate a report for Aishihik###
       if (report_name %in% c("Champagne", "Aishihik", "aishihik", "champagne")) {
@@ -469,6 +525,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
         )
@@ -503,6 +561,8 @@ floodReport <-
             MESH = MESH,
             CLEVER = CLEVER,
             flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
             meteogram = meteogram,
             plot_titles = plot_titles)
           )
