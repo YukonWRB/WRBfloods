@@ -19,6 +19,8 @@ params:
   MESH: MESH
   CLEVER: CLEVER
   flow_returns: flow_returns
+  level_returns: level_returns
+  rate: rate
 ---
 
 ```{r setup, include=FALSE}
@@ -85,7 +87,9 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
           level_zoom = TRUE,
           filter = TRUE,
-          recent_prctile = FALSE
+          recent_prctile = FALSE,
+          rate = rate,
+          rate_days = zoom_days
         )
       } else{
         levelData <- utils_level_data(
@@ -93,7 +97,9 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           select_years = lubridate::year(Sys.Date()),
           level_zoom = TRUE,
           filter = TRUE,
-          recent_prctile = FALSE
+          recent_prctile = FALSE,
+          rate = rate,
+          rate_days = zoom_days
         )
       }
       
@@ -216,10 +222,28 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       }
       
     #Determine if the last data point is >6 hours old
-      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*6)) {
-        tbl[4:17] <- "M"
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time())) {
+        tbl$Last_data <- "< 1 hrs"
       }
-        
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*1)) {
+        tbl$Last_data <- "1-2 hrs"
+      }
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*2)) {
+        tbl$Last_data <- "2-3 hrs"
+      }
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*3)) {
+        tbl$Last_data <- "3-4 hrs"
+      }
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*4)) {
+        tbl$Last_data <- "4-5 hrs"
+      }
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*5)) {
+        tbl$Last_data <- "5-6 hrs"
+      }
+      if (as.POSIXlt(as.numeric(levelData[[3]][nrow(levelData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*6)) {
+        tbl$Last_data <- "> 6 hrs"
+      }
+      
     }, error=function(e) {}
     ) #End of tryCatch for station existence
     levelInfo[[i]] <- tbl #add each station information to a list, later made into a table
@@ -267,7 +291,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
     
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
       
-      tbl$Current.flow <- NA #Overwrite 0.0001 so that the reader knows that a station could/should have flow but does not
+      tbl$Current_flow <- NA #Overwrite 0.0001 so that the reader knows that a station could/should have flow but does not
       
       tryCatch ({
         #Get the Flow data
@@ -399,10 +423,29 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
               }
           }
         }
-       #Determine if the last data point is >6 hours old
-      if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*6)) {
-        tbl[4:16] <- "M"
-      }
+        #Determine if the last data point is >6 hours old
+        tbl$Last_data <- " "
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time())) {
+          tbl$Last_data <- "< 1 hrs"
+        }
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*1)) {
+          tbl$Last_data <- "1-2 hrs"
+        }
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*2)) {
+          tbl$Last_data <- "2-3 hrs"
+        }
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*3)) {
+          tbl$Last_data <- "3-4 hrs"
+        }
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*4)) {
+          tbl$Last_data <- "4-5 hrs"
+        }
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*5)) {
+          tbl$Last_data <- "5-6 hrs"
+        }
+        if (as.POSIXlt(as.numeric(flowData[[3]][nrow(flowData[[3]]),2]), origin = "1970-01-01") < (Sys.time() - 60*60*6)) {
+          tbl$Last_data <- "> 6 hrs"
+        }
         
       }, error=function(e) {}
       ) #End of tryCatch for station existence
@@ -542,7 +585,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   cat("  \n# Summary of water levels and level changes \n")
   cat("Level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
   
-  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 10, 12, 19, 20)] #select columns of level m, level masl, today percent historic, 24 hour change, 48 hour change, 72 hour change, current return period, and flags.
+  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 4, 8, 10, 12, 19, 20, 21)] #select columns of level m, level masl, today percent historic, 24 hour change, 48 hour change, 72 hour change, current return period, flags, last data.
   levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
   names(levelTable) <- gsub("\\.", " ", names(levelTable))
   names(levelTable) <- gsub("X", "", names(levelTable))
@@ -551,17 +594,14 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
   names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
   names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
   
-  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "Current percent historic", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "Current return period", "Flag")
+  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)", "Current percent historic", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "Current return period", "Flag", "Last data age")
   
   levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
   levelTable$`48 hr change (cm)` <- round(levelTable$`48 hr change (cm)`,1)
   levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
   
-  print(knitr::kable(levelTable, digits=2, align = "lcccccccc"))
+  print(knitr::kable(levelTable, digits=2, align = "lccccccccc"))
   
- if (TRUE %in% stringr::str_detect(levelTable$`Current level (m)`, "M")){
-    cat("M: Recent level values are missing - all data points are more than 6 hours old.")
-  }
 }
 ```
 
@@ -576,9 +616,9 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
     dplyr::bind_cols(stationInfo[,1], .)#add in the pre-made column with links embedded.
   
   if (!(flow_returns %in% c("none", "None"))){
-    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17, 18)] #0.0001 is the indicator for lake stations, remove those
+    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17, 18, 19)] #0.0001 is the indicator for lake stations, remove those
   } else {
-    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17)]
+    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17, 18)]
   }
   
   names(flowTable) <- gsub("\\.", " ", names(flowTable))
@@ -587,12 +627,12 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   flowTable$Current_percent_historic <- round(flowTable$`Current_percent_historic`, 1)
   
   if (!(flow_returns %in% c("none", "None"))){
-    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period")
-    print(knitr::kable(flowTable, digits=1, align="lccccccc"))
+    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period", "Last data age")
+    print(knitr::kable(flowTable, digits=1, align="lcccccccc"))
 
   } else {
-    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
-    print(knitr::kable(flowTable, digits=1, align="lcccccc"))
+    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Last data age")
+    print(knitr::kable(flowTable, digits=1, align="lccccccc"))
   }
   
   
@@ -603,11 +643,15 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
     if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
     cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. No human checks were performed on underlying data.")
     }
-   if (TRUE %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "M")){
-    cat("M: Recent flow values are missing - all data points are more than 6 hours old.")
-  }
-
 }
+```
+
+```{r Rates table, echo=FALSE, results='asis', message=FALSE}
+tidyhydat::hy_annual_instant_peaks("09EB001", start_year = 2010, end_year = 2022) #Sadly, full of holes and no recent
+fasstr::calc_annual_peaks(station_number = "09EA004", start_year = 2010, end_year = 2022 ) #Sadly, flow only and no recent
+
+
+
 ```
 
 <br>
