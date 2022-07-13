@@ -18,6 +18,7 @@ Imports:
     ggplot2,
     dplyr,
     plyr,
+    tidyr,
     stringr,
     purrr,
     lubridate,

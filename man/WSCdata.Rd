@@ -9,7 +9,9 @@ WSCdata(
   level_flow = "Both",
   years = lubridate::year(Sys.Date()),
   recent_percentile = FALSE,
-  filter = TRUE
+  filter = TRUE,
+  rate = FALSE,
+  rate_days = "all"
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ WSCdata(
 \item{recent_percentile}{Should the percent of historical max flows be calculated for recent data? Adds about 30 seconds per station.}
 
 \item{filter}{Should the recent_data (if requested) be filtered to remove spikes? Adds about a minute of processing time per station.}
+
+\item{rate}{TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If level_zoom == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.}
+
+\item{rate_days}{Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.}
 }
 \value{
 A list with an element for each station requested.

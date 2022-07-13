@@ -1,6 +1,6 @@
 ---
 title: "`r params$report_name`"
-subtitle: "`r paste0(format(Sys.Date(), '%B %e'), ', ', lubridate::year(Sys.Date()), ' at ', format(Sys.time(), '%I %p', tz='America/Whitehorse'))`"
+subtitle: "`r paste0(format(Sys.Date(), '%B %e'), ', ', lubridate::year(Sys.Date()), ' at ', stringr::str_remove(tolower(format(Sys.time(), '%I %p', tz='America/Whitehorse')), '^0+'))`"
 date: 
 output: 
   word_document:
@@ -20,6 +20,9 @@ params:
   plot_titles: plot_titles
   MESH: MESH
   CLEVER: CLEVER
+  flow_returns: flow_returns
+  level_returns: level_returns
+  rate: rate
 ---
 
 ```{r setup, include=FALSE}
@@ -27,6 +30,8 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyhydat.ws)
 ```
+
+```{r code save, eval=FALSE, include=FALSE}
 
 Record-setting May 1 snowpack in many Yukon watersheds creates a high potential for flooding driven by spring snowmelt in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in lakes and rivers.
 
@@ -65,6 +70,18 @@ This report provides current conditions, outlook, and technical data.
 ## Water level and flow outlook
 
 [ENTER LEVEL OUTLOOK HERE]
+```
+
+
+``` {r intro text, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+  cat("  \nWater levels in the Southern Lakes are driven by a combination of snowmelt, summer precipitation and glacier melt. Winter 2021-22 snow conditions suggested that water levels would be higher than average this summer. Weather conditions through the summer will determine the peak water level in the Southern Lakes, which typically occurs in late summer in response to peak glacial runoff and precipitation events.  \n  \nThis report provides an overview of current conditions.")
+} else {
+  cat("  \nRecord-setting spring snowpack across many Yukon watersheds had created high potential for flooding near streams and some lakes driven by snowmelt this spring and early summer. Now that the bulk of last winter's snow has melted flooding potential shifts to larger lake systems, particularly those receiving glacial meltwater such as the Southern Lakes.  \n  \nThis report provides an overview of current conditions at selected stations across the territory. More detailed reports are also issued periodically for regions experiencing high or rapidly rising water levels and flows.")
+}
+```
+
+
 
 <br>
 
@@ -94,11 +111,9 @@ for (i in stations){
   community <- c(community, newcommunity)
 }
 
-#Get level data in two lists
-levelDataList <- list()
-levelInfo <- list()
-
 if (report_type %in% c("Both", "Level", "both", "level")){
+  levelDataList <- list()
+  levelInfo <- list()
   #parse out the extra years if requested
   if (is.null(extra_years)==FALSE){
     years <- data.frame(data=extra_years)
@@ -107,19 +122,20 @@ if (report_type %in% c("Both", "Level", "both", "level")){
     years <- data.frame()
   }
   
-  for(i in stations) {
+  for (i in stations) {
     
     #tryCatch special here: the error function was not creating any output, so the error data.frames are created here. If successful, it is overwritten in the for loop, otherwise the error output is already created for each i
     tbl <- data.frame(
       Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else{paste0(i, " DOES NOT EXIST")},
       ID = i,
-      `Start year level` = NA,
+      Start_year = NA,
       Today_percent_historic = NA,
       Level_m= NA,
       Level_masl = NA,
       Yesterday = NA,
       `24_hr_change_cm` = NA,
       Two_days_ago = NA,
+      `48_hr_change_cm` = NA,
       Three_days_ago = NA,
       `72_hr_change_cm` = NA,
       Four_days_ago = NA,
@@ -128,11 +144,12 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       One_week_ago = NA,
       One_week_change_cm = NA,
       Datum_elevation_m = NA,
-      Current_return_period = "NA"
+      Current_return_period = "NA",
+      Flag = "NA",
+      Last_data = NA
     )
     
-    levelData <- list() #Created to standardize the eventual output of this code block
-    
+    levelData <- data.frame() #Created to standardize the eventual output of this code block
     tryCatch ({
       #Get the level data
       if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
@@ -141,7 +158,9 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
           level_zoom = TRUE,
           filter = TRUE,
-          recent_prctile = FALSE
+          recent_prctile = FALSE,
+          rate = FALSE,
+          rate_days = zoom_days
         )
       } else{
         levelData <- utils_level_data(
@@ -149,30 +168,33 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           select_years = lubridate::year(Sys.Date()),
           level_zoom = TRUE,
           filter = TRUE,
-          recent_prctile = FALSE
+          recent_prctile = FALSE,
+          rate = FALSE,
+          rate_days = zoom_days
         )
       }
       
       datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))))
       
       #Level data processing
-      if (datum_na==TRUE) {
+      if (datum_na==TRUE) { #then there is no datum elevation
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- levelData[[3]]$Level[levelData[[3]]$Date == max(levelData[[3]]$Date)]
+        todayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level)
         todayLevelmasl <- NA
         todayLevelPerc <- round((todayLevel-levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (levelData[[2]]$Max[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())] - levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
-        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 ), by = "5 min"))$Level)
-        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 ), by = "5 min"))$Level)
-        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 ), by = "5 min"))$Level)
-        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 ), by = "5 min"))$Level)
-        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 ), by = "5 min"))$Level)
-        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 ), by = "5 min"))$Level)
-        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 ), by = "5 min"))$Level)
+        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24), by = "5 min"))$Level)
+        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48), by = "5 min"))$Level)
+        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72), by = "5 min"))$Level)
+        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96), by = "5 min"))$Level)
+        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120), by = "5 min"))$Level)
+        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144), by = "5 min"))$Level)
+        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168), by = "5 min"))$Level)
+        
         
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
-          `Start year level` = startYearLevel,
+          Start_year = startYearLevel,
           Today_percent_historic = todayLevelPerc,
           Level_m = todayLevel,
           Level_masl = todayLevelmasl,
@@ -189,12 +211,13 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           One_week_change_cm = if(length(weekLevel)==0) {as.numeric(NA)} else {(todayLevel - weekLevel)*100},
           Datum_elevation_m = as.numeric(NA),
           Current_return_period = "NA",
-          Flag = "NA"
+          Flag = "NA",
+          Last_data = NA
         )
-      } else {
+      } else { #there is a datum elevation
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- levelData[[3]]$Level[levelData[[3]]$Date == max(levelData[[3]]$Date)]
-        todayLevelmasl <- levelData[[3]]$Level_masl[levelData[[3]]$Date == max(levelData[[3]]$Date)]
+        todayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level)
+        todayLevelmasl <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level_masl)
         todayLevelPerc <- round((todayLevelmasl-levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (levelData[[2]]$Max[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())] - levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
         yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 ), by = "5 min"))$Level_masl)
         twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 ), by = "5 min"))$Level_masl)
@@ -204,10 +227,11 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 ), by = "5 min"))$Level_masl)
         weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 ), by = "5 min"))$Level_masl)
         
+        
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
-          `Start year level` = startYearLevel,
+          Start_year = startYearLevel,
           Today_percent_historic = todayLevelPerc,
           Level_m = todayLevel,
           Level_masl = todayLevelmasl,
@@ -224,43 +248,73 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           One_week_change_cm = if(length(weekLevel)==0) {as.numeric(NA)} else {(todayLevelmasl - weekLevel)*100},
           Datum_elevation_m = as.numeric(NA),
           Current_return_period = "NA",
-          Flag = "NA"
+          Flag = "NA",
+          Last_data = NA
         )
       }
       
-      
-      #next few lines calculate where we're at for return periods
+      #next few lines calculate where we're at for level return periods and if there's a flag raised
       if (i %in% data$level_returns$ID==TRUE) {
         
-       stn <- dplyr::filter(data$level_returns, ID == i)
-      
+        stn <- dplyr::filter(data$level_returns, ID == i)
+        
         tbl$Current_return_period <- 
           if (todayLevel < stn$twoyear) {
             "<2 year"
           } else if (todayLevel < stn$fiveyear) {
-              "2 to 5 year"
-            } else if (todayLevel < stn$tenyear) {
-              "5 to 10 year" 
-            } else if (todayLevel < stn$twentyyear) {
-              "10 to 20 year" 
-            } else if (todayLevel < stn$fiftyyear) {
-              "20 to 50 year" 
-            } else if (todayLevel < stn$onehundredyear) {
-              "50 to 100 year"
-            } else if (todayLevel < stn$twohundredyear) {
-              "100 to 200 year"
-            } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
-              "> 200 year" 
-            } else if (todayLevel < stn$fivehundredyear) {
-              "200 to 500 year" 
-            } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
-              "> 500 year"
-            } else if (todayLevel < stn$thousandyear) {
-              "500 to 1000 year"
-            } else if (todayLevel > stn$thousandyear) {
-              ">1000 year"
-            }
-      } else { tbl$Current_return_period <- "NA"
+            "2 to 5 year"
+          } else if (todayLevel < stn$tenyear) {
+            "5 to 10 year" 
+          } else if (todayLevel < stn$twentyyear) {
+            "10 to 20 year" 
+          } else if (todayLevel < stn$fiftyyear) {
+            "20 to 50 year" 
+          } else if (todayLevel < stn$onehundredyear) {
+            "50 to 100 year"
+          } else if (todayLevel < stn$twohundredyear) {
+            "100 to 200 year"
+          } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
+            "> 200 year" 
+          } else if (todayLevel < stn$fivehundredyear) {
+            "200 to 500 year" 
+          } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
+            ">500 year"
+          } else if (todayLevel < stn$thousandyear) {
+            "500 to 1000 year"
+          } else if (todayLevel > stn$thousandyear) {
+            ">1000 year"
+          }
+        tbl$Flag <- if (todayLevel >= stn$Flag_Level & !is.na(stn$Flag_Level)) {
+          stn$Note
+        } else {
+          tbl$Flag <- "NA"
+        }
+      } else {
+        tbl$Current_return_period <- "NA"
+        tbl$Flag <- "NA"
+      }
+      
+    #Determine if the last data point is >6 hours old
+      if (levelData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
+        tbl$Last_data <- "< 1 hrs"
+      }
+      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
+        tbl$Last_data <- "1-2 hrs"
+      }
+      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*2)) {
+        tbl$Last_data <- "2-3 hrs"
+      }
+      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*3)) {
+        tbl$Last_data <- "3-4 hrs"
+      }
+      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*4)) {
+        tbl$Last_data <- "4-5 hrs"
+      }
+      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*5)) {
+        tbl$Last_data <- "5-6 hrs"
+      }
+      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*6)) {
+        tbl$Last_data <- "> 6 hrs"
       }
       
     }, error=function(e) {}
@@ -284,33 +338,34 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
   } else {
     years <- data.frame()
   }
-    
+  
   for(i in stations) {
     station_info <- tidyhydat::hy_stations(i)
-    flowData <- data.frame() #Created to standardize the eventual output of this code block
+    flowData <- data.frame() #Created to standardize the eventual output of this code block; some stations have no flow
     
     tbl <- data.frame( #make the table for all stations (even lakes) so that start year information can be extracted in order when making the station info table later.
-        Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
-        ID = i,
-        Start_year_flow = NA,
-        Current_flow= 0.0001, #this is a number so that lake stations can be removed after.
-        Current_percent_historic = NA,
-        Yesterday = NA,
-        `24_hr_change` = NA,
-        Two_days_ago = NA,
-        Three_days_ago = NA,
-        `72_hr_change` = NA,
-        Four_days_ago = NA,
-        Five_days_ago = NA,
-        Six_days_ago = NA,
-        One_week_ago = NA,
-        One_week_change = NA
-      )    
+      Station_name = if(is.na(tidyhydat::hy_stations(i)$STATION_NUMBER[1])==FALSE){stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)} else {paste0(i, " DOES NOT EXIST")},
+      ID = i,
+      `Start year flow` = NA,
+      Current_flow= 0.0001, #this is a number so that lake stations can be removed after.
+      Current_percent_historic = NA,
+      Yesterday = NA,
+      `24_hr_change` = NA,
+      Two_days_ago = NA,
+      `48_hr_change` = NA,
+      Three_days_ago = NA,
+      `72_hr_change` = NA,
+      Four_days_ago = NA,
+      Five_days_ago = NA,
+      Six_days_ago = NA,
+      One_week_ago = NA,
+      One_week_change = NA
+    )    
     
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
       
-      tbl$Current.flow <- NA #Overwrite 0.0001 so that the reader knows that a station should have flow but does not
-       
+      tbl$Current_flow <- NA #Overwrite 0.0001 so that the reader knows that a station could/should have flow but does not
+      
       tryCatch ({
         #Get the Flow data
         if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
@@ -335,6 +390,13 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         startYearFlow <- min(lubridate::year(flowData[[1]]$Date), na.rm = T)
         todayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)]
         todayFlowPerc <- round((todayFlow-flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) /   (flowData[[2]]$Max[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())] - flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
+        yesterdayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*24]
+        twodayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*48]
+        threedayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*72]
+        fourdayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*96]
+        fivedayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*120]
+        sixdayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*144]
+        weekFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*168]
         yesterdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 ), by = "5 min"))$Flow)
         twodayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 ), by = "5 min"))$Flow)
         threedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 ), by = "5 min"))$Flow)
@@ -346,7 +408,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
           ID = i,
-          Start_year_flow = startYearFlow,
+          `Start year flow` = startYearFlow,
           Current_flow = todayFlow,
           Current_percent_historic = todayFlowPerc,
           Yesterday = if(length(yesterdayFlow)==0) {as.numeric(NA)} else {yesterdayFlow},
@@ -361,11 +423,108 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           One_week_ago = if(length(weekFlow)==0) {as.numeric(NA)} else {weekFlow},
           One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
         )
-      }, error = function(e) {}
+        
+        if (!(flow_returns %in% c("None", "none"))){ #if flow_returns is "none", the column is simply not created.
+          
+          if (flow_returns %in% c("both", "Both", "Table", "table") & i %in% data$flow_returns$ID){ #where possible, plug in the verified value
+            stn <- dplyr::filter(data$flow_returns, ID == i)
+            tbl$Current_return_period <-
+              if (todayFlow < stn$twoyear) {
+                "<2 year"
+              } else if (todayFlow < stn$fiveyear) {
+                "2 to 5 year"
+              } else if (todayFlow < stn$tenyear) {
+                "5 to 10 year" 
+              } else if (todayFlow < stn$twentyyear) {
+                "10 to 20 year" 
+              } else if (todayFlow < stn$fiftyyear) {
+                "20 to 50 year" 
+              } else if (todayFlow < stn$onehundredyear) {
+                "50 to 100 year"
+              } else if (todayFlow < stn$twohundredyear) {
+                "100 to 200 year"
+              } else if (todayFlow > stn$twohundredyear & is.na(stn$fivehundredyear)) {
+                "> 200 year" 
+              } else if (todayFlow < stn$fivehundredyear) {
+                "200 to 500 year" 
+              } else if (todayFlow > stn$fivehundredyear & is.na(stn$thousandyear)) {
+                "> 500 year"
+              } else if (todayFlow < stn$thousandyear) {
+                "500 to 1000 year"
+              } else if (todayFlow > stn$thousandyear & is.na(stn$twothousandyear)) {
+                "> 1000 year"
+              } else if (todayFlow < stn$twothousandyear) {
+                "1000 to 2000 year"
+              } else if (todayFlow > stn$twothousandyear) {
+                "> 2000 year"
+              }
+            
+          } else if (flow_returns %in% c("Table", "table") & !(i %in% data$flow_returns$ID)){ #if human-verified values only requested but not available, give NA
+            tbl$Current_return_period <- "NA"
+            
+          } else if (flow_returns %in% c("both", "Both", "Auto", "auto")){ #if auto selected, run code OR if both selected and no human-verified value available.
+            peaks <- fasstr::calc_annual_peaks(flowData[[1]], values = Flow, months = 5:9, allowed_missing = 5)
+            peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+            peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+            
+            freq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+            freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
+            
+            tbl$Current_return_period <- 
+              if (tail(freq, n=1)$`Return Period` < 2) {
+                "<2 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 5) {
+                " 2 to 5 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 10) {
+                "5 to 10 year*"
+              } else if(tail(freq, n=1)$`Return Period` < 20) {
+                "10 to 20 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 50) {
+                "20 to 50 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 100) {
+                "50 to 100 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 200) {
+                "100 to 200 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 500) {
+                "200 to 500 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 1000) {
+                "500 to 100 year*"
+              } else if (tail(freq, n=1)$`Return Period` < 2000) {
+                "1000 to 2000 year*"
+              } else if (tail(freq, n=1)$`Return Period` > 2000) {
+                "> 2000 year*"
+              }
+          }
+        }
+        #Determine if the last data point is >6 hours old
+        tbl$Last_data <- " "
+        if (flowData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
+          tbl$Last_data <- "< 1 hrs"
+        }
+        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
+          tbl$Last_data <- "1-2 hrs"
+        }
+        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*2)) {
+          tbl$Last_data <- "2-3 hrs"
+        }
+        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*3)) {
+          tbl$Last_data <- "3-4 hrs"
+        }
+        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*4)) {
+          tbl$Last_data <- "4-5 hrs"
+        }
+        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*5)) {
+          tbl$Last_data <- "5-6 hrs"
+        }
+        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*6)) {
+          tbl$Last_data <- "> 6 hrs"
+        }
+        
+      }, error=function(e) {}
       ) #End of tryCatch for station existence
     } #End of loop that runs only if it's not a lake
-      flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
-      flowDataList[[i]] <- flowData    
+    flowInfo[[i]] <- tbl #add each station information to a list, later made into a table
+    flowDataList[[i]] <- flowData
   } #End of FLOW for loop
 }# End of if "flow" or "both" selected statement
 
@@ -373,8 +532,14 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
 ```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
 
-stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
+if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+  stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) as.data.frame(tidyhydat::hy_stn_datum_conv(x)[1,3]) else (data.frame(DATUM_TO="Local datum")))) %>%
   purrr::reduce(dplyr::bind_rows)
+} else {
+  stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])) else (data.frame(DATUM_TO="Local datum")))) %>%
+  purrr::reduce(dplyr::bind_rows)
+}
+
 
 if (report_type %in% c("Both", "both", "Level", "level")){
   levelStart <- dplyr::bind_rows(levelInfo)[3] #vector of start years
@@ -422,48 +587,113 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 stationInfo$Station <- gsub("Morely", "Morley", stationInfo$Station)
 ```
 
+# Summary of water levels and trajectory
+
+```{r Rates table for levels, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+
+if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
+  info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 20)]
+  
+  if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+    #adjust elevations to CGVD28 (all are in 2013 at this point)
+    convert <- vector()
+    for (i in stations){ #CGVD2013 minus CGVD28
+      convert[i] <- as.numeric(tail(tidyhydat::hy_stn_datum_conv(i)[,4], n=1)) - as.numeric(head(tidyhydat::hy_stn_datum_conv(i)[,4], n=1))
+    }
+    info$Level_masl <- info$Level_masl - convert
+    
+    
+    distpeak2007 <- vector()
+    distpeak2021 <- vector()
+    # distday2007 <- vector()
+    # distday2021 <- vector()
+    for (i in stations){
+      if (length(levelDataList[[i]]) == 3){ #if the list element isn't properly filled, don't run
+        df <- fasstr::calc_annual_peaks(levelDataList[[i]][[1]], values = Level, start_year=2000, ignore_missing = TRUE)
+        if (length(dplyr::filter(df, Year == 2007)$Max_1_Day) != 0){
+          distpeak2007[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(df, Year == 2007)$Max_1_Day) * 100, 1)
+        } else { distpeak2007[i] <- NA}
+        
+        if (length(dplyr::filter(df, Year == 2021)$Max_1_Day) != 0){
+          distpeak2021[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(df, Year == 2021)$Max_1_Day) * 100, 1)
+        } else { distpeak2021[i] <- NA}
+        
+        # distday2007[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(levelDataList[[i]][[1]], Date == paste0("2007-", substr(Sys.Date(), 6, 10)))$Level) * 100, 1)
+        # distday2021[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(levelDataList[[i]][[1]], Date == paste0("2021-", substr(Sys.Date(), 6, 10)))$Level) * 100, 1)
+      } else {
+        distpeak2007[i] <- NA
+        distpeak2021[i] <- NA
+        # distday2007[i] <- NA
+        # distday2021[i] <- NA
+      }
+    }
+  }
+  
+  
+  Trajectory <- vector()
+  for (i in 1:nrow(info)){
+    Trajectory[i] <- paste0(ifelse(info$X24_hr_change_cm[i] > 0, "Rising", "Dropping"), " at ", ifelse(abs(info$X24_hr_change_cm[i]) > abs(info$X24_hr_change_cm[i] - info$X48_hr_change_cm[i]), "increasing", "decreasing"), " rate")
+  }
+  
+  rateTable <- dplyr::bind_cols(stationInfo[,1], info[, c(2:4)], Trajectory=Trajectory)
+  colnames(rateTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)*", "24 hr change (cm)", "Trajectory")
+  rateTable$`24 hr change (cm)` <- round(rateTable$`24 hr change (cm)`, 1)
+  
+  if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+    rateTable$`Difference from 2007 peak (cm)` <- distpeak2007
+    # rateTable$`Difference from this date 2007 (cm)` <- distday2007
+    rateTable$`Difference from 2021 peak (cm)` <- distpeak2021
+    # rateTable$`Difference from this date 2021 (cm)` <- distday2021
+    
+    print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
+    
+    cat("*masl = metres above sea level  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
+    
+  } else {  print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
+    
+    cat("*masl = metres above sea level  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration to the datum used. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
+  }
+}
+
+```
+
 ```{r Levels table, echo=FALSE, results='asis', message=FALSE}
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
-  cat("  \n# Summary of water level conditions in communities  \n")
-  cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
-  levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 8, 12, 19)]
-  levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
-  names(levelTable) <- gsub("\\.", " ", names(levelTable))
-  names(levelTable) <- gsub("X", "", names(levelTable))
   
-  names(levelTable) <- gsub("masl", "(masl)*", names(levelTable))
-  names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
-  names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
-  
-  colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
-  
-  levelTable$`Advisory in effect` <- ""
-  levelTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
-  levelTable <- dplyr::relocate(levelTable, Community)
-  
-  levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
-  levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
-  
-  knitr::kable(levelTable, digits=2, align="c")
+  if (!(report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes"))){
+    cat("  \n# Summary of water level conditions in communities  \n")
+    cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
+    levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 8, 12, 19)]
+    levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
+    names(levelTable) <- gsub("\\.", " ", names(levelTable))
+    names(levelTable) <- gsub("X", "", names(levelTable))
+    
+    names(levelTable) <- gsub("masl", "(masl)*", names(levelTable))
+    names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
+    names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
+    
+    colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+    
+    levelTable$`Advisory in effect` <- ""
+    levelTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
+    levelTable <- dplyr::relocate(levelTable, Community)
+    
+    levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
+    levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
+    
+    knitr::kable(levelTable, digits=2, align="c")
+    
+    cat("*masl = metres above sea level  \n **Notes:**  \n")
+    if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
+      cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information at the end of this document.")
+    } else {
+      cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
+    }
+    cat("  \nReturn periods representing 2, 10, 20, 50, 100, and 200 year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.")
+  }
 }
 ```
-
-\*masl = metres above sea level
-
-**Notes:**
-
-```{r Levels explanation, echo=FALSE, results='asis', message=FALSE}
-
-if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
-  cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information at the end of this document.")
-} else {
-  cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
-}
-
-```
-
-Return periods representing 2, 10, 20, 50, 100, and 200 year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.
 
 ```{r Flows table, echo=FALSE, results='asis', message=FALSE}
 
@@ -476,7 +706,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
 
   
-  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 11, 16, 19)] #0.0001 is the indicator for lake stations, remove those
+  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 2, 4, 5, 7, 11, 16)] #0.0001 is the indicator for lake stations, remove those
   
 
   
@@ -577,7 +807,7 @@ for(i in stations) {
   station_info <- tidyhydat::hy_stations(i)
   if(is.na(station_info$STATION_NUMBER[1])==FALSE){ #if the station is in the database, continue!
     tryCatch ( {
-      cat("  \n## ", stringr::str_to_title(station_info$STATION_NAME)," (station ", i,")  \n")
+      cat("  \n# ", stringr::str_to_title(station_info$STATION_NAME)," (station ", i,")  \n")
       
       if (report_type %in% c("Both", "Level", "both", "level")){
         tryCatch ({
@@ -675,7 +905,9 @@ for(i in stations) {
             cat("  \n### Flow  \n")
             #Flow data plotting
             flowPlot <- utils_daily_flow_plot(station_number = i,
-                                  flow_years = flowDataList[[n]][[2]])
+                                  flow_years = flowDataList[[n]][[2]],
+                                               returns = flow_returns,
+                                               complete_df = flowDataList[[n]][[1]])
             
             if (plot_titles == TRUE){
               flowPlot <- flowPlot +
@@ -698,7 +930,7 @@ for(i in stations) {
                 diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range compasses two points
                 MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
                 
-                #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
+                #CLEVER seems to be well adjusted so far! If that changes the adjustment should take place here.
                 
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 zoom <- dplyr::full_join(zoom, CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
@@ -706,7 +938,9 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(MESH)){
                 #Add in the MESH data, nudge it to match WSC at forecast time.
@@ -722,22 +956,28 @@ for(i in stations) {
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else if (i %in% names(CLEVER)) {
-                #Add in CLEVER data, nudge it to match wSC at forecast time.
+                #Add in CLEVER data, nudge it to match WSC at forecast time.
                 zoom <- dplyr::full_join(flowDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
                 
                 zoomFlowPlot <- utils_fcast_flow_plot(station_number = i,
                                                       flow_years = flowDataList[[n]][[2]],
                                                       zoom_data = zoom,
-                                                      zoom_days = zoom_days)
+                                                      zoom_days = zoom_days,
+                                                      returns = flow_returns,
+                                                      complete_df = flowDataList[[n]][[1]])
                 
               } else { #if no MESH or CLEVER, just give a regular plot
                 zoomFlowPlot <- utils_zoom_flow_plot(station_number =i,
                                                      flow_years = flowDataList[[n]][[2]],
                                                      zoom_data = flowDataList[[n]][[3]],
-                                                     zoom_days = zoom_days)
+                                                     zoom_days = zoom_days,
+                                                     returns = flow_returns,
+                                                     complete_df = flowDataList[[n]][[1]])
               }
               
               if (plot_titles == TRUE){
@@ -1005,5 +1245,8 @@ knitr::kable(stationInfo, digits=2, caption="These are the stations contained in
 cat("**Notes:**  \n")
 for (i in 1:length(notes)){
   cat(notes[[i]], "  \n")
+}
+if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+  cat("  \nThe stations in this report have more recent datums available (CGVD2013), but the historical CGVD28 datum is used here to align with local knowledge and with other reporting.")
 }
 ```

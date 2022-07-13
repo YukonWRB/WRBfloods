@@ -58,13 +58,13 @@ utils_level_data <- function(
     #TODO: remove line below once tidyhydat.ws is fixed.
     param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
     
-    level_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
+    level_real_time <- tidyhydat.ws::realtime_ws(
       station_number = station_number, 
       parameters = 46, 
       start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), 
       end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
       token = token_out
-      ))
+      )
     
     recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
 
@@ -275,9 +275,11 @@ utils_level_data <- function(
     recent_level <- tidyr::complete(recent_level, Date = seq.POSIXt(min(Date), max(Date), by=paste0(diff, " min")))
   }
 
+  level_years <- dplyr::arrange(level_years, desc(Date))
+  recent_level <- dplyr::arrange(recent_level, desc(Date))
+  
   if (rate == TRUE) {
-    level_years <- dplyr::arrange(level_years, desc(Date)) %>%
-      dplyr::mutate(rate = as.numeric(NA))
+    level_years <- dplyr::mutate(level_years, rate = as.numeric(NA))
     earliest_datetime <- tail(level_years, n=1)$Date
     
     for (i in 1:(nrow(level_years)-1)){
@@ -285,8 +287,7 @@ utils_level_data <- function(
     }
     
     if (level_zoom == TRUE){
-      recent_level <- dplyr::arrange(recent_level, desc(Date)) %>%
-        dplyr::mutate(rate = as.numeric(NA))
+      recent_level <- dplyr::mutate(recent_level, rate = as.numeric(NA))
       if (rate_days == "all"){
         for (i in 1:(nrow(recent_level)-1)){
           try(recent_level$rate[i] <- recent_level$Level[i] - recent_level$Level[i+1], silent=TRUE)
