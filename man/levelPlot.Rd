@@ -13,7 +13,7 @@ levelPlot(
   filter = FALSE,
   forecast = NULL,
   returns = "both",
-  save_path = "choose"
+  save_path = "none"
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ levelPlot(
 
 \item{returns}{Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
 
-\item{save_path}{Default is "none", and the graph will only be visible in RStudio or needs to be assigned to an object. Option "choose"  brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.}
+\item{save_path}{Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.}
 }
 \value{
 A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.

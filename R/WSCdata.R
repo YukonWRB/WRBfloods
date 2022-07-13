@@ -7,6 +7,8 @@
 #' @param years The years for which you want easy-to-plot daily means. The resultant data.frame includes calculated To simplify plotting multiple years together, each daily mean data point is dated as if it was collected in the year 2022. Individual years are identified by the Year_Real column. Defaults to the current year.
 #' @param recent_percentile Should the percent of historical max flows be calculated for recent data? Adds about 30 seconds per station.
 #' @param filter Should the recent_data (if requested) be filtered to remove spikes? Adds about a minute of processing time per station.
+#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If level_zoom == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 #'
 #' @return A list with an element for each station requested.
 #' @export
@@ -16,7 +18,9 @@ WSCdata <- function(
     level_flow = "Both",
     years = lubridate::year(Sys.Date()), 
     recent_percentile = FALSE,
-    filter = TRUE
+    filter = TRUE,
+    rate = FALSE,
+    rate_days = "all"
 ) {
   
   data <- list()
@@ -24,7 +28,12 @@ WSCdata <- function(
     for (i in stations){
       level <- list()
       tryCatch({
-        level <- utils_level_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
+        level <- utils_level_data(station_number = i, 
+                                  select_years = years, 
+                                  recent_prctile = recent_percentile, 
+                                  filter = filter, 
+                                  rate = rate, 
+                                  rate_days = rate_days)
         names(level) <- c("historical", "requested_years", "recent_5_minute")
       }, error=function(e) {}
       )
@@ -44,7 +53,12 @@ WSCdata <- function(
     for (i in stations){
       level <- list()
       tryCatch({
-        level <- utils_level_data(station_number = i, select_years = years, recent_prctile = recent_percentile, filter = filter)
+        level <- utils_level_data(station_number = i, 
+                                  select_years = years, 
+                                  recent_prctile = recent_percentile, 
+                                  filter = filter,
+                                  rate = rate,
+                                  rate_days = rate_days)
         names(level) <- c("historical", "requested_years", "recent_5_minute")
       }, error=function(e) {}
       )

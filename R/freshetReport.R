@@ -10,36 +10,24 @@
 #' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
 #' 
 #'
-#' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".
-#' 
+#' @param report_name The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", "Southern Lakes and Laberge", "Major Lakes" (southern lakes plus Laberge), "Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".
 #' @param custom_report_stations A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!
-#' 
 #' @param extra_years Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years
-#' 
 #' @param preset_extra_years TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.
-#' 
 #' @param report_type What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
-#' 
 #' @param plot_titles Do you want the plots to have a title?
-#' 
 #' @param level_zoom Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.
-#' 
 #' @param flow_zoom Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.
-#' 
 #' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
-#' 
-#' @param precip Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE
-#' 
-#' @param meteogram Should meteograms relevant to the stations in the report be included? TRUE or FALSE.
-#' 
+#' @param rate Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.
+#' @param level_returns Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
 #' @param MESH Should MESH forecasts be incorporated into the graphs?
-#' 
 #' @param CLEVER Should CLEVER forecasts be incorporated into the graphs?
-#' 
+#' @param precip Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE
+#' @param meteogram Should meteograms relevant to the stations in the report be included? TRUE or FALSE.
 #' @param WSC_images Should images from WSC fixed cameras be included? TRUE or FALSE.
-#' 
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
-#' 
 #' @param save_path The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.
 #' 
 #' @return A flood report containing flow and water level information in Microsoft Word format.
@@ -58,14 +46,17 @@ freshetReport <-
            level_zoom = TRUE,
            flow_zoom = NULL,
            zoom_days = 20,
-           MESH = TRUE,
-           CLEVER = TRUE,
+           rate = TRUE,
+           level_returns = "both",
+           flow_returns = "both",
+           MESH = FALSE,
+           CLEVER = FALSE,
            precip = FALSE,
            meteogram = FALSE,
            WSC_images = FALSE,
            image_path = NULL,
            save_path = "choose") {
-    
+
 
     #####Selection of image path and save path#####
     if (is.null(image_path) == FALSE) {
@@ -84,11 +75,10 @@ freshetReport <-
       flow_zoom=level_zoom
     }
     
-    
     #####Generate reports#####
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == FALSE) {
       #deals with mistakes
-      print("You specified custom report stations while the preset report was also set (if defaults to 'Territory'). I've set the preset to NULL so you get a custom report instead.")
+      print("You specified custom report stations while the preset report was also set (it defaults to 'Territory' if you didn't change it). I've set the preset to NULL so you get a custom report instead.")
       report_name <- NULL
     }
     
@@ -96,7 +86,7 @@ freshetReport <-
       
       ### Generate a report for the whole territory###
       if (report_name %in% c("Territory", "territory", "Communities", "communities", "Yukon", "Yukon Wide", "Yukon wide", "yukon wide")) {
-        stations <- c("09AA004", "09AA017", "09AB004", "09AB001", "09AB010", "09AE002", "09AH004", "09AH001", "09BC002", "09BC001", "09DC006", "09EA003", "09EB001", "09FD003", "10AA001" )
+        stations <- c("09AA004", "09AA017", "09AB004", "09AB001", "09AB010", "09AE002", "09AH004", "09AH001", "09BC002", "09BC001", "09DC006", "09EA003", "09EB001", "09FD003", "10AA001")
 #        preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1992,2021", "09BC002:2013,1992,1972", "09FD003:2007,2015", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
 
         preset_extras <- c("09EA003:2013","09EB001:2013", "09AH001:2021","09AH004:2021","09AE002:2021", "09BC002:2013", "09FD003:2015", "10AA001:2012", "09DC006:1992", "09AB004:2007,2021", "09AB010:2021")
@@ -125,7 +115,10 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
         )
       } #End of territory report
       
@@ -158,7 +151,10 @@ freshetReport <-
               precip = precip,
               meteogram = meteogram,
               WSC_images = WSC_images,
-              plot_titles = plot_titles)
+              plot_titles = plot_titles,
+              flow_returns = flow_returns,
+              level_returns = level_returns,
+              rate = rate)
           )
       } #End of Dawson report
       
@@ -191,7 +187,10 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
         )
       } #End of Carmacks report
       
@@ -224,7 +223,10 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
         )
       } #End of Carmacks report
       
@@ -257,7 +259,10 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
         )
       } #End of Pelly report
       
@@ -290,7 +295,10 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
         )
       } #End of Old Crow report
     
@@ -323,7 +331,10 @@ freshetReport <-
           precip = precip,
           meteogram = meteogram,
           WSC_images = WSC_images,
-          plot_titles = plot_titles)
+          plot_titles = plot_titles,
+          flow_returns = flow_returns,
+          level_returns = level_returns,
+          rate = rate)
       )
     } #End of Liard/Watson report
 
@@ -356,75 +367,86 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
         )
       } #End of Mayo/Stewart report
-      
-      ### Generate a report for Southern Lakes###
-      if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")) {
-        stations <-c ("09AB001", "09AB004", "09AA017", "09AA004", "09AA012", "09AA013", "09AA001")
-        preset_extras <- c("09AB004:2007,2021", "09AB010:2007,2021")
-        
-        if (preset_extra_years==TRUE){
-          extra_years <- c(preset_extras, extra_years) 
-        } else {
-          extra_years <- extra_years
-        }
-        
-        rmarkdown::render(
-          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Southern Lakes Freshet Report ", Sys.Date()),
-          output_dir = save_path,
-          params = list(
-            stations = stations,
-            report_name = "Southern Lakes Water Report",
-            extra_years = extra_years,
-            image_path = image_path,
-            report_type = report_type,
-            level_zoom = level_zoom,
-            flow_zoom = flow_zoom,
-            zoom_days = zoom_days,
-            MESH = MESH,
-            CLEVER = CLEVER,
-            precip = precip,
-            meteogram = meteogram,
-            WSC_images = WSC_images,
-            plot_titles = plot_titles)
-        )
-      } #End of Southern Lakes report
+
     
-      ### Generate a report for Whitehorse/Laberge###
-      if (report_name %in% c("Whitehorse", "whitehorse", "Laberge", "Lake Laberge", "Lake laberge", "lake laberge", "Whitehorse/Laberge", "Whitehorse/Lake Laberge", "Whitehorse/lake Laberge", "whitehorse/lake laberge", "Laberge/Whitehorse", "Lake Laberge/Whitehorse")) {
-        stations <-c ("09AB010", "09AC001", "09AC007", "09AB001", "09AB004")
-        preset_extras <- c("09AB004:2007,2021", "09AB010:2007,2021")
-        
-        if (preset_extra_years==TRUE){
-          extra_years <- c(preset_extras, extra_years) 
-        } else {
-          extra_years <- extra_years
-        }
-        
-        rmarkdown::render(
-          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Whitehorse.Laberge Freshet Report ", Sys.Date()),
-          output_dir = save_path,
-          params = list(
-            stations = stations,
-            report_name = "Whitehorse/Laberge Water Report",
-            extra_years = extra_years,
-            image_path = image_path,
-            report_type = report_type,
-            level_zoom = level_zoom,
-            flow_zoom = flow_zoom,
-            zoom_days = zoom_days,
-            MESH = MESH,
-            CLEVER = CLEVER,
-            precip = precip,
-            meteogram = meteogram,
-            WSC_images = WSC_images,
-            plot_titles = plot_titles)
-        )
-      } #End of Whitehorse/Laberge report
+    ### Generate a report for Southern Lakes AND Laberge###
+    if (report_name %in% c("Southern Lakes and Laberge", "Southern Lakes/Laberge", "southern lakes and laberge", "Southern lakes and Laberge", "Southern lakes/Laberge")) {
+      stations <-c ("09AB001", "09AB004", "09AA017", "09AA004", "09AA012", "09AA013", "09AA001", "09AB010", "09AC001", "09AC007")
+      preset_extras <- c("09AB004:2007,2021", "09AB010:2007,2021")
+      
+      if (preset_extra_years==TRUE){
+        extra_years <- c(preset_extras, extra_years) 
+      } else {
+        extra_years <- extra_years
+      }
+      
+      rmarkdown::render(
+        input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
+        output_file = paste0("S. Lakes and Laberge Condition Report ", Sys.Date()),
+        output_dir = save_path,
+        params = list(
+          stations = stations,
+          report_name = "Southern Lakes and Laberge Condition Report",
+          extra_years = extra_years,
+          image_path = image_path,
+          report_type = report_type,
+          level_zoom = level_zoom,
+          flow_zoom = flow_zoom,
+          zoom_days = zoom_days,
+          MESH = MESH,
+          CLEVER = CLEVER,
+          precip = precip,
+          meteogram = meteogram,
+          WSC_images = WSC_images,
+          plot_titles = plot_titles,
+          flow_returns = flow_returns,
+          level_returns = level_returns,
+          rate = rate)
+      )
+    } #End of Southern Lakes AND Laberge report
+    
+    ### Generate a report for Southern Lakes###
+    if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")) {
+      stations <-c ("09AA001", "09AA004", "09AA017", "09AB004", "09AB001", "09AB010")
+      preset_extras <- c("09AA004:2007,2021", "09AA001:2007,2021", "09AA017:2007,2021", "09AB004:2007,2021", "09AB001:2007,2021", "09AB010:2007,2021")
+      
+      if (preset_extra_years==TRUE){
+        extra_years <- c(preset_extras, extra_years) 
+      } else {
+        extra_years <- extra_years
+      }
+      
+      rmarkdown::render(
+        input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
+        output_file = paste0("Southern Lakes Hydrometric Conditions Report ", Sys.Date()),
+        output_dir = save_path,
+        params = list(
+          stations = stations,
+          report_name = "Southern Lakes Hydrometric Conditions Report",
+          extra_years = extra_years,
+          image_path = image_path,
+          report_type = report_type,
+          level_zoom = level_zoom,
+          flow_zoom = flow_zoom,
+          zoom_days = zoom_days,
+          MESH = MESH,
+          CLEVER = CLEVER,
+          precip = precip,
+          meteogram = meteogram,
+          WSC_images = WSC_images,
+          plot_titles = plot_titles,
+          flow_returns = flow_returns,
+          level_returns = level_returns,
+          rate = rate)
+      )
+    } #End of lakes of Southern Lakes report
+      
     }
       
     ### Generate a custom report ###
@@ -456,7 +478,10 @@ freshetReport <-
             precip = precip,
             meteogram = meteogram,
             WSC_images = WSC_images,
-            plot_titles = plot_titles)
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
           )
       } #End of custom report
     }

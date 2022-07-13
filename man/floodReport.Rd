@@ -17,68 +17,50 @@ floodReport(
   MESH = TRUE,
   CLEVER = TRUE,
   flow_returns = "both",
+  level_returns = "both",
+  rate = TRUE,
   meteogram = TRUE,
   image_path = NULL,
   save_path = "choose"
 )
 }
 \arguments{
-\item{report_name}{The name of the report you wish to generate. One of
-"Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly",
-"Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Aishihik", or "Territory". Most minor spelling
-variations should work. Leave as NULL (default) if specifying stations
-under custom_report_stations.}
+\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", "Southern Lakes and Laberge", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Aishihik", or "Territory". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.}
 
-\item{custom_report_stations}{A user-specified list of stations for which to
-generate a report. Defaults to NULL to operate on the report_name parameter
-instead. Input must be a character vector of station IDs, as in
-c("station1", "station2"). Reminder: you can create a character vector from
-a column of a data.frame, and you can reference an environment object
-instead of typing in the vector!}
+\item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
 
-\item{extra_years}{Specify extra years of data to plot for one or multiple
-stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if
-more than one station. Can be used together with preset_extra_years}
+\item{extra_years}{Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years.}
 
-\item{preset_extra_years}{TRUE or FALSE, defaults to FALSE. Can be used
-together with extra_years.}
+\item{preset_extra_years}{TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.}
 
-\item{report_type}{What do you want your report to contain? Choose from
-"Level", "Flow", or "Both." Defaults to Both.}
+\item{report_type}{What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.}
 
 \item{plot_titles}{Do you want the plots to have a title?}
 
-\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or
-FALSE. Defaults to TRUE.}
+\item{level_zoom}{Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.}
 
-\item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL,
-defaults to NULL which copies the setting for level_zoom.}
+\item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.}
 
-\item{zoom_days}{The number of days to plot for zoomed in level plots.
-Defaults to 30, but not used unless level_zoom is set to TRUE.}
+\item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
 
 \item{MESH}{Should MESH forecasts be incorporated into the graphs?}
 
 \item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
 
-\item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".}
 
-\item{meteogram}{Should meteograms relevant to the stations in the report be
-generated? TRUE or FALSE.}
+\item{level_returns}{Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
 
-\item{image_path}{The path to the directory (folder) containing the images
-you wish to include. Default to NULL to not include any extra images. Set
-to "choose" to navigate to the folder, or enter the folder path directly as
-a character string. Some reports automatically include web-hosted images,
-do not include them here.}
+\item{rate}{Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.}
 
-\item{save_path}{The path to the directory (folder) where the report should
-be saved. Default "choose" lets you select your folder, otherwise enter the
-path as a character string.}
+\item{meteogram}{Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.}
+
+\item{image_path}{The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.}
+
+\item{save_path}{The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.}
 }
 \value{
-A flood report containing flow and water level information in
-Microsoft Word format.
+A flood report containing flow and water level information in Microsoft Word format.
 }
 \description{
 This function generates condition reports for preset or user-specified Water

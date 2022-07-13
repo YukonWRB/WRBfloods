@@ -40,12 +40,12 @@ utils_flow_data <- function(
 	  #TODO: remove line below once tidyhydat.ws is fixed.
 	  param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
 	  
-	  flow_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
+	  flow_real_time <- tidyhydat.ws::realtime_ws(
 	    station_number = station_number, 
 	    parameters = 47, 
 	    start_date = ifelse(max(lubridate::year(flow_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
 	    token = token_out
-	    ))
+	    )
 	  
 	  recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	  
@@ -183,6 +183,19 @@ utils_flow_data <- function(
 	  }
 	}
 	
+	#Fill missing data points in recent_flow: first figure out the recording rate, then fill
+	if (flow_zoom == TRUE){
+	  diff <- vector()
+	  for (i in 1:nrow(recent_flow)){
+	    diff[i] <- as.numeric(difftime(recent_flow$Date[i+1], recent_flow$Date[i]))
+	  }
+	  diff <- as.numeric(names(sort(table(diff),decreasing=TRUE)[1])) #difference between data points in minutes
+	  recent_flow <- tidyr::complete(recent_flow, Date = seq.POSIXt(min(Date), max(Date), by=paste0(diff, " min")))
+	}
+	
+	flow_years <- dplyr::arrange(flow_years, desc(Date))
+	recent_flow <- dplyr::arrange(recent_flow, desc(Date))
+	
 	tidyData <- list(flow_df, flow_years, recent_flow)
 	return(tidyData)
 	
@@ -200,7 +213,7 @@ utils_flow_data <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param returns Should flow returns be plotted? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "both".
 #' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table".
 #'
 #' @return A plot of flow volumes for a WSC station.
@@ -353,7 +366,7 @@ utils_daily_flow_plot <- function(
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".
+#' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "none".
 #' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means.
 #'
 #' @return A plot for the station requested and for the duration requested.

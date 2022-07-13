@@ -14,8 +14,11 @@ freshetReport(
   level_zoom = TRUE,
   flow_zoom = NULL,
   zoom_days = 20,
-  MESH = TRUE,
-  CLEVER = TRUE,
+  rate = TRUE,
+  level_returns = "both",
+  flow_returns = "both",
+  MESH = FALSE,
+  CLEVER = FALSE,
   precip = FALSE,
   meteogram = FALSE,
   WSC_images = FALSE,
@@ -24,7 +27,7 @@ freshetReport(
 )
 }
 \arguments{
-\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".}
+\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", "Southern Lakes and Laberge", "Major Lakes" (southern lakes plus Laberge), "Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".}
 
 \item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
 
@@ -41,6 +44,12 @@ freshetReport(
 \item{flow_zoom}{Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.}
 
 \item{zoom_days}{The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.}
+
+\item{rate}{Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.}
+
+\item{level_returns}{Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+
+\item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".}
 
 \item{MESH}{Should MESH forecasts be incorporated into the graphs?}
 
