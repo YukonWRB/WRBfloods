@@ -56,8 +56,8 @@ freshetReport <-
            WSC_images = FALSE,
            image_path = NULL,
            save_path = "choose") {
-
-
+    
+    
     #####Selection of image path and save path#####
     if (is.null(image_path) == FALSE) {
       if (image_path == "choose") {
@@ -87,8 +87,8 @@ freshetReport <-
       ### Generate a report for the whole territory###
       if (report_name %in% c("Territory", "territory", "Communities", "communities", "Yukon", "Yukon Wide", "Yukon wide", "yukon wide")) {
         stations <- c("09AA004", "09AA017", "09AB004", "09AB001", "09AB010", "09AE002", "09AH004", "09AH001", "09BC002", "09BC001", "09DC006", "09EA003", "09EB001", "09FD003", "10AA001")
-#        preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1992,2021", "09BC002:2013,1992,1972", "09FD003:2007,2015", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
-
+        #        preset_extras <- c("09EA003:2013,1972","09EB001:2013,1964", "09AH001:2021,1992","09AH004:2021","09AE002:1992,2021", "09BC002:2013,1992,1972", "09FD003:2007,2015", "10AA001:2007,2012,2013", "09DC006:1992,1983,2013", "09AB004:2007,2021", "09AB010:2007,2021")
+        
         preset_extras <- c("09EA003:2013","09EB001:2013", "09AH001:2021","09AH004:2021","09AE002:2021", "09BC002:2013", "09FD003:2015", "10AA001:2012", "09DC006:1992", "09AB004:2007,2021", "09AB010:2021")
         
         if (preset_extra_years==TRUE){
@@ -133,29 +133,29 @@ freshetReport <-
           extra_years <- extra_years
         }
         
-          rmarkdown::render(
-            input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-            output_file = paste0("Dawson Freshet Report ", Sys.Date()),
-            output_dir = save_path,
-            params = list(
-              stations = stations,
-              report_name = "Dawson Water Report",
-              extra_years = extra_years,
-              image_path = image_path,
-              report_type = report_type,
-              level_zoom = level_zoom,
-              flow_zoom = flow_zoom,
-              zoom_days = zoom_days,
-              MESH = MESH,
-              CLEVER = CLEVER,
-              precip = precip,
-              meteogram = meteogram,
-              WSC_images = WSC_images,
-              plot_titles = plot_titles,
-              flow_returns = flow_returns,
-              level_returns = level_returns,
-              rate = rate)
-          )
+        rmarkdown::render(
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
+          output_file = paste0("Dawson Freshet Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Dawson Water Report",
+            extra_years = extra_years,
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
+            zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images,
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
+        )
       } #End of Dawson report
       
       ### Generate a report for Carmacks###
@@ -301,43 +301,43 @@ freshetReport <-
             rate = rate)
         )
       } #End of Old Crow report
-    
-    ### Generate a report for Liard/Watson###
-    if (report_name %in% c("Liard", "Watson", "Watson Lake", "Watson lake", "watson lake", "Liard River", "Liard river", "liard river", "Liard/Watson", "Watson/Liard", "Watson Lake/Liard River", "Liard River/Watson Lake")) {
-      stations <-c ("10AA001", "10AA006", "10AA004", "10AA005", "10AB001", "10AB001", "10AD002")
-      preset_extras <- "10AA001:2007,2012,2013"
       
-      if (preset_extra_years==TRUE){
-        extra_years <- c(preset_extras, extra_years) 
-      } else {
-        extra_years <- extra_years
-      }
+      ### Generate a report for Liard/Watson###
+      if (report_name %in% c("Liard", "Watson", "Watson Lake", "Watson lake", "watson lake", "Liard River", "Liard river", "liard river", "Liard/Watson", "Watson/Liard", "Watson Lake/Liard River", "Liard River/Watson Lake")) {
+        stations <-c ("10AA001", "10AA006", "10AA004", "10AA005", "10AB001", "10AB001", "10AD002")
+        preset_extras <- "10AA001:2007,2012,2013"
+        
+        if (preset_extra_years==TRUE){
+          extra_years <- c(preset_extras, extra_years) 
+        } else {
+          extra_years <- extra_years
+        }
+        
+        rmarkdown::render(
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
+          output_file = paste0("Liard.Watson Freshet Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Liard/Watson Lake Water Report",
+            extra_years = extra_years,
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
+            zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images,
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
+        )
+      } #End of Liard/Watson report
       
-      rmarkdown::render(
-        input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-        output_file = paste0("Liard.Watson Freshet Report ", Sys.Date()),
-        output_dir = save_path,
-        params = list(
-          stations = stations,
-          report_name = "Liard/Watson Lake Water Report",
-          extra_years = extra_years,
-          image_path = image_path,
-          report_type = report_type,
-          level_zoom = level_zoom,
-          flow_zoom = flow_zoom,
-          zoom_days = zoom_days,
-          MESH = MESH,
-          CLEVER = CLEVER,
-          precip = precip,
-          meteogram = meteogram,
-          WSC_images = WSC_images,
-          plot_titles = plot_titles,
-          flow_returns = flow_returns,
-          level_returns = level_returns,
-          rate = rate)
-      )
-    } #End of Liard/Watson report
-
       ### Generate a report for Mayo/Stewart###
       if (report_name %in% c("Mayo", "mayo", "Stewart", "stewart", "Stewart River", "Stewart river", "stewart river", "Stewart Crossing", "Stewart crossing", "stewart crossing", "Mayo/Stewart", "stewart/Mayo")) {
         stations <-c ("09DC006", "09DC005", "09DA001", "09DB001", "09DD004")
@@ -373,82 +373,46 @@ freshetReport <-
             rate = rate)
         )
       } #End of Mayo/Stewart report
-
-    
-    ### Generate a report for Southern Lakes AND Laberge###
-    if (report_name %in% c("Southern Lakes and Laberge", "Southern Lakes/Laberge", "southern lakes and laberge", "Southern lakes and Laberge", "Southern lakes/Laberge")) {
-      stations <-c ("09AB001", "09AB004", "09AA017", "09AA004", "09AA012", "09AA013", "09AA001", "09AB010", "09AC001", "09AC007")
-      preset_extras <- c("09AB004:2007,2021", "09AB010:2007,2021")
       
-      if (preset_extra_years==TRUE){
-        extra_years <- c(preset_extras, extra_years) 
-      } else {
-        extra_years <- extra_years
-      }
       
-      rmarkdown::render(
-        input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-        output_file = paste0("S. Lakes and Laberge Condition Report ", Sys.Date()),
-        output_dir = save_path,
-        params = list(
-          stations = stations,
-          report_name = "Southern Lakes and Laberge Condition Report",
-          extra_years = extra_years,
-          image_path = image_path,
-          report_type = report_type,
-          level_zoom = level_zoom,
-          flow_zoom = flow_zoom,
-          zoom_days = zoom_days,
-          MESH = MESH,
-          CLEVER = CLEVER,
-          precip = precip,
-          meteogram = meteogram,
-          WSC_images = WSC_images,
-          plot_titles = plot_titles,
-          flow_returns = flow_returns,
-          level_returns = level_returns,
-          rate = rate)
-      )
-    } #End of Southern Lakes AND Laberge report
-    
-    ### Generate a report for Southern Lakes###
-    if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")) {
-      stations <-c ("09AA001", "09AA004", "09AA017", "09AB004", "09AB001", "09AB010")
-      preset_extras <- c("09AA004:2007,2021", "09AA001:2007,2021", "09AA017:2007,2021", "09AB004:2007,2021", "09AB001:2007,2021", "09AB010:2007,2021")
-      
-      if (preset_extra_years==TRUE){
-        extra_years <- c(preset_extras, extra_years) 
-      } else {
-        extra_years <- extra_years
-      }
-      
-      rmarkdown::render(
-        input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-        output_file = paste0("Southern Lakes Hydrometric Conditions Report ", Sys.Date()),
-        output_dir = save_path,
-        params = list(
-          stations = stations,
-          report_name = "Southern Lakes Hydrometric Conditions Report",
-          extra_years = extra_years,
-          image_path = image_path,
-          report_type = report_type,
-          level_zoom = level_zoom,
-          flow_zoom = flow_zoom,
-          zoom_days = zoom_days,
-          MESH = MESH,
-          CLEVER = CLEVER,
-          precip = precip,
-          meteogram = meteogram,
-          WSC_images = WSC_images,
-          plot_titles = plot_titles,
-          flow_returns = flow_returns,
-          level_returns = level_returns,
-          rate = rate)
-      )
-    } #End of lakes of Southern Lakes report
+      ### Generate a report for Southern Lakes###
+      if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")) {
+        stations <-c ("09AA001", "09AA004", "09AA017", "09AB004", "09AB001", "09AB010")
+        preset_extras <- c("09AA004:2007,2021", "09AA001:2007,2021", "09AA017:2007,2021", "09AB004:2007,2021", "09AB001:2007,2021", "09AB010:2007,2021")
+        
+        if (preset_extra_years==TRUE){
+          extra_years <- c(preset_extras, extra_years) 
+        } else {
+          extra_years <- extra_years
+        }
+        
+        rmarkdown::render(
+          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
+          output_file = paste0(Sys.Date(), "_Southern-Lakes-Hydrometric-Conditions-Report "),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Southern Lakes Hydrometric Conditions Report",
+            extra_years = extra_years,
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
+            zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
+            precip = precip,
+            meteogram = meteogram,
+            WSC_images = WSC_images,
+            plot_titles = plot_titles,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate)
+        )
+      } #End of lakes of Southern Lakes report
       
     }
-      
+    
     ### Generate a custom report ###
     if (is.null(custom_report_stations)==FALSE){
       if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
@@ -482,7 +446,7 @@ freshetReport <-
             flow_returns = flow_returns,
             level_returns = level_returns,
             rate = rate)
-          )
+        )
       } #End of custom report
     }
     

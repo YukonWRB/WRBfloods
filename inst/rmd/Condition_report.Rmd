@@ -226,7 +226,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       
     #Determine if the last data point is > 6 hours old
       if (levelData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
-        tbl$Last_data <- "< 1 hrs"
+        tbl$Last_data <- "< 1 hr"
       }
       if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
         tbl$Last_data <- "1-2 hrs"
@@ -429,7 +429,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         #Determine if the last data point is >6 hours old
         tbl$Last_data <- " "
         if (flowData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
-          tbl$Last_data <- "< 1 hrs"
+          tbl$Last_data <- "< 1 hr"
         }
         if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
           tbl$Last_data <- "1-2 hrs"
