@@ -76,7 +76,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       Datum_elevation_m = NA,
       Current_return_period = "NA",
       # Flag = "NA",
-      Last_data = NA
+      Last_data = "NA"
     )
     
     levelData <- data.frame() #Created to standardize the eventual output of this code block
@@ -142,7 +142,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           Datum_elevation_m = as.numeric(NA),
           Current_return_period = "NA",
           # Flag = "NA",
-          Last_data = NA
+          Last_data = "NA"
         )
       } else { #There is a datum
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
@@ -179,7 +179,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           Datum_elevation_m = as.numeric(NA),
           Current_return_period = "NA",
           # Flag = "NA",
-          Last_data = NA
+          Last_data = "NA"
         )
       }
       
@@ -289,7 +289,9 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
       Five_days_ago = NA,
       Six_days_ago = NA,
       One_week_ago = NA,
-      One_week_change = NA
+      One_week_change = NA,
+      Current_return_period = NA,
+      Last_data = "NA"
     )    
     
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
@@ -351,7 +353,9 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           Five_days_ago = if(length(fivedayFlow)==0) {as.numeric(NA)} else {fivedayFlow},
           Six_days_ago = if(length(sixdayFlow)==0) {as.nueric(NA)} else {sixdayFlow},
           One_week_ago = if(length(weekFlow)==0) {as.numeric(NA)} else {weekFlow},
-          One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
+          One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow},
+          Current_return_period = NA,
+          Last_data = "NA"
         )
         
         if (!(flow_returns %in% c("None", "none"))){ #if flow_returns is "none", the column is simply not created.
@@ -693,27 +697,30 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
     flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 5, 6, 8, 10, 12, 17, 18)]
   }
   
-  names(flowTable) <- gsub("\\.", " ", names(flowTable))
-  names(flowTable) <- gsub("X", "", names(flowTable))
-  
-  flowTable$Current_percent_historic <- round(flowTable$`Current_percent_historic`, 1)
-  
-  if (!(flow_returns %in% c("none", "None"))){
-    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period", "Last data age")
-    print(knitr::kable(flowTable, digits=1, align="lcccccccc"))
-
-  } else {
-    colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Last data age")
-    print(knitr::kable(flowTable, digits=1, align="lccccccc"))
-  }
-  
-  if (TRUE %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
-    cat("NOTE: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
-  }
-
-    if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
-    cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. No human checks were performed on underlying data.")
+  if (nrow(flowTable)  > 0){
+    names(flowTable) <- gsub("\\.", " ", names(flowTable))
+    names(flowTable) <- gsub("X", "", names(flowTable))
+    
+    flowTable$Current_percent_historic <- round(flowTable$`Current_percent_historic`, 1)
+    
+    if (!(flow_returns %in% c("none", "None"))){
+      colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return period", "Last data age")
+      print(knitr::kable(flowTable, digits=1, align="lcccccccc"))
+      
+    } else {
+      colnames(flowTable) <- c("Station name (number)", "Current flow (m^3^/s)", "Current percent historic", "24 hr change (m^3^/s)", "48 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Last data age")
+      print(knitr::kable(flowTable, digits=1, align="lccccccc"))
     }
+    
+    if (TRUE %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
+      cat("NOTE: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
+    }
+    
+    if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
+      cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. No human checks were performed on underlying data.")
+    }
+  }
+  
 }
 ```
 
