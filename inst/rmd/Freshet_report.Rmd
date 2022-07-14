@@ -296,7 +296,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       
     #Determine if the last data point is >6 hours old
       if (levelData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
-        tbl$Last_data <- "< 1 hrs"
+        tbl$Last_data <- "< 1 hr"
       }
       if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
         tbl$Last_data <- "1-2 hrs"
@@ -499,7 +499,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         #Determine if the last data point is >6 hours old
         tbl$Last_data <- " "
         if (flowData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
-          tbl$Last_data <- "< 1 hrs"
+          tbl$Last_data <- "< 1 hr"
         }
         if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
           tbl$Last_data <- "1-2 hrs"
@@ -647,11 +647,11 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
     
     print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
     
-    cat("*masl = metres above sea level  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
+    cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
     
   } else {  print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
     
-    cat("*masl = metres above sea level  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration to the datum used. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
+    cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration to the datum used. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
   }
 }
 
