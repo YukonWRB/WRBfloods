@@ -765,7 +765,7 @@ colnames(precipTable) <- c("Station code", "Station name", "12 hours", "One day"
 
 \newpage
 
-```{r Get MESH and CLEVER information, echo=FALSE, results='asis', message=FALSE}
+```{r Get MESH and CLEVER information, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 
 if (MESH == TRUE){
   #today's files if exists:

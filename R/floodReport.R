@@ -359,7 +359,7 @@ floodReport <-
       
       ### Generate a report for Southern Lakes###
       if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")) {
-        stations <-c ("09AA001", "09AA004", "09AA017", "09AB004", "09AB001", "09AB010")
+        stations <-c ("09AA001", "09AA012", "09AA004", "09AA013", "09AA017", "09AB004", "09AB001", "09AB010", "09AC001", "09AC007")
         preset_extras <- c("09AA004:2007,2021", "09AA001:2007,2021", "09AA017:2007,2021", "09AB004:2007,2021", "09AB001:2007,2021", "09AB010:2007,2021")
         
         if (preset_extra_years==TRUE){
