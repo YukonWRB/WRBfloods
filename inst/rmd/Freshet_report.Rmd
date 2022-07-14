@@ -587,11 +587,12 @@ stationInfo$Datum <- gsub("Local datum", "Local datum", sub)
 stationInfo$Station <- gsub("Morely", "Morley", stationInfo$Station)
 ```
 
-# Summary of water levels and trajectory
-
 ```{r Rates table for levels, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 
 if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
+  
+  cat("  \n# Summary of water levels and trajectories")
+  
   info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 20)]
   
   if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
@@ -682,7 +683,7 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
     levelTable$`24 hr change (cm)` <- round(levelTable$`24 hr change (cm)`,1)
     levelTable$`72 hr change (cm)` <- round(levelTable$`72 hr change (cm)`,1)
     
-    knitr::kable(levelTable, digits=2, align="c")
+    print(knitr::kable(levelTable, digits=2, align="llcccccc"))
     
     cat("*masl = metres above sea level  \n **Notes:**  \n")
     if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
