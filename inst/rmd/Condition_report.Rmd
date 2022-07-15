@@ -866,57 +866,11 @@ for(i in stations) {
           if (level_zoom == TRUE){ #Plot zoomed-in level data
             cat("  \n### Level (last", zoom_days, " days) \n")
             
-            #Lines below can be used to incorporate MESH outputs to lakes, once the files are available from Mohamed.
-            # if (i %in% names(MESH) & i %in% names(CLEVER)){
-            #   #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
-            #   
-            #   last_value <- tail(levelDataList[[n]][[3]], n=1)
-            #   dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
-            #   nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
-            #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range compasses two points
-            #   MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
-            #   
-            #   #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
-            #   
-            #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   zoom <- dplyr::full_join(zoom, CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   
-            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
-            #                                          level_years = levelDataList[[n]][[2]],
-            #                                          zoom_data = zoom,
-            #                                          zoom_days = zoom_days)
-            #   
-            # } else if (i %in% names(MESH)){
-            #   #Add in the MESH data, nudge it to match WSC at forecast time.
-            #   last_value <- tail(levelDataList[[n]][[3]], n=1)
-            #   dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
-            #   nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
-            #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range encompass two points
-            #   MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
-            #   
-            #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   
-            #   
-            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
-            #                                          level_years = levelDataList[[n]][[2]],
-            #                                          zoom_data = zoom,
-            #                                          zoom_days = zoom_days)
-            #   
-            # } else if (i %in% names(CLEVER)) {
-            #   #Add in CLEVER data, nudge it to match wSC at forecast time.
-            #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   
-            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
-            #                                          level_years = levelDataList[[n]][[2]],
-            #                                          zoom_data = zoom,
-            #                                          zoom_days = zoom_days)
-            #   
-            # } else { #if no MESH or CLEVER, just give a regular plot
+
               zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
                                                      level_years = levelDataList[[n]][[2]],
                                                      zoom_data = levelDataList[[n]][[3]],
                                                      zoom_days = zoom_days)
-            #}
             
             if (plot_titles == TRUE){
               zoomLevelPlot <- zoomLevelPlot +

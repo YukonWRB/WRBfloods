@@ -388,7 +388,7 @@ freshetReport <-
         
         rmarkdown::render(
           input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0(Sys.Date(), "_Southern-Lakes-Hydrometric-Conditions-Report "),
+          output_file = paste0(Sys.Date(), "_Southern-Lakes-Hydrometric-Conditions-Report"),
           output_dir = save_path,
           params = list(
             stations = stations,

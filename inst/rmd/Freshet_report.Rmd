@@ -685,13 +685,13 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
     
     print(knitr::kable(levelTable, digits=2, align="llcccccc"))
     
-    cat("*masl = metres above sea level  \n **Notes:**  \n")
+    cat("*masl = metres above sea level  \n **Notes:**  \n  \n")
     if (FALSE %in% stringr::str_detect(stationInfo$Datum, "CGVD2013")){ #if there is any datum NOT CGVD2013
       cat("Current water levels are presented relative to the local datum (column 3) and relative to either the Canadian Geodetic Vertical Datum 2013 (CGVD2013) or to the Canadian Geodetic Vertical datum of 1928 (CGVD28) (column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013/CGVD28 elevations can be compared across stations with caution. Note that significant differences may exist between CGVD2013 and CGVD28. Datum information is provided in a table of station information at the end of this document.")
     } else {
       cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
     }
-    cat("  \nReturn periods representing 2, 10, 20, 50, 100, and 200 year levels are reported here (column 6) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.")
+    cat("  \n  \nReturn periods representing 2, 10, 20, 50, 100, and 200 year levels are reported here (column 7) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.")
   }
 }
 ```
