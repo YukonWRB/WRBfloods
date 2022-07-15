@@ -27,7 +27,7 @@ freshetReport(
 )
 }
 \arguments{
-\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Whitehorse/Laberge", "Southern Lakes", "Southern Lakes and Laberge", "Major Lakes" (southern lakes plus Laberge), "Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".}
+\item{report_name}{The name of the report you wish to generate. One of "Dawson", "Southern Lakes", "Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", "Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".}
 
 \item{custom_report_stations}{A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!}
 
