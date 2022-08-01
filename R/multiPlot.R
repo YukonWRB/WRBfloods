@@ -8,7 +8,7 @@
 #'
 #' @param stations The WSC stations for which you wish to generate a plot. The first one listed should be the primary station, and usually the one with the greatest flow or slowest level response. If plotting flows, the left y-axis will be for this station while subsequent stations will plot on the secondary y-axis.
 #' @param type "Level" or "Flow"?
-#' @param days Number from 2 to 730 representing the number of days to plot
+#' @param days Number from 2 to 730 representing the number of days to plot.
 #' @param title Do you want a title added to the plot? Leave as NULL for no title, otherwise enter it here as a character string.
 #' @param save_path Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.
 #'
@@ -39,16 +39,16 @@ multiPlot <- function(stations, type, days=30, title=NULL, save_path="choose") {
       data <- dplyr::bind_rows(data, level[,c(1,2,4)])
       
     }
-    
-    plot <- ggplot2::ggplot(data, ggplot2::aes(Date, Value)) +
-      ggplot2::labs(x="", y = "Level (m relative to station)")+
-      ggplot2::theme_classic()+
-      ggplot2::theme(legend.position = "right", legend.text = ggplot2::element_text(size = 9), legend.title = ggplot2::element_text(size=12)) +
-      ggplot2::geom_point(ggplot2::aes(colour = STATION_NUMBER), size=0.75, na.rm = T) +
-      ggplot2::scale_colour_manual(name = "Stations", labels = unique(data$STATION_NUMBER), values = colours[1:length(unique(data$STATION_NUMBER))]) +
-      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=2.5)))
-  }
   
+  plot <- ggplot2::ggplot(data, ggplot2::aes(Date, Value, colour=STATION_NUMBER)) +
+    ggplot2::labs(x="", y = "Level (m relative to station)")+
+    ggplot2::theme_classic()+
+    ggplot2::theme(legend.position = "right", legend.text = ggplot2::element_text(size = 9), legend.title = ggplot2::element_text(size=12)) +
+    ggplot2::geom_point(ggplot2::aes(colour = factor(STATION_NUMBER)), size=0.75, na.rm = T) +
+    ggplot2::scale_colour_manual(name = "Stations", values = colours[1:length(unique(data$STATION_NUMBER))]) +
+    ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=2.5)))
+  
+  }
   
   if (type %in% c("Flow", "flow")){
     #Get the data for each station
@@ -73,8 +73,8 @@ multiPlot <- function(stations, type, days=30, title=NULL, save_path="choose") {
       ggplot2::labs(x="", y = "Flow (" ~m^3* "/s," ~log^10*" scale)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.position = "right", legend.text = ggplot2::element_text(size = 9), legend.title = ggplot2::element_text(size=12)) +
-      ggplot2::geom_point(ggplot2::aes(colour = STATION_NUMBER), size=0.75, na.rm = T) +
-      ggplot2::scale_colour_manual(name = "Stations", labels = unique(data$STATION_NUMBER), values = colours[1:length(unique(data$STATION_NUMBER))]) +
+      ggplot2::geom_point(ggplot2::aes(colour = factor(STATION_NUMBER)), size=0.75, na.rm = T) +
+      ggplot2::scale_colour_manual(name = "Stations", values = colours[1:length(unique(data$STATION_NUMBER))]) +
       ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=2.5)))
   }
   
