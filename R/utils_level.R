@@ -269,8 +269,7 @@ utils_level_data <- function(
   
   if (rate == TRUE) {
     level_years <- dplyr::mutate(level_years, rate = as.numeric(NA))
-    earliest_datetime <- tail(level_years, n=1)$Date
-    
+
     for (i in 1:(nrow(level_years)-1)){
       try(level_years$rate[i] <- level_years$Level[i] - level_years$Level[i+1], silent=TRUE)
     }
