@@ -24,7 +24,7 @@ utils_flow_data <- function(
 	station_number,
 	select_years,
 	flow_zoom = TRUE,
-	filter = FALSE,
+	filter = TRUE,
 	recent_prctile = FALSE
 ){
 	
@@ -47,8 +47,16 @@ utils_flow_data <- function(
 	    token = token_out
 	    )
 	  
-	  recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
+	  #Filter the data here if requested (option exists in case user wants to see the outliers)
+	  if (filter == TRUE) {
+	    IQR <- stats::IQR(flow_real_time$Value, na.rm=TRUE)
+	    quartiles <- stats::quantile(flow_real_time$Value, na.rm=TRUE, probs = c(.25, .75))
+	    
+	    flow_real_time <- subset(flow_real_time, flow_real_time$Value > (quartiles[1] - 1.5*IQR) & flow_real_time$Value < (quartiles[2] + 1.5*IQR))
+	  }
 	  
+	  
+	  recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	  if (flow_zoom == TRUE){ #If requesting zoomed-in plot
 	    recent_flow <- flow_real_time %>% plyr::rename(c("Value"="Flow"))
 	    recent_flow$DateOnly <- lubridate::date(recent_flow$Date)
@@ -163,25 +171,6 @@ utils_flow_data <- function(
 	  }
 	}
 	
-	
-	
-	#TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
-	if (filter==TRUE){
-	  #Filter out data spikes
-	  if (flow_zoom == TRUE){ #If requesting zoomed-in plot, remove spikes by using historical (and thus QC'd) daily min/max values.
-	    flow_df$dayofyear <- lubridate::yday(flow_df$Date)  #repopulate dayofyear in flow_df in case of leap year
-	    recent_flow$dayofyear <- lubridate::yday(recent_flow$Date) # create matching column
-	    
-	    range <- max(flow_df$Max, na.rm=TRUE) - min(flow_df$Min, na.rm=TRUE)
-	    for (i in unique(recent_flow$dayofyear)){
-	      
-	      max <- max(dplyr::filter(flow_df, dayofyear==i)$Max, na.rm=TRUE) + range
-	      min <- min(dplyr::filter(flow_df, dayofyear==i)$Min, na.rm=TRUE) - range
-	      
-	      try (recent_flow[recent_flow$dayofyear==i & (recent_flow$Flow < min | recent_flow$Flow > max),]$Flow <- NA)
-	    }
-	  }
-	}
 	
 	#Fill missing data points in recent_flow: first figure out the recording rate, then fill
 	if (flow_zoom == TRUE){

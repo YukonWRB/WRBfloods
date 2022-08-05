@@ -8,7 +8,7 @@ utils_flow_data(
   station_number,
   select_years,
   flow_zoom = TRUE,
-  filter = FALSE,
+  filter = TRUE,
   recent_prctile = FALSE
 )
 }

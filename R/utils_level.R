@@ -16,7 +16,7 @@
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
 #' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
 #' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If level_zoom == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
-#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
 #' @export
@@ -26,7 +26,7 @@ utils_level_data <- function(
     station_number,
     select_years,
     level_zoom = TRUE,
-    filter = FALSE,
+    filter = TRUE,
     recent_prctile = FALSE,
     rate = FALSE,
     rate_days = "all"
@@ -44,12 +44,10 @@ utils_level_data <- function(
   
   datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
   
-  level_historic$Level_masl <- level_historic$Level #create col here so we end up with two cols filled out
+  level_historic$Level_masl <- as.numeric(NA) #create col here so we end up with two cols filled out
   
   if(datum_na == FALSE) {
     level_historic$Level_masl[level_historic$Level_masl < 50 & !is.na(level_historic$Level_masl)] <- level_historic$Level_masl[level_historic$Level_masl <50 & !is.na(level_historic$Level_masl)] + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
-  } else {
-    level_historic$Level_masl <- as.numeric(NA)
   }
 
   if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
@@ -66,8 +64,15 @@ utils_level_data <- function(
       token = token_out
       )
     
-    recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
+    #Filter the data here if requested (option exists in case user wants to see the outliers)
+    if (filter == TRUE) {
+      IQR <- stats::IQR(level_real_time$Value, na.rm=TRUE)
+      quartiles <- stats::quantile(level_real_time$Value, na.rm=TRUE, probs = c(.25, .75))
+      
+      level_real_time <- subset(level_real_time, level_real_time$Value > (quartiles[1] - 1.5*IQR) & level_real_time$Value < (quartiles[2] + 1.5*IQR))
+    }
 
+    recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
     if (level_zoom == TRUE){ #If requesting zoomed-in plot
       recent_level <- level_real_time %>% plyr::rename(c("Value"="Level"))
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
@@ -81,7 +86,7 @@ utils_level_data <- function(
                        .groups = "drop")
     level_real_time <- level_real_time[,-c(2,3)]
     
-    if (datum_na == FALSE){ #Generate new column to hold masl levels in level_real_time and recent_level
+    if (datum_na == FALSE){ #Generate new column to hold masl levels in level_real_time and recent_level. At this point level_real_time has a single point per day, recent_level has the data at max resolution.
       level_real_time$Level_masl <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
       recent_level$Level_masl <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
     } else {
@@ -89,7 +94,6 @@ utils_level_data <- function(
       recent_level$Level_masl <- as.numeric(NA)
     }
     
-    # Need to add NaN for blank days
     level_df <- dplyr::bind_rows(level_historic, level_real_time)
     
   } else {
@@ -249,23 +253,8 @@ utils_level_data <- function(
       }
     }
   }
-    #TODO: look at doing this with data.table to save time. Currently taking ~1 minute.
-    if (filter==TRUE){ #Filter out data spikes
-      level_df$dayofyear <- lubridate::yday(level_df$Date)  #repopulate dayofyear in level_df in case of leap year
-      recent_level$dayofyear <- lubridate::yday(recent_level$Date) # create matching column
-      
-      range <- max(level_df$Max, na.rm=TRUE) - min(level_df$Min, na.rm=TRUE)
-      
-      for (i in unique(recent_level$dayofyear)) {
-        dat <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
-        max <- max(dplyr::filter(level_df, dayofyear==i)$Max, na.rm=TRUE) + range - if (datum_na==FALSE) dat else 0
-        min <- min(dplyr::filter(level_df, dayofyear==i)$Min, na.rm=TRUE) - range - if (datum_na==FALSE) dat else 0
-        
-        try (recent_level[recent_level$dayofyear==i & (recent_level$Level < min | recent_level$Level > max),]$Level <- NA)
-      }
-    }
   
-  #Fill missing data points in recent_level: first figure out the recording rate, then fill
+  #Fill missing data points in recent_level: first figure out the recording rate, then fill with NAs
   if (level_zoom == TRUE){
     diff <- vector()
     for (i in 1:nrow(recent_level)){

@@ -23,7 +23,9 @@ WSCdata <- function(
     rate_days = "all"
 ) {
   
-  data <- list()
+  param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
+
+    data <- list()
   if (level_flow %in% c("Both", "both")){
     for (i in stations){
       level <- list()
