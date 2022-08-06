@@ -78,8 +78,8 @@ freshetReport <-
     #####Generate reports#####
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == FALSE) {
       #deals with mistakes
-      print("You specified custom report stations while the preset report was also set (it defaults to 'Territory' if you didn't change it). I've set the preset to NULL so you get a custom report instead.")
-      report_name <- NULL
+      print("You specified custom report stations while the preset report was also set (it defaults to 'Territory' if you didn't change it). I've set the preset to Custom Water Report so you get a custom report instead.")
+      report_name <- "Custom Water Report"
     }
     
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {
@@ -410,49 +410,56 @@ freshetReport <-
             rate = rate)
         )
       } #End of lakes of Southern Lakes report
-      
     }
     
     ### Generate a custom report ###
     if (is.null(custom_report_stations)==FALSE){
-      if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
-        stations <- custom_report_stations
+      if (is(custom_report_stations, "character")==TRUE) {
+        #Check for existence of all stations in hydat
+        stop_go <- "go"
+        for (i in custom_report_stations){
+          if (!(i %in% tidyhydat::allstations$STATION_NUMBER)){
+             stop_go <- "stop"
+            warning(paste0("Station ", i, " is not a station listed in the tidyhydat database. Please correct this discrepancy or omit the station before proceeding."))
+          }}
         
-        if (is.null(extra_years)==FALSE) {
-          extra_years <- extra_years
-        } else {
-          extra_years <- NULL
-        }
-        
-        rmarkdown::render(
-          input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
-          output_file = paste0("Custom Freshet Report ", Sys.Date()),
-          output_dir = save_path,
-          params = list(
-            stations = stations,
-            report_name = "Custom Water Report",
-            extra_years = extra_years,
-            image_path = image_path,
-            report_type = report_type,
-            level_zoom = level_zoom,
-            flow_zoom = flow_zoom,
-            zoom_days = zoom_days,
-            MESH = MESH,
-            CLEVER = CLEVER,
-            precip = precip,
-            meteogram = meteogram,
-            WSC_images = WSC_images,
-            plot_titles = plot_titles,
-            flow_returns = flow_returns,
-            level_returns = level_returns,
-            rate = rate)
-        )
+        if (stop_go == "go"){
+          stations <- custom_report_stations
+          
+          if (is.null(extra_years)==FALSE) {
+            extra_years <- extra_years
+          } else { extra_years <- NULL}
+          
+          rmarkdown::render(
+            input = system.file("rmd", "Freshet_report.Rmd", package="WRBfloods"),
+            output_file = paste0("Custom Water Report ", Sys.Date()),
+            output_dir = save_path,
+            params = list(
+              stations = stations,
+              report_name = report_name,
+              extra_years = extra_years,
+              image_path = image_path,
+              report_type = report_type,
+              level_zoom = level_zoom,
+              flow_zoom = flow_zoom,
+              zoom_days = zoom_days,
+              MESH = MESH,
+              CLEVER = CLEVER,
+              precip = precip,
+              meteogram = meteogram,
+              WSC_images = WSC_images,
+              plot_titles = plot_titles,
+              flow_returns = flow_returns,
+              level_returns = level_returns,
+              rate = rate)
+          )
+        } else {stop("Please correct your station inputs by referencing the message above.")}
       } #End of custom report
     }
     
     if (is.null(report_name) == TRUE &
         is.null(custom_report_stations) == TRUE) {
-      print("You must specify either a report_name or provide a character vector for custom_report_station.")   #to catch an error where no parameter was entered in both of these
+      stop("You must specify either a report_name or provide a character vector for custom_report_station.")   #to catch an error where no parameter was entered in both of these
     }
     
   } #End of function.
