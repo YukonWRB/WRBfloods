@@ -1,3 +1,4 @@
+library(tidyhydat.ws)
 test <- suppressWarnings(WSCdata(c("09EA004", "10AA001")))
 test_that("WSCdata gets a list with necessary number of elements", {
   expect_length(test, 2)
