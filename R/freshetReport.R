@@ -414,7 +414,7 @@ freshetReport <-
     
     ### Generate a custom report ###
     if (is.null(custom_report_stations)==FALSE){
-      if (is(custom_report_stations, "character")==TRUE) {
+      if (methods::is(custom_report_stations, "character")==TRUE) {
         #Check for existence of all stations in hydat
         stop_go <- "go"
         for (i in custom_report_stations){

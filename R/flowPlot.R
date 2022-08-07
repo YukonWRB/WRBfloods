@@ -78,7 +78,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
     #Extract information from the files and stick it into a single data.frame:
       files <- data.frame(YEAR=NA)
       for (i in 1:length(MESHfiles)){
-        add <- read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
+        add <- utils::read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
         files <- suppressMessages(dplyr::full_join(files, add))
       }
       files <- dplyr::mutate(files, Date = as.Date(JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
@@ -87,9 +87,9 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
       
       #Pull apart the two columns for each station, plus datetime, and make them list elements:
       datetime <- data.frame(datetime = files$datetime)
-      QOSIM <- dplyr::select(files, contains("QOSIM"))
+      QOSIM <- dplyr::select(files, tidyselect::contains("QOSIM"))
       names(QOSIM) <- gsub(pattern = "QOSIM_*", replacement = "", names(QOSIM))
-      QOMEAS <- dplyr::select(files, contains("QOMEAS"))
+      QOMEAS <- dplyr::select(files, tidyselect::contains("QOMEAS"))
       names(QOMEAS) <- gsub(pattern = "QOMEAS_*", replacement = "", names(QOMEAS))
       #Rename certain stations if necessary
       QOSIM <- plyr::rename(QOSIM, c("Marsh" = "09AB004"))
@@ -101,7 +101,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
         MESH$DateOnly <- as.Date(substr(MESH$datetime, 1, 10))
         
         #Add in the MESH data, nudge it to match WSC at forecast time.
-        last_value <- tail(flowData[[3]], n=1)
+        last_value <- utils::tail(flowData[[3]], n=1)
         dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
         nrst_MESH <- MESH[MESH$datetime %in% dttm_range,] #Get the model prediction closest to that time
         diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range encompass two points
@@ -131,7 +131,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
     exists <- RCurl::url.exists(paste0("bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"))
     
     if (exists == TRUE){
-      stn <- read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"), skip=6, na.strings = "")
+      stn <- utils::read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"), skip=6, na.strings = "")
       stn <- tidyr::fill(stn, DATE)
       stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
       stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
@@ -162,7 +162,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
     #Deal with CLEVER first
     exists <- RCurl::url.exists(paste0("bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"))
     if (exists == TRUE){
-      stn <- read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"), skip=6, na.strings = "")
+      stn <- utils::read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"), skip=6, na.strings = "")
       stn <- tidyr::fill(stn, DATE)
       stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
       stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
@@ -185,7 +185,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
       #Extract information from the files and stick it into a single data.frame:
       files <- data.frame(YEAR=NA)
       for (i in 1:length(MESHfiles)){
-        add <- read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
+        add <- utils::read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
         files <- suppressMessages(dplyr::full_join(files, add))
       }
       files <- dplyr::mutate(files, Date = as.Date(JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
@@ -194,9 +194,9 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
       
       #Pull apart the two columns for each station, plus datetime, and make them list elements:
       datetime <- data.frame(datetime = files$datetime)
-      QOSIM <- dplyr::select(files, contains("QOSIM"))
+      QOSIM <- dplyr::select(files, tidyselect::contains("QOSIM"))
       names(QOSIM) <- gsub(pattern = "QOSIM_*", replacement = "", names(QOSIM))
-      QOMEAS <- dplyr::select(files, contains("QOMEAS"))
+      QOMEAS <- dplyr::select(files, tidyselect::contains("QOMEAS"))
       names(QOMEAS) <- gsub(pattern = "QOMEAS_*", replacement = "", names(QOMEAS))
       #Rename certain stations if necessary
       QOSIM <- plyr::rename(QOSIM, c("Marsh" = "09AB004"))
@@ -208,7 +208,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
         MESH$DateOnly <- as.Date(substr(MESH$datetime, 1, 10))
         
         #Nudge MESH to match WSC actual levels at plot generation time.
-        last_value <- tail(flowData[[3]], n=1)
+        last_value <- utils::tail(flowData[[3]], n=1)
         dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
         nrst_MESH <- MESH[MESH$datetime %in% dttm_range,] #Get the model prediction closest to that time
         diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range encompass two points

@@ -108,11 +108,11 @@ utils_flow_data <- function(
 	  dplyr::group_by(dayofyear) %>%
 	  dplyr::mutate(Max = max(Flow, na.rm = TRUE),
 	                Min = min(Flow, na.rm = TRUE),
-	                QP90 = quantile(Flow, 0.90, na.rm = TRUE),
-	                QP75 = quantile(Flow, 0.75, na.rm = TRUE),
-	                QP50 = quantile(Flow, 0.50, na.rm = TRUE),
-	                QP25 = quantile(Flow, 0.25, na.rm = TRUE),
-	                QP10 = quantile(Flow, 0.10, na.rm = TRUE)) %>%
+	                QP90 = stats::quantile(Flow, 0.90, na.rm = TRUE),
+	                QP75 = stats::quantile(Flow, 0.75, na.rm = TRUE),
+	                QP50 = stats::quantile(Flow, 0.50, na.rm = TRUE),
+	                QP25 = stats::quantile(Flow, 0.25, na.rm = TRUE),
+	                QP10 = stats::quantile(Flow, 0.10, na.rm = TRUE)) %>%
 	  dplyr::ungroup() %>%
 	  hablar::rationalize() #rationalize replaces Inf values with NA
 	
@@ -182,8 +182,8 @@ utils_flow_data <- function(
 	  recent_flow <- tidyr::complete(recent_flow, Date = seq.POSIXt(min(Date), max(Date), by=paste0(diff, " min")))
 	}
 	
-	flow_years <- dplyr::arrange(flow_years, desc(Date))
-	recent_flow <- dplyr::arrange(recent_flow, desc(Date))
+	flow_years <- dplyr::arrange(flow_years, dplyr::desc(Date))
+	recent_flow <- dplyr::arrange(recent_flow, dplyr::desc(Date))
 	
 	tidyData <- list(flow_df, flow_years, recent_flow)
 	return(tidyData)
@@ -240,7 +240,7 @@ utils_daily_flow_plot <- function(
     dplyr::bind_rows(ribbon) %>%
     dplyr::arrange(Year_Real)
   
-  legend_length <- length(unique(na.omit(flow_years$Year_Real)))
+  legend_length <- length(unique(stats::na.omit(flow_years$Year_Real)))
 
   # Generate the plot
   plot <- ggplot2::ggplot(flow_years, ggplot2::aes(x = Date, y = Flow)) +
@@ -415,7 +415,7 @@ utils_zoom_flow_plot <- function(
     dplyr::bind_rows(ribbon) %>%
     dplyr::arrange(Year_Real)
     
-legend_length <- length(unique(na.omit(flow_years[flow_years$DateOnly %in% point_dates,]$Year_Real)))
+legend_length <- length(unique(stats::na.omit(flow_years[flow_years$DateOnly %in% point_dates,]$Year_Real)))
 
 #TODO: get this information on the plot, above/below the legend
 # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
@@ -458,7 +458,7 @@ if (zoom_days > 14) {
     ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
     
     
-    ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), rev(unique(flow_years$Year_Real)[1:legend_length-1])), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(na.omit(flow_years$Year_Real))[1:legend_length])) +
+    ggplot2::scale_colour_manual(name = "Flows", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), rev(unique(flow_years$Year_Real)[1:legend_length-1])), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(stats::na.omit(flow_years$Year_Real))[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if requested
