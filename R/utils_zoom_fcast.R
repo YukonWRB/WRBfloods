@@ -89,7 +89,7 @@ utils_fcast_flow_plot <- function(
     dplyr::bind_rows(ribbon) %>%
     dplyr::arrange(Year_Real)
   
-  legend_length <- length(unique(na.omit(flow_years[flow_years$DateOnly %in% point_dates,]$Year_Real)))
+  legend_length <- length(unique(stats::na.omit(flow_years[flow_years$DateOnly %in% point_dates,]$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
   # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
@@ -336,7 +336,7 @@ utils_fcast_level_plot <- function(
     dplyr::bind_rows(ribbon) %>%
     dplyr::arrange(Year_Real)
   
-  legend_length <- length(unique(na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
+  legend_length <- length(unique(stats::na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
   
   #TODO: get this information on the plot, above/below the legend
   #last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
