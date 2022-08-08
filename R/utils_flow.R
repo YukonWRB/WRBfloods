@@ -37,9 +37,6 @@ utils_flow_data <- function(
 	if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
 	  token_out <- suppressMessages(tidyhydat.ws::token_ws())
 	  
-	  #TODO: remove line below once tidyhydat.ws is fixed.
-	  param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
-	  
 	  flow_real_time <- tidyhydat.ws::realtime_ws(
 	    station_number = station_number, 
 	    parameters = 47, 

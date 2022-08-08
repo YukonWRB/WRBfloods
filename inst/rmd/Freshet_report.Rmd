@@ -26,9 +26,7 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#Normally there would not be a library call in a package, but this package doesn't handle internal data properly.
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyhydat.ws)
 ```
 
 ```{r code save, eval=FALSE, include=FALSE}
