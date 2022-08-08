@@ -1,29 +1,49 @@
-#First set of tests is on default function call to check structure. Object is created outside of tests and removed after.
+#First set of tests is on a default function call to check structure. Object is created outside of tests and removed after (objects created withing test_that are not presistent)
 ############
-test <- utils_level_data("09EA004", 2022)
-test_that("utils_level is list of three elements", {
+test <- utils_level_data("09EA004", lubridate::year(Sys.Date()))
+test_that("yields list of three elements", {
   expect_length(test, 3)
 })
 
-test_that("utils_level list element 1 has correct column names", {
+test_that("list element 1 has correct column names", {
   expect_named(test[[1]], c("STATION_NUMBER", "Date", "Level", "Level_masl", "dayofyear", "prctile", "Max", "Min", "QP90", "QP75", "QP50", "QP25", "QP10"), ignore.order = TRUE)
 })
 
-test_that("utils_level list element 2 has correct column names", {
+test_that("list element 2 has correct column names", {
   expect_named(test[[2]], c("STATION_NUMBER", "Date", "dayofyear", "prctile", "Max", "Min", "QP90", "QP75", "QP50", "QP25", "QP10", "Level", "Level_masl", "Year_Real"), ignore.order = TRUE)
 })
 
-test_that("utils_level list element 3 has correct column names", {
+test_that("list element 3 has correct column names", {
   expect_named(test[[3]], c("Date", "STATION_NUMBER", "Level", "DateOnly", "Level_masl", "dayofyear", "prct_max_hist"), ignore.order = TRUE)
 })
 rm(test)
 ############
 
-test_that("utils_level gets multiple years of data, formatted properly", {
-  test <- utils_level_data("09EA004", c(2021))
+#additional output tests
+test_that("works as expected when requesting only historical data",{
+  expect_length(suppressWarnings(utils_level_data("09EA004", c(2018,2017,2016))), 3)
 })
 
-test_that("utils_level spits out correct error if trying to pull non-existent historical data", {
-  test <- utils_level_data("09EA004", 2004)
+test_that("multiple years of data each have a year_real in the level_years data.frame", {
+  test <- suppressWarnings(utils_level_data("09EA004", c(2018,2017,2016)))
+  expect_equal(length(unique(test$requested_years$Year_Real)), 3)
+})
+
+#Warning message tests
+test_that("warning message exists to advise of missing years", {
+  expect_warning(utils_level_data("09EA004", c(lubridate::year(Sys.Date()), lubridate::year(Sys.Date())-1, lubridate::year(Sys.Date())-2, 1973)))
+})
+
+test_that("throws a warning message if no recent data exists but historical does", {
+  expect_warning(utils_level_data("09EA004", 2018), "There is no high-resolution data for the data range you selected. Note that high-resolution data is only kept by the WSC for 18 months. All of the available data for the date range you requested is in the requested_years data.frame.")
+})
+
+test_that("throws a warning when data requested does not exist", {
+  year <- lubridate::year(Sys.Date()-577)-1
+  expect_warning(utils_level_data("09EA004", year))
+})
+
+test_that("throws a warning when data requested does not exist and requested years are prior to data availability", {
+  expect_warning(utils_level_data("09EA004", 1973))
 })
   

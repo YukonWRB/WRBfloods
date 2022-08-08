@@ -182,8 +182,8 @@ utils_flow_data <- function(
 	flow_years <- dplyr::arrange(flow_years, dplyr::desc(Date))
 	recent_flow <- dplyr::arrange(recent_flow, dplyr::desc(Date))
 	
-	tidyData <- list(flow_df, flow_years, recent_flow)
-	return(tidyData)
+	flowData <- list(flow_df, flow_years, recent_flow)
+	return(flowData)
 	
 }
 

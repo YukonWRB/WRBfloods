@@ -12,20 +12,20 @@
 #' 
 #' @param station_number The WSC station number for which you want data.
 #' @param select_years The year(s) for which you want data.
-#' @param level_zoom TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
+#' @param high_res TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
 #' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
-#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If level_zoom == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
 #' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 
-#' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
+#' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months.
 #' @export
 #'
 
 utils_level_data <- function(
     station_number,
     select_years,
-    level_zoom = TRUE,
+    high_res = TRUE,
     filter = TRUE,
     recent_prctile = FALSE,
     rate = FALSE,
@@ -42,26 +42,26 @@ utils_level_data <- function(
     level_historic <- level_historic[level_historic$Date > "2014-01-01",]
   }
   
-  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
+  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))) #Check if there is a datum on record - any datum
   
   level_historic$Level_masl <- level_historic$Level #create col here so we end up with two cols filled out
-  
   if(datum_na == FALSE) {
     level_historic$Level_masl[level_historic$Level_masl < 50 & !is.na(level_historic$Level_masl)] <- level_historic$Level_masl[level_historic$Level_masl <50 & !is.na(level_historic$Level_masl)] + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
   } else {
     level_historic$Level_masl <- as.numeric(NA)
   }
   
-  if (max(select_years) >= lubridate::year(Sys.Date() - 730)) {
+  recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
+  if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {
     token_out <- suppressMessages(tidyhydat.ws::token_ws())
     
-    level_real_time <- tidyhydat.ws::realtime_ws(
+    level_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
       station_number = station_number, 
       parameters = 46, 
-      start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 730), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 730)), "01", "01", sep = "-")), 
+      start_date = ifelse(max(lubridate::year(level_historic$Date)) == lubridate::year(Sys.Date() - 577), paste(paste(lubridate::year(Sys.Date() - 365)), "01", "01", sep = "-"), paste(paste(lubridate::year(Sys.Date() - 577)), "01", "01", sep = "-")), 
       end_date = ifelse(lubridate::year(Sys.Date()) > max(select_years), paste(max(select_years), "12", "31", sep = "-"), paste(Sys.Date())), 
       token = token_out
-    )
+    ))
     
     #Filter the data here if requested (option exists in case user wants to see the outliers). Note that this step happens before creating recent_level!
     if (filter == TRUE) {
@@ -71,8 +71,7 @@ utils_level_data <- function(
       level_real_time <- subset(level_real_time, level_real_time$Value > (quartiles[1] - 1.5*IQR) & level_real_time$Value < (quartiles[2] + 1.5*IQR))
     }
     
-    recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
-    if (level_zoom == TRUE){ #If requesting zoomed-in plot
+    if (high_res == TRUE){ #If requesting high-res data
       recent_level <- level_real_time %>% plyr::rename(c("Value"="Level"))
       recent_level$DateOnly <- lubridate::date(recent_level$Date)
       recent_level <- recent_level[,-c(3,5:10)]
@@ -87,10 +86,10 @@ utils_level_data <- function(
     
     if (datum_na == FALSE){ #Generate new column to hold masl levels in level_real_time and recent_level. At this point level_real_time has a single point per day, recent_level has the data at max resolution.
       level_real_time$Level_masl <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
-      recent_level$Level_masl <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
+      if (high_res == TRUE) {recent_level$Level_masl <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))}
     } else {
       level_real_time$Level_masl <- as.numeric(NA)
-      if(level_zoom == TRUE) {recent_level$Level_masl <- as.numeric(NA)}
+      if(high_res == TRUE) {recent_level$Level_masl <- as.numeric(NA)}
     }
     
     level_df <- dplyr::bind_rows(level_historic, level_real_time)
@@ -233,7 +232,9 @@ utils_level_data <- function(
     level_years <- dplyr::bind_rows(level_years, single_year)
   }
 
-  if (level_zoom==TRUE){ # Create a few columns here depending on other options
+  
+  #If loop below modifies recent_level if high_res is TRUE
+  if (high_res == TRUE & max(select_years) >= lubridate::year(Sys.Date() - 577)){ # Create a few columns here depending on other options
     recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
                                                                       ifelse(lubridate::month(Date) <=2,
                                                                              lubridate::yday(Date),
@@ -250,29 +251,26 @@ utils_level_data <- function(
         }
       }
     }
-  }
-  
-  #Fill missing data points in recent_level: first figure out the recording rate, then fill with NAs
-  if (level_zoom == TRUE){
+    
+    #Fill missing data points in recent_level: first figure out the recording rate, then fill with NAs
     diff <- vector()
     for (i in 1:nrow(recent_level)){
       diff[i] <- as.numeric(difftime(recent_level$Date[i+1], recent_level$Date[i]))
     }
-    diff <- as.numeric(names(sort(table(diff),decreasing=TRUE)[1])) #difference between data points in minutes
+    diff <- as.numeric(names(sort(table(diff),decreasing=TRUE)[1])) #Take the tightest difference between data points in minutes
     recent_level <- tidyr::complete(recent_level, Date = seq.POSIXt(min(Date), max(Date), by=paste0(diff, " min"))) %>%
       dplyr::arrange(dplyr::desc(Date))
   }
   
-  level_years <- dplyr::arrange(level_years, dplyr::desc(Date))
+  level_years <- level_years[with(level_years, order(Year_Real, dayofyear, decreasing = TRUE)),]
   
   if (rate == TRUE) {
-    level_years <- dplyr::mutate(level_years, rate = as.numeric(NA))
-    
+    level_years$rate <- as.numeric(NA)
     for (i in 1:(nrow(level_years)-1)){
       try(level_years$rate[i] <- level_years$Level[i] - level_years$Level[i+1], silent=TRUE)
     }
     
-    if (level_zoom == TRUE){
+    if (high_res == TRUE & max(select_years) >= lubridate::year(Sys.Date() - 577)){
       recent_level <- dplyr::mutate(recent_level, rate = as.numeric(NA))
       if (rate_days == "all"){
         for (i in 1:(nrow(recent_level)-1)){
@@ -287,10 +285,26 @@ utils_level_data <- function(
     }
   }
   
+  #Warning messages
+  if (nrow(recent_level) <= 1 & nrow(level_years) >= 1){
+    warning("There is no high-resolution data for the data range you selected. Note that high-resolution data is only kept by the WSC for 18 months. All of the available data for the date range you requested is in the requested_years data.frame.")
+  }
   
-  
-  tidyData <- list(level_df, level_years, recent_level)
-  return(tidyData)
+  if (nrow(recent_level) <= 1 & nrow(level_years) <= 1){
+    range <- dplyr::filter(hy_stn_data_range(station_number), DATA_TYPE == "H")
+    range <- seq(as.numeric(range$Year_from), as.numeric(range$Year_to))
+    warning(paste0("No data exists for the years you requested. Only historical data was returned. Note that the historical data range is from ", range[1], " to ", range[2], " and that high-resolution data is only kept for 18 months."))
+  }
+  if (length(select_years) > 1 & nrow(level_years > 1)){
+    for (i in select_years){
+      if (!(i %in% unique(level_years$Year_Real))){
+        warning(paste0("No data was available (historical daily means or recent, high-resolution data) for year ", i, ". All other years of data have been returned."))
+      } 
+    }
+  }
+
+  levelData <- list(all_historical = level_df, requested_years = level_years, recent_level = recent_level)
+  return(levelData)
 }
 
 
