@@ -1,4 +1,4 @@
-#First set of tests is on a default function call to check structure. Object is created outside of tests and removed after (objects created withing test_that are not presistent)
+#First set of tests is on a default function call to check structure. Object is created outside of tests and removed after (objects created withing test_that are not persistent)
 ############
 test <- utils_level_data("09EA004", lubridate::year(Sys.Date()))
 test_that("yields list of three elements", {
@@ -15,6 +15,22 @@ test_that("list element 2 has correct column names", {
 
 test_that("list element 3 has correct column names", {
   expect_named(test[[3]], c("Date", "STATION_NUMBER", "Level", "DateOnly", "Level_masl", "dayofyear", "prct_max_hist"), ignore.order = TRUE)
+})
+
+test_that("list element 1 columns all have data", {
+  expect_false(TRUE %in% unname(unlist(lapply(test$all_historical, function(x) all(is.na(x))))))
+})
+
+test_that("list element 2 columns all have data", {
+  expect_false(TRUE %in% unname(unlist(lapply(test$requested_years, function(x) all(is.na(x))))))
+})
+
+test_that("list element 3 columns all have data expect for one (prct_max_hist)", {
+  expect_equal(sum(unname(unlist(lapply(test$recent_level, function(x) all(is.na(x)))))), 1)
+})
+
+test_that("list element 3 prc_max_hist is all NAs", {
+  expect_true(all(is.na(test$recent_level$prct_max_hist)))
 })
 rm(test)
 ############
