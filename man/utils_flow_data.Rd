@@ -7,9 +7,11 @@
 utils_flow_data(
   station_number,
   select_years,
-  flow_zoom = TRUE,
+  high_res = TRUE,
   filter = TRUE,
-  recent_prctile = FALSE
+  recent_prctile = FALSE,
+  rate = FALSE,
+  rate_days = "all"
 )
 }
 \arguments{
@@ -17,15 +19,19 @@ utils_flow_data(
 
 \item{select_years}{The years for which you want data.}
 
-\item{flow_zoom}{TRUE/FALSE, should high-res data be kept for zoomed-in plots?}
+\item{high_res}{TRUE/FALSE, should high-res data be kept for zoomed-in plots?}
 
 \item{filter}{TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.}
 
 \item{recent_prctile}{TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical flows calculated? Adds about 30 seconds.}
+
+\item{rate}{TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.}
+
+\item{rate_days}{Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution flow data; specify a smaller number of days as an integer to lessen processing time.}
 }
 \value{
-A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing 5-minute data for the past 18 months.
+A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
 }
 \description{
-Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use flowData function instead.
+Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::flowData function instead.
 }

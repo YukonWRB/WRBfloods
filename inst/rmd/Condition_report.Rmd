@@ -302,7 +302,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           flowData <- utils_flow_data(
             station_number = i,
             select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-            flow_zoom = TRUE,
+            high_res = TRUE,
             filter = TRUE,
             recent_prctile = FALSE
           )
@@ -310,7 +310,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           flowData <- utils_flow_data(
             station_number = i,
             select_years = lubridate::year(Sys.Date()),
-            flow_zoom = TRUE,
+            high_res = TRUE,
             filter = TRUE,
             recent_prctile = FALSE
           )

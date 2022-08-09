@@ -40,11 +40,11 @@ multiPlot <- function(stations, type, days=30, title=NULL, save_path="choose") {
       
     }
   
-  plot <- ggplot2::ggplot(data, ggplot2::aes(Date, Value, colour=STATION_NUMBER)) +
+  plot <- ggplot2::ggplot(data, ggplot2::aes(.data$Date, .data$Value, colour=.data$STATION_NUMBER)) +
     ggplot2::labs(x="", y = "Level (m relative to station)")+
     ggplot2::theme_classic()+
     ggplot2::theme(legend.position = "right", legend.text = ggplot2::element_text(size = 9), legend.title = ggplot2::element_text(size=12)) +
-    ggplot2::geom_point(ggplot2::aes(colour = factor(STATION_NUMBER)), size=0.75, na.rm = T) +
+    ggplot2::geom_point(ggplot2::aes(colour = factor(.data$STATION_NUMBER)), size=0.75, na.rm = T) +
     ggplot2::scale_colour_manual(name = "Stations", values = colours[1:length(unique(data$STATION_NUMBER))]) +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=2.5)))
   
@@ -68,12 +68,12 @@ multiPlot <- function(stations, type, days=30, title=NULL, save_path="choose") {
       )
     }
     
-    plot <- ggplot2::ggplot(data, ggplot2::aes(Date, Value)) +
+    plot <- ggplot2::ggplot(data, ggplot2::aes(.data$Date, .data$Value)) +
       ggplot2::scale_y_log10()+
       ggplot2::labs(x="", y = "Flow (" ~m^3* "/s," ~log^10*" scale)")+
       ggplot2::theme_classic()+
       ggplot2::theme(legend.position = "right", legend.text = ggplot2::element_text(size = 9), legend.title = ggplot2::element_text(size=12)) +
-      ggplot2::geom_point(ggplot2::aes(colour = factor(STATION_NUMBER)), size=0.75, na.rm = T) +
+      ggplot2::geom_point(ggplot2::aes(colour = factor(.data$STATION_NUMBER)), size=0.75, na.rm = T) +
       ggplot2::scale_colour_manual(name = "Stations", values = colours[1:length(unique(data$STATION_NUMBER))]) +
       ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=2.5)))
   }

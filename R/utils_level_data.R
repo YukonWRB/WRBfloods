@@ -1,7 +1,5 @@
 # Download, process, save, and plot level data from WSC databases
 
-# Ghislain de Laplante (ghislain.delaplante@yukon.ca)
-
 # Adapted from original functions developed by:
 # Ryan Connon (ryan_connon@gov.nt.ca; 867-767-9234 x 53127)
 # Water Resources, Government of the Northwest Territories
@@ -15,7 +13,7 @@
 #' @param high_res TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
 #' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
-#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+#' @param rate TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
 #' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
@@ -51,7 +49,7 @@ utils_level_data <- function(
     level_historic$Level_masl <- as.numeric(NA)
   }
   
-  recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant
+  recent_level <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
   if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {
     token_out <- suppressMessages(tidyhydat.ws::token_ws())
     
@@ -78,9 +76,9 @@ utils_level_data <- function(
     }
     
     level_real_time <- level_real_time %>%
-      dplyr::group_by(STATION_NUMBER, lubridate::year(Date), lubridate::yday(Date)) %>%
-      dplyr::summarize(Date = mean(lubridate::date(Date)), #retain single data (mean) point per day
-                       Level = mean(Value),
+      dplyr::group_by(.data$STATION_NUMBER, lubridate::year(.data$Date), lubridate::yday(.data$Date)) %>%
+      dplyr::summarize(Date = mean(lubridate::date(.data$Date)), #retain single data (mean) point per day
+                       Level = mean(.data$Value),
                        .groups = "drop")
     level_real_time <- level_real_time[,-c(2,3)]
     
@@ -108,32 +106,32 @@ utils_level_data <- function(
   # Calculate percentiles (IQR, max/min)
   if (datum_na==TRUE) {
     level_df <- level_df %>%
-      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
-                                       ifelse(lubridate::month(Date) <= 2,
-                                              lubridate::yday(Date),
-                                              lubridate::yday(Date) - 1),
-                                       lubridate::yday(Date)))
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(.data$Date) %in% leap_list, 
+                                       ifelse(lubridate::month(.data$Date) <= 2,
+                                              lubridate::yday(.data$Date),
+                                              lubridate::yday(.data$Date) - 1),
+                                       lubridate::yday(.data$Date)))
     
     current.year <- dplyr::filter(level_df, Date == seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) #set the current year aside
     
     level_df <- dplyr::filter(level_df, Date!=seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) %>% #remove current year so it doesn't mess with the stats
-      dplyr::filter(!is.na(Level)) %>%  #remove na values in Level so that stats::ecdf can work below - they're added in after
-      dplyr::group_by(dayofyear) %>%
-      dplyr::mutate(prctile = (stats::ecdf(Level)(Level)) * 100) %>%
+      dplyr::filter(!is.na(.data$Level)) %>%  #remove na values in Level so that stats::ecdf can work below - they're added in after
+      dplyr::group_by(.data$dayofyear) %>%
+      dplyr::mutate(prctile = (stats::ecdf(.data$Level)(.data$Level)) * 100) %>%
       fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now - including Feb 29
-      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
-                                       ifelse(lubridate::month(Date) <= 2,
-                                              lubridate::yday(Date),
-                                              lubridate::yday(Date) - 1),
-                                       lubridate::yday(Date))) %>%
-      dplyr::group_by(dayofyear) %>%
-      dplyr::mutate(Max = max(Level, na.rm = TRUE),
-                    Min = min(Level, na.rm = TRUE),
-                    QP90 = stats::quantile(Level, 0.90, na.rm = TRUE),
-                    QP75 = stats::quantile(Level, 0.75, na.rm = TRUE),
-                    QP50 = stats::quantile(Level, 0.50, na.rm = TRUE),
-                    QP25 = stats::quantile(Level, 0.25, na.rm = TRUE),
-                    QP10 = stats::quantile(Level, 0.10, na.rm = TRUE)) %>%
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(.data$Date) %in% leap_list, 
+                                       ifelse(lubridate::month(.data$Date) <= 2,
+                                              lubridate::yday(.data$Date),
+                                              lubridate::yday(.data$Date) - 1),
+                                       lubridate::yday(.data$Date))) %>%
+      dplyr::group_by(.data$dayofyear) %>%
+      dplyr::mutate(Max = max(.data$Level, na.rm = TRUE),
+                    Min = min(.data$Level, na.rm = TRUE),
+                    QP90 = stats::quantile(.data$Level, 0.90, na.rm = TRUE),
+                    QP75 = stats::quantile(.data$Level, 0.75, na.rm = TRUE),
+                    QP50 = stats::quantile(.data$Level, 0.50, na.rm = TRUE),
+                    QP25 = stats::quantile(.data$Level, 0.25, na.rm = TRUE),
+                    QP10 = stats::quantile(.data$Level, 0.10, na.rm = TRUE)) %>%
       dplyr::ungroup() %>%
       hablar::rationalize() #rationalize replaces Inf values with NA
     
@@ -144,6 +142,7 @@ utils_level_data <- function(
     current.year$QP50 <- as.numeric(NA)
     current.year$QP25 <- as.numeric(NA)
     current.year$QP10 <- as.numeric(NA)
+    current.year$prctile<- as.numeric(NA)
     
     for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats
       current.year$Max[current.year$dayofyear==i] <- unique(level_df$Max[level_df$dayofyear==i])
@@ -153,6 +152,7 @@ utils_level_data <- function(
       current.year$QP50[current.year$dayofyear==i] <- unique(level_df$QP50[level_df$dayofyear==i])
       current.year$QP25[current.year$dayofyear==i] <- unique(level_df$QP25[level_df$dayofyear==i])
       current.year$QP10[current.year$dayofyear==i] <- unique(level_df$QP10[level_df$dayofyear==i])
+      current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
     }
     level_df <- dplyr::bind_rows(level_df, current.year)#add in the current year
     
@@ -167,23 +167,22 @@ utils_level_data <- function(
     current.year <- dplyr::filter(level_df, Date == seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) #set the current year aside
     
     level_df <- dplyr::filter(level_df, Date!=seq.Date(from=as.Date(paste0(lubridate::year(Sys.Date()), "-01-01")), to=as.Date(paste0(lubridate::year(Sys.Date()), "-12-31")), by="day")) %>% #remove current year so it doesn't mess with the stats
-      dplyr::filter(!is.na(Level_masl)) %>%  #remove na values in Level_masl so that stats::ecdf can work below - they're added in after
-      dplyr::group_by(dayofyear) %>%
-      dplyr::mutate(prctile = (stats::ecdf(Level_masl)(Level_masl)) * 100) %>%
+      dplyr::filter(!is.na(.data$Level_masl)) %>%  #remove na values in Level_masl so that stats::ecdf can work below - they're added in after
+      dplyr::mutate(prctile = (stats::ecdf(.data$Level_masl)(.data$Level_masl)) * 100) %>%
       fasstr::fill_missing_dates(dates = "Date") %>% #add the missing dates back in now
-      dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list, 
-                                       ifelse(lubridate::month(Date) <= 2,
-                                              lubridate::yday(Date),
-                                              lubridate::yday(Date) - 1),
-                                       lubridate::yday(Date))) %>%
-      dplyr::group_by(dayofyear) %>%
-      dplyr::mutate(Max = max(Level_masl, na.rm = TRUE),
-                    Min = min(Level_masl, na.rm = TRUE),
-                    QP90 = stats::quantile(Level_masl, 0.90, na.rm = TRUE),
-                    QP75 = stats::quantile(Level_masl, 0.75, na.rm = TRUE),
-                    QP50 = stats::quantile(Level_masl, 0.50, na.rm = TRUE),
-                    QP25 = stats::quantile(Level_masl, 0.25, na.rm = TRUE),
-                    QP10 = stats::quantile(Level_masl, 0.10, na.rm = TRUE)) %>%
+      dplyr::mutate(dayofyear = ifelse(lubridate::year(.data$Date) %in% leap_list, 
+                                       ifelse(lubridate::month(.data$Date) <= 2,
+                                              lubridate::yday(.data$Date),
+                                              lubridate::yday(.data$Date) - 1),
+                                       lubridate::yday(.data$Date))) %>%
+      dplyr::group_by(.data$dayofyear) %>%
+      dplyr::mutate(Max = max(.data$Level_masl, na.rm = TRUE),
+                    Min = min(.data$Level_masl, na.rm = TRUE),
+                    QP90 = stats::quantile(.data$Level_masl, 0.90, na.rm = TRUE),
+                    QP75 = stats::quantile(.data$Level_masl, 0.75, na.rm = TRUE),
+                    QP50 = stats::quantile(.data$Level_masl, 0.50, na.rm = TRUE),
+                    QP25 = stats::quantile(.data$Level_masl, 0.25, na.rm = TRUE),
+                    QP10 = stats::quantile(.data$Level_masl, 0.10, na.rm = TRUE)) %>%
       dplyr::ungroup() %>%
       hablar::rationalize() #rationalize replaces Inf values with NA
     
@@ -196,7 +195,7 @@ utils_level_data <- function(
     current.year$QP10 <- as.numeric(NA)
     current.year$prctile <- as.numeric(NA)
     
-    for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats and calulate the percent of historic max for each day
+    for (i in unique(current.year$dayofyear)){ #populate rows with the necessary stats and calculate the percent of historic max for each day
       current.year$Max[current.year$dayofyear==i] <- unique(level_df$Max[level_df$dayofyear==i])
       current.year$Min[current.year$dayofyear==i] <- unique(level_df$Min[level_df$dayofyear==i])
       current.year$QP90[current.year$dayofyear==i] <- unique(level_df$QP90[level_df$dayofyear==i])
@@ -204,11 +203,7 @@ utils_level_data <- function(
       current.year$QP50[current.year$dayofyear==i] <- unique(level_df$QP50[level_df$dayofyear==i])
       current.year$QP25[current.year$dayofyear==i] <- unique(level_df$QP25[level_df$dayofyear==i])
       current.year$QP10[current.year$dayofyear==i] <- unique(level_df$QP10[level_df$dayofyear==i])
-      if (datum_na == TRUE){
-        current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
-      } else {
-        current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level_masl[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
-      }
+      current.year$prctile[current.year$dayofyear==i] <- ((current.year$Level_masl[current.year$dayofyear==i] - unique(level_df$Min[level_df$dayofyear==i])) / (unique(level_df$Max[level_df$dayofyear==i]) - unique(level_df$Min[level_df$dayofyear==i]))) * 100
     }
     level_df <- dplyr::bind_rows(level_df, current.year)#add in the current year
   }
@@ -221,12 +216,12 @@ utils_level_data <- function(
     single_year <- level_df %>%
       subset(lubridate::year(Date) == i) %>%
       dplyr::mutate(Year = last_year,
-                    Month = lubridate::month(Date),
-                    Day = lubridate::day(Date), 
+                    Month = lubridate::month(.data$Date),
+                    Day = lubridate::day(.data$Date), 
                     Year_Real = i) %>%
-      dplyr::mutate(Date_2 = as.Date(paste(Year, Month, Day, sep = "-"))) %>%
-      dplyr::select(-Date, -Month, -Day, -Year) %>%
-      dplyr::rename(Date = Date_2)
+      dplyr::mutate(Date_2 = as.Date(paste(.data$Year, .data$Month, .data$Day, sep = "-"))) %>%
+      dplyr::select(-.data$Date, -.data$Month, -.data$Day, -.data$Year) %>%
+      dplyr::rename(Date = .data$Date_2)
     
     single_year <- single_year[,c(1, 14, 4:12, 2, 3, 13)]
     level_years <- dplyr::bind_rows(level_years, single_year)
@@ -235,12 +230,12 @@ utils_level_data <- function(
   
   #If loop below modifies recent_level if high_res is TRUE
   if (high_res == TRUE & max(select_years) >= lubridate::year(Sys.Date() - 577)){ # Create a few columns here depending on other options
-    recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(Date) %in% leap_list,
-                                                                      ifelse(lubridate::month(Date) <=2,
-                                                                             lubridate::yday(Date),
-                                                                             lubridate::yday(Date) - 1),
-                                                                      lubridate::yday(Date))) %>%
-      dplyr::mutate(prct_max_hist= as.numeric(NA))
+    recent_level <- recent_level %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(.data$Date) %in% leap_list,
+                                                                      ifelse(lubridate::month(.data$Date) <=2,
+                                                                             lubridate::yday(.data$Date),
+                                                                             lubridate::yday(.data$Date) - 1),
+                                                                      lubridate::yday(.data$Date))) %>%
+      dplyr::mutate(prct_max_hist = as.numeric(NA))
     
     if (recent_prctile == TRUE){ #Calculate a percent historic for the 5 minute data 
       for (i in 1:nrow(recent_level)){
@@ -258,8 +253,8 @@ utils_level_data <- function(
       diff[i] <- as.numeric(difftime(recent_level$Date[i+1], recent_level$Date[i]))
     }
     diff <- as.numeric(names(sort(table(diff),decreasing=TRUE)[1])) #Take the tightest difference between data points in minutes
-    recent_level <- tidyr::complete(recent_level, Date = seq.POSIXt(min(Date), max(Date), by=paste0(diff, " min"))) %>%
-      dplyr::arrange(dplyr::desc(Date))
+    recent_level <- tidyr::complete(recent_level, Date = seq.POSIXt(min(.data$Date), max(.data$Date), by=paste0(diff, " min"))) %>%
+      dplyr::arrange(dplyr::desc(.data$Date))
   }
   
   level_years <- level_years[with(level_years, order(Year_Real, dayofyear, decreasing = TRUE)),]
@@ -291,9 +286,9 @@ utils_level_data <- function(
   }
   
   if (nrow(recent_level) <= 1 & nrow(level_years) <= 1){
-    range <- dplyr::filter(tidyhydat::hy_stn_data_range(station_number), DATA_TYPE == "H")
+    range <- dplyr::filter(tidyhydat::hy_stn_data_range(station_number), .data$DATA_TYPE == "H")
     range <- seq(as.numeric(range$Year_from), as.numeric(range$Year_to))
-    warning(paste0("No data exists for the years you requested. Only historical data was returned. Note that the historical data range is from ", range[1], " to ", range[2], " and that high-resolution data is only kept for 18 months."))
+    warning(paste0("No data exists for the years you requested. Only historical data was returned. Note that the historical data range is from ", range[1], " to ", range[length(range)], " and that high-resolution data is only kept for 18 months."))
   }
   if (length(select_years) > 1 & nrow(level_years > 1)){
     for (i in select_years){

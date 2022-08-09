@@ -42,7 +42,7 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
   flowData <- utils_flow_data(
     station_number = station,
     select_years = years,
-    flow_zoom = TRUE,
+    high_res = TRUE,
     filter = filter,
     recent_prctile = FALSE
   )
@@ -81,8 +81,8 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
         add <- utils::read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
         files <- suppressMessages(dplyr::full_join(files, add))
       }
-      files <- dplyr::mutate(files, Date = as.Date(JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
-      files <- dplyr::mutate(files, datetime = paste0(Date, " ", HOUR, ":", MINS, ":00"), .keep = "unused")[-1,-1]
+      files <- dplyr::mutate(files, Date = as.Date(.data$JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
+      files <- dplyr::mutate(files, datetime = paste0(.data$Date, " ", .data$HOUR, ":", .data$MINS, ":00"), .keep = "unused")[-1,-1]
       files$datetime <- as.POSIXct(files$datetime, tz = "UTC")
       
       #Pull apart the two columns for each station, plus datetime, and make them list elements:
@@ -132,8 +132,8 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
     
     if (exists == TRUE){
       stn <- utils::read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"), skip=6, na.strings = "")
-      stn <- tidyr::fill(stn, DATE)
-      stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
+      stn <- tidyr::fill(stn, .data$DATE)
+      stn <- dplyr::mutate(stn, datetime = paste0(.data$DATE, " ", .data$HOUR, ":00:00"), .keep="unused")
       stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
       stn$DateOnly <- as.Date(substr(stn$datetime, 1, 10))
       CLEVER <- stn
@@ -163,8 +163,8 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
     exists <- RCurl::url.exists(paste0("bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"))
     if (exists == TRUE){
       stn <- utils::read.csv(paste0("http://bcrfc.env.gov.bc.ca/freshet/clever/", station, ".CSV"), skip=6, na.strings = "")
-      stn <- tidyr::fill(stn, DATE)
-      stn <- dplyr::mutate(stn, datetime = paste0(DATE, " ", HOUR, ":00:00"), .keep="unused")
+      stn <- tidyr::fill(stn, .data$DATE)
+      stn <- dplyr::mutate(stn, datetime = paste0(.data$DATE, " ", .data$HOUR, ":00:00"), .keep="unused")
       stn$datetime <- as.POSIXct(stn$datetime, tz = "UTC")
       stn$DateOnly <- as.Date(substr(stn$datetime, 1, 10))
       CLEVER <- stn
@@ -188,8 +188,8 @@ flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filte
         add <- utils::read.csv(paste0("G:/water/Hydrology/Flood_Forecasting/01-Imagery-Data-Forecasts/2022/02-Openwater/01-Forecasts/MESH/zSource/", MESHfiles[i]))
         files <- suppressMessages(dplyr::full_join(files, add))
       }
-      files <- dplyr::mutate(files, Date = as.Date(JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
-      files <- dplyr::mutate(files, datetime = paste0(Date, " ", HOUR, ":", MINS, ":00"), .keep = "unused")[-1,-1]
+      files <- dplyr::mutate(files, Date = as.Date(.data$JDAY, origin = paste0(lubridate::year(Sys.Date())-1, "-12-31")), .keep = "unused") 
+      files <- dplyr::mutate(files, datetime = paste0(.data$Date, " ", .data$HOUR, ":", .data$MINS, ":00"), .keep = "unused")[-1,-1]
       files$datetime <- as.POSIXct(files$datetime, tz = "UTC")
       
       #Pull apart the two columns for each station, plus datetime, and make them list elements:

@@ -38,7 +38,9 @@ Imports:
     foreign,
     pdftools,
     qpdf,
-    RCurl
+    RCurl,
+    methods,
+    rlang
 License: AGPL (>= 3) + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
