@@ -1,4 +1,4 @@
-#' Flow plots of WSC data
+#' Plot WSC flow data
 #' 
 #' Generates plots of water flows from Water Survey of Canada stations, with up to 10 years of data specified by the user. Return periods can be added (with a few options), and a plot title is optional.
 #' 
