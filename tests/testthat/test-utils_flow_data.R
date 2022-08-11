@@ -32,18 +32,43 @@ test_that("list element 3 columns all have data expect for one (prct_max_hist)",
 test_that("list element 3 prc_max_hist is all NAs", {
   expect_true(all(is.na(test$recent_flow$prct_max_hist)))
 })
+
+test_that("column classes  for element 1 are as expected", {
+  expect_equal(unname(unlist(lapply(test$all_historical, function(x) class(x)))), c("character", "Date", "numeric", "numeric", "numeric", "numeric",  "numeric",  "numeric", "numeric",  "numeric",  "numeric", "numeric"))
+})
+
+test_that("column classes  for element 2 are as expected", {
+  expect_equal(unname(unlist(lapply(test$requested_years, function(x) class(x)))), c("character", "Date", "numeric", "numeric", "numeric", "numeric",  "numeric",  "numeric", "numeric",  "numeric",  "numeric", "numeric", "numeric"))
+})
+
+test_that("column classes  for element 3 are as expected", {
+  expect_equal(unname(unlist(lapply(test$recent_flow, function(x) class(x)))), c("POSIXct", "POSIXt", "character", "numeric", "Date", "numeric", "numeric"))
+})
 rm(test)
 ############
 
 #additional output tests
+test <- suppressWarnings(utils_flow_data("09EA004", c(2018,2017,2016)))
 test_that("works as expected when requesting only historical data",{
-  expect_length(suppressWarnings(utils_flow_data("09EA004", c(2018,2017,2016))), 3)
+  expect_length(test, 3)
 })
 
 test_that("multiple years of data each have a year_real in the flow_years data.frame", {
-  test <- suppressWarnings(utils_flow_data("09EA004", c(2018,2017,2016)))
   expect_equal(length(unique(test$requested_years$Year_Real)), 3)
 })
+
+test_that("column classes  for element 1 are as expected", {
+  expect_equal(unname(unlist(lapply(test$all_historical, function(x) class(x)))), c("character", "Date", "numeric", "numeric", "numeric", "numeric",  "numeric",  "numeric", "numeric",  "numeric",  "numeric", "numeric"))
+})
+
+test_that("column classes  for element 2 are as expected", {
+  expect_equal(unname(unlist(lapply(test$requested_years, function(x) class(x)))), c("character", "Date", "numeric", "numeric", "numeric", "numeric",  "numeric",  "numeric", "numeric",  "numeric",  "numeric", "numeric", "numeric"))
+})
+
+test_that("column classes  for element 3 are as expected (NULL in this case)", {
+  expect_equal(unname(unlist(lapply(test$recent_level, function(x) class(x)))), NULL)
+})
+rm(test)
 
 #Warning message tests
 test_that("warning message exists to advise of missing years", {
