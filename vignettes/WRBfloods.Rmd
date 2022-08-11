@@ -1,0 +1,742 @@
+---
+title: "WRBfloods"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{WRBfloods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include = FALSE}
+library(WRBfloods)
+```
+
+The Water Resources Branch (Yukon Department of Environment) hydrology-related functions. Easy generation of public and internal-facing reports incorporating data from multiple agencies, various plots, processing of Water Survey of Canada data, processing of MESH prediction outputs, and importation of BC CLEVER predictions.
+
+
+
+## Author
+
+Ghislain de Laplante; ghislaindel@gmail.com ( [ORCID](https://orcid.org/0000-0002-5093-9185) )
+
+
+------------------------------------------------------------------------
+
+## Introduction
+
+The idea behind this package lies in automated RMarkdown reports shared with the Yukon Water Resources Branch by our colleagues at the Northwest Territories Government. At the onset our intent was to build a simple tool to augment our situation awareness of water level and flow conditions; this quickly evolved into a set of tools to generate public and private facing reports, as well as more basic tools to create standardized graphs, retrieve MESH and CLEVER forecast information, as well as retrieve and process Water Survey of Canada data. The "workhorse" functions of this package are labelled with the utils- prefix and are not intended for direct use; rather, they form the building blocks of the RMarkdown reports, of the data-fetching functions, and of the plotting functions.
+
+Development on this package began in the summer of 2022 and is expected to continue in anticipation of the 2023 high-water season.
+
+
+## Getting started with the WRBfloods package
+
+### Installing the package
+
+### Updating package dependencies
+
+This package depends on (too) many other packages to execute its code. Please ensure that any packages required for the function of WRBfloods are up to date when you install, re-install, or update WRBfloods. Note that not all packages can be updated from an active RStudio session, and that you may need to perform updates using the basic R interface; at the same time you should ensure that your version of R is up to date. A convenient package exists to perform both of these tasks at once: the [installr](https://www.rdocumentation.org/packages/installr/versions/0.23.2) package.
+
+### Necessary setup
+
+------------------------------------------------------------------------
+
+# `floodReport`
+
+## Level and Flow condition reporting utility - internal or technical audience
+
+This function generates condition reports for preset or user-specified Water Survey of Canada stations. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
+
+## Usage
+
+```r
+floodReport(
+  report_name = NULL,
+  custom_report_stations = NULL,
+  extra_years = NULL,
+  preset_extra_years = FALSE,
+  report_type = "Both",
+  plot_titles = FALSE,
+  level_zoom = TRUE,
+  flow_zoom = NULL,
+  zoom_days = 30,
+  MESH = TRUE,
+  CLEVER = TRUE,
+  flow_returns = "both",
+  level_returns = "both",
+  rate = TRUE,
+  meteogram = TRUE,
+  image_path = NULL,
+  save_path = "choose"
+)
+```
+
+Argument|Description
+----- |----------------
+`report_name`     |     The name of the report you wish to generate. One of "Dawson", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", "Old Crow", "Aishihik", or "Territory". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
+`custom_report_stations`     |     A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!
+`extra_years`     |     Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years.
+`preset_extra_years`|     TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.
+`report_type`     |     What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
+`plot_titles`     |     Do you want the plots to have a title?
+`level_zoom`     |     Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.
+`flow_zoom`     |     Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.
+`zoom_days`     |     The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
+`MESH`     |     Should MESH forecasts be incorporated into the graphs?
+`CLEVER`     |     Should CLEVER forecasts be incorporated into the graphs?
+`flow_returns`     |     Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
+`level_returns`     |     Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+`rate`     |     Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.
+`meteogram`     |     Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.
+`image_path`     |     The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
+`save_path`     |     The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.
+
+
+## Details
+
+To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+ 
+To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password". Refer to the R and GitHub for the WRB word document for more information.
+
+## Value
+
+A flood report containing flow and water level information in Microsoft Word format.
+
+---------
+
+# `flowPlot`
+
+## Plot WSC flow data
+
+Generates plots of water flows (discharge) from Water Survey of Canada stations. Up to 10 years of records can be requested by the user. Return periods can be added (with a few options), and a plot title is optional.
+
+
+## Usage
+
+```r
+flowPlot(
+  station,
+  years,
+  title = TRUE,
+  zoom = FALSE,
+  zoom_days = 30,
+  filter = FALSE,
+  forecast = "none",
+  returns = "both",
+  save_path = "none"
+)
+```
+
+Argument      |Description
+----- |----------------
+`station`     |     The WSC station for which you wish to generate a plot.
+`years`     |     The year(s) you wish to plot. Maximum of 10 years specified in a vector. Only the current year can be plotted with MESH or CLEVER forecasts.
+`title`     |     Do you want a title added to the plot? TRUE/FALSE.
+`zoom`     |     TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
+`zoom_days`     |     Number from 2 to 365. Not used unless zoom=TRUE. Note that if specifying MESH or CLEVER forecasts that the x-axis length will include the full 10 days of forecasts in addition to zoom_days!
+`filter`     |     TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
+`forecast`     |     Do you want MESH or CLEVER forecasts, or both? Choose from "MESH", "CLEVER", "both", or "none". Default is "none"
+`returns`     |     Should flow returns be added? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+`save_path`     |     Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
+
+
+## Details
+
+To generate zoomed-in plots with real-time data you MUST have your HYDAT credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+
+## Value
+
+A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
+
+---------
+
+# `freshetReport`
+
+## Freshet condition reporting utility - public audience
+
+This function generates condition reports for preset or user-specified Water Survey of Canada stations, in a format intended for public consumption. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
+
+## Usage
+
+```r
+freshetReport(
+  report_name = "Territory",
+  custom_report_stations = NULL,
+  extra_years = NULL,
+  preset_extra_years = FALSE,
+  report_type = "Level",
+  plot_titles = FALSE,
+  level_zoom = TRUE,
+  flow_zoom = NULL,
+  zoom_days = 20,
+  rate = TRUE,
+  level_returns = "both",
+  flow_returns = "both",
+  MESH = FALSE,
+  CLEVER = FALSE,
+  precip = FALSE,
+  meteogram = FALSE,
+  WSC_images = FALSE,
+  image_path = NULL,
+  save_path = "choose"
+)
+```
+
+Argument      |Description
+----- |----------------
+`report_name`     |     The name of the report you wish to generate. One of "Dawson", "Southern Lakes", "Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", "Old Crow", "Territory" (for an overview of the territory with fewer stations). Most minor spelling variations should work. Defaults to "Territory".
+`custom_report_stations`     |     A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!
+`extra_years`     |     Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years
+`preset_extra_years`     |     TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.
+`report_type`     |     What do you want your report to contain? Choose from "Level", "Flow", or "Both." Defaults to Both.
+`plot_titles`     |     Do you want the plots to have a title?
+`level_zoom`     |     Do you want a zoomed-in plot for level? Choose from TRUE or FALSE. Defaults to TRUE.
+`flow_zoom`     |     Do you want a zoomed-in plot for flow? TRUE/FALSE/NULL, defaults to NULL which copies the setting for level_zoom.
+`zoom_days`     |     The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
+`rate`     |     Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.
+`level_returns`     |     Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+`flow_returns`     |     Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
+`MESH`     |     Should MESH forecasts be incorporated into the graphs?
+`CLEVER`     |     Should CLEVER forecasts be incorporated into the graphs?
+`precip`     |     Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE
+`meteogram`     |     Should meteograms relevant to the stations in the report be included? TRUE or FALSE.
+`WSC_images`     |     Should images from WSC fixed cameras be included? TRUE or FALSE.
+`image_path`     |     The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
+`save_path`     |     The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.
+
+
+## Details
+
+Parts of this report fetch password-protected information:
+ 
+To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+ 
+To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
+
+
+## Value
+
+A flood report containing flow and water level information in Microsoft Word format.
+
+---------
+
+# `getCLEVER`
+
+## Download CLEVER outputs
+
+Downloads model outputs from BC's CLEVER model.
+
+## Usage
+
+```r
+getCLEVER(
+  stations = c("10AA006", "10AB001", "10AA004", "10AA001", "10AD002", "99FK100",
+    "09AE003", "09AA013"),
+  output_folder = "choose",
+  types = c("PDF", "CSV")
+)
+```
+
+Argument      |Description
+----- |----------------
+`stations`     |     The station(s) for which you want CLEVER pdf outputs.
+`output_folder`     |     The folder where you wish to have the outputs saved.
+`types`     |     The type of files you wish to download. Graphical products are in PDF format, but the underlying data is available as a CSV. Can specify one or both.
+
+
+## Value
+
+A .pdf, .csv, or both types of files for each station you specify, unless a station cannot be found.
+
+---------
+
+# `levelPlot`
+
+## Level plots of WSC data
+
+Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
+
+## Usage
+
+```r
+levelPlot(
+  station,
+  years,
+  title = TRUE,
+  zoom = FALSE,
+  zoom_days = 30,
+  filter = FALSE,
+  forecast = NULL,
+  returns = "both",
+  save_path = "none"
+)
+```
+
+Argument      |Description
+----- |----------------
+`station`     |     The WSC station for which you wish to generate a plot.
+`years`     |     The year(s) you wish to plot. Maximum of 10 years specified in a vector.
+`title`     |     Do you want a title added to the plot? TRUE/FALSE.
+`zoom`     |     TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
+`zoom_days`     |     Number from 1 to 365. Not used unless zoom=TRUE.
+`filter`     |     TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
+`forecast`     |     Not currently in use; will eventually work similarly to forecast in flowPlot.
+`returns`     |     Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+`save_path`     |     Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
+
+## Details
+
+To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+
+## Value
+
+A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
+
+---------
+
+# `multiPlot`
+
+## Plot multiple WSC stations on one graph.
+
+Generates overlapping plots of water levels or flows from Water Survey of Canada stations, plotting up to 10 stations together at once. Only plots data as far back as 18 months from today's date. Warning: this function can take a long time to execute!
+
+## Usage
+
+```r
+multiPlot(
+  stations, 
+  type, days = 30, 
+  title = NULL, 
+  save_path = "choose"
+)
+```
+
+Argument      |Description
+----- |----------------
+`stations`     |     The WSC stations for which you wish to generate a plot. The first one listed should be the primary station, and usually the one with the greatest flow or slowest level response. If plotting flows, the left y-axis will be for this station while subsequent stations will plot on the secondary y-axis.
+`type`     |     "Level" or "Flow"?
+`days`     |     Number from 2 to 730 representing the number of days to plot.
+`title`     |     Do you want a title added to the plot? Leave as NULL for no title, otherwise enter it here as a character string.
+`save_path`     |     Where you wish to save the plot. Default is "choose" which brings up the File Explorer for you to choose.
+
+
+## Details
+
+Only points are plotted with no connecting lines: this ensures that gaps or excessive noise in the data is clearly visible.\
+As with other package functions, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+
+
+## Value
+
+A .png file of the plot requested. Assign the function to a variable to also get a plot in your global environment.
+
+---------
+
+# `splitMESH`
+
+## Split MESH pdf output into individual pdfs
+
+This utility splits the standard MESH pdf output. Predicated on each page of the pdf containing one station (no more, no less). Outputs with stations taking up more than one page or with two stations per page will not work in this current state.
+
+
+## Usage
+
+```r
+splitMESH(
+  file = "choose", 
+  output_folder = "choose"
+)
+```
+
+Argument      |Description
+----- |----------------
+`file`     |     The pdf file you wish to split. Defaults "choose" lets you interactively choose a file.
+`output_folder`     |     The folder in which the new pdfs will be saved. Default "choose" lets you interactively choose a folder.
+
+
+## Value
+
+A pdf for each station in the output pdf.
+
+---------
+
+# `WSCdata`
+
+## Download and process WSC flow or level data
+
+Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
+
+
+## Usage
+
+```r
+WSCdata(
+  stations,
+  level_flow = "Both",
+  years = lubridate::year(Sys.Date()),
+  recent_percentile = FALSE,
+  filter = TRUE,
+  rate = FALSE,
+  rate_days = "all"
+)
+```
+
+Argument      |Description
+----- |----------------
+`stations`     |     The stations for which you want to download data.
+`level_flow`     |     Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both".
+`years`     |     The years for which you want easy-to-plot daily means. The resultant data.frame includes calculated To simplify plotting multiple years together, each daily mean data point is dated as if it was collected in the year 2022. Individual years are identified by the Year_Real column. Defaults to the current year.
+`recent_percentile`     |     Should the percent of historical max flows be calculated for recent data? Adds about 30 seconds per station.
+`filter`     |     Should the recent_data (if requested) be filtered to remove spikes? Adds about a minute of processing time per station.
+`rate`     |     TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. This data will likely be noisy.
+`rate_days`     |     Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+
+
+## Value
+
+A list with an element for each station requested.
+
+-----------------
+
+-----------------
+
+## **NOTE** 
+### The following functions are not intended to be used directly; rather, they are low-level functions called when knitting Markdown reports (floodReport and freshetReport), pulling WSC data, and requesting various plots.
+
+
+# `utils_daily_flow_plot`
+
+## Plot WSC hydrometric flow data for the whole year using daily means.
+
+
+This utility function is designed to take the output of the utils_flow_data function. If you're looking for a plot, use the flowPlot function instead.
+
+
+## Usage
+
+```r
+utils_daily_flow_plot(
+  station_number,
+  flow_years,
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
+  legend_position = "right",
+  line_size = 1,
+  point_size = 0.75,
+  returns = "both",
+  complete_df = NULL
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The station for which you want to plot data.
+`flow_years`     |     data.frame containing plotting data for all years selected, normally output from daily_flow_data
+`colours`     |     Colour for the lines and points
+`legend_position`     |     Self explanatory.
+`line_size`     |     Self explanatory.
+`point_size`     |     Self explanatory.
+`returns`     |     Should flow returns be plotted? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "both".
+`complete_df`     |     If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table".
+
+
+## Value
+
+A plot of flow volumes for a WSC station.
+
+---------
+
+# `utils_daily_level_plot`
+
+## Plot WSC hydrometric level data for the whole year using daily means.
+
+This utility function is designed to take the output of the utils_level_data function. If you're looking for a plot, use the levelPlot function instead.
+
+
+## Usage
+
+```r
+utils_daily_level_plot(
+  station_number,
+  level_years,
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
+  legend_position = "right",
+  line_size = 1,
+  point_size = 0.75,
+  returns = "both",
+  complete_df = NULL
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The station for which you want to plot data.
+`level_years`     |     data.frame containing plotting data for all years selected, normally output from daily_level_data
+`colours`     |     Colour for the lines and points
+`legend_position`     |     Self explanatory.
+`line_size`     |     Self explanatory.
+`point_size`     |     Self explanatory.
+`returns`     |     Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+`complete_df`     |     If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"
+
+
+## Value
+
+A plot for the station requested with return intervals, if it exists in the data file data$level_returns.
+
+---------
+
+# `utils_fcast_flow_plot`
+
+## Plot WSC hydrometric flow data for a set number of days using 5 minute data points for the current year,
+
+This utility function is designed to work with objects generated in the condition reports markdown file. If you're looking for a plot, use the flowPlot function instead.
+
+
+## Usage
+
+```r
+utils_fcast_flow_plot(
+  station_number,
+  flow_years,
+  zoom_data,
+  zoom_days = 30,
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
+    "gold1", "chartreuse1", "darkorange", "lightsalmon"),
+  legend_position = "right",
+  line_size = 1,
+  point_size = 0.75,
+  returns = "none",
+  complete_df = NULL
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The station for which you want to plot data.
+`flow_years`     |     A data.frame of plotting data
+`zoom_data`     |     The data frame of zoomed-in data.
+`zoom_days`     |     The number of days to plot, counting back from the current date.
+`colours`     |     Colour of the lines/points.
+`legend_position`     |     Self explanatory.
+`line_size`     |     Self explanatory.
+`point_size`     |     Self explanatory.
+`returns`     |     Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "none".
+`complete_df`     |     A data.frame containing historical data for the relevant station. Used only if parameter "returns" is "auto" or "both".
+
+
+## Value
+
+A plot for the station requested and for the duration requested.
+
+---------
+
+# `utils_fcast_level_plot`
+
+## Plot WSC hydrometric level data for a set number of days using 5 minute data points for the current year as well as MESH and CLEVER forecast data.
+
+This utility function is designed to work with objects generated in the condition reports markdown file. If you're looking for a plot, use the levelPlot function instead.
+
+
+## Usage
+
+```r
+utils_fcast_level_plot(
+  station_number,
+  level_years,
+  zoom_data,
+  zoom_days = 30,
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
+    "gold1", "chartreuse1", "darkorange", "lightsalmon"),
+  legend_position = "right",
+  line_size = 1,
+  point_size = 0.75
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The station for which you want to plot data.
+`level_years`     |     A data.frame of plotting data
+`zoom_data`     |     The data frame of zoomed-in data.
+`zoom_days`     |     The number of days to plot, counting back from the current date.
+`colours`     |     Colour of the lines/points.
+`legend_position`     |     Self explanatory.
+`line_size`     |     Self explanatory.
+`point_size`     |     Self explanatory.
+
+
+## Value
+
+A plot for the station requested and for the duration requested.
+
+---------
+
+# `utils_flow_data`
+
+## Download flow data
+
+Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::WSCdata function instead.
+
+
+## Usage
+
+```r
+utils_flow_data(
+  station_number,
+  select_years,
+  high_res = TRUE,
+  filter = TRUE,
+  recent_prctile = FALSE,
+  rate = FALSE,
+  rate_days = "all"
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The WSC station number for which you want data.
+`select_years`     |     The year(s) for which you want data.
+`high_res`     |     TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
+`filter`     |     TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
+`recent_prctile`     |     TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
+`rate`     |     TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+`rate_days`     |     Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+
+
+## Value
+
+A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
+
+---------
+
+# `utils_level_data`
+
+## Download level data
+
+Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::levelData function instead.
+
+```r
+utils_level_data(
+  station_number,
+  select_years,
+  high_res = TRUE,
+  filter = TRUE,
+  recent_prctile = FALSE,
+  rate = FALSE,
+  rate_days = "all"
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The WSC station number for which you want data.
+`select_years`     |     The year(s) for which you want data.
+`high_res`     |     TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
+`filter`     |     TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
+`recent_prctile`     |     TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
+`rate`     |     TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+`rate_days`     |     Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+
+
+## Value
+
+A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
+
+---------
+
+# `utils_zoom_flow_plot`
+
+## Plot WSC hydrometric flow data for a set number of days using 5 minute data points for the current year
+
+This utility function is designed to take the output of the utils_flow_data function. If you're looking for a plot, use the flowPlot function instead.
+
+
+## Usage
+
+```r
+utils_zoom_flow_plot(
+  station_number,
+  flow_years,
+  zoom_data,
+  zoom_days = 30,
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
+    "gold1", "chartreuse1", "darkorange", "lightsalmon"),
+  legend_position = "right",
+  line_size = 1,
+  point_size = 0.75,
+  returns = "none",
+  complete_df = NULL
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The station for which you want to plot data.
+`flow_years`     |     A data.frame of plotting data
+`zoom_data`     |     The data frame of zoomed-in data.
+`zoom_days`     |     The number of days to plot, counting back from the current date.
+`colours`     |     Colour of the lines/points.
+`legend_position`     |     Self explanatory.
+`line_size`     |     Self explanatory.
+`point_size`     |     Self explanatory.
+`returns`     |     Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "none".
+`complete_df`     |     If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means.
+
+
+## Value
+
+A plot for the station requested and for the duration requested.
+
+---------
+
+# `utils_zoom_level_plot`
+
+## Plot WSC hydrometric level data for a set number of days using 5 minute data points for the current year.
+
+This utility function is designed to take the output of the utils_level_data function. If you're looking for a plot, use the levelPlot function instead.
+
+
+## Usage
+
+```r
+utils_zoom_level_plot(
+  station_number,
+  level_years,
+  zoom_data,
+  zoom_days = 30,
+  colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
+    "gold1", "chartreuse1", "darkorange", "lightsalmon"),
+  legend_position = "right",
+  line_size = 1,
+  point_size = 0.75,
+  returns = "none",
+  complete_df = NULL
+)
+```
+
+Argument      |Description
+----- |----------------
+`station_number`     |     The station for which you want to plot data.
+`level_years`     |     A data.frame of plotting data
+`zoom_data`     |     The data frame of zoomed-in data.
+`zoom_days`     |     The number of days to plot, counting back from the current date.
+`colours`     |     Colour of the lines/points.
+`legend_position`     |     Self explanatory.
+`line_size`     |     Self explanatory.
+`point_size`     |     Self explanatory.
+`returns`     |     Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+`complete_df`     |     If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"
+
+
+## Value
+
+A plot for the station requested and for the duration requested.
+
+

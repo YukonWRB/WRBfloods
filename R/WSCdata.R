@@ -1,13 +1,13 @@
 #' Download and process WSC flow or level data
 #' 
-#' Neatly packages the output from utils_flow_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
+#' Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
 #'
 #' @param stations The stations for which you want to download data.
 #' @param level_flow Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both".
 #' @param years The years for which you want easy-to-plot daily means. The resultant data.frame includes calculated To simplify plotting multiple years together, each daily mean data point is dated as if it was collected in the year 2022. Individual years are identified by the Year_Real column. Defaults to the current year.
 #' @param recent_percentile Should the percent of historical max flows be calculated for recent data? Adds about 30 seconds per station.
 #' @param filter Should the recent_data (if requested) be filtered to remove spikes? Adds about a minute of processing time per station.
-#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If level_zoom == TRUE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
+#' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. This data will likely be noisy.
 #' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 #'
 #' @return A list with an element for each station requested.
@@ -23,7 +23,8 @@ WSCdata <- function(
     rate_days = "all"
 ) {
   
-  data <- list()
+
+    data <- list()
   if (level_flow %in% c("Both", "both")){
     for (i in stations){
       level <- list()

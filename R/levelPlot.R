@@ -32,7 +32,7 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filt
   levelData <- utils_level_data(
     station_number = station,
     select_years = years,
-    level_zoom = zoom,
+    high_res = zoom,
     filter = filter,
     recent_prctile = FALSE
   )

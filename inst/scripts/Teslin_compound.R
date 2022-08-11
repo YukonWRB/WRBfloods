@@ -40,7 +40,7 @@ attr(Aquarius$timestamp, "tzone") <- "UTC"
 
 WSC_recent <- WSC$`09AE002`$level$recent_5_minute
 last_time <- tail(WSC_recent, n=1)
-Aquarius<-Aquarius[8693:nrow(Aquarius),]
+Aquarius <- Aquarius[8693:nrow(Aquarius),]
 diff <- last_time$Level - Aquarius$value[1]
 for (i in 1:nrow(Aquarius)){
   Aquarius$change[i] <- Aquarius$value[i] - Aquarius$value[1]

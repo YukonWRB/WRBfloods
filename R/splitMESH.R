@@ -13,7 +13,7 @@
 splitMESH <- function(file = "choose", output_folder = "choose") {
   
   if (file == "choose"){
-    targetFile <- as.character(utils::choose.files(caption="Select Your File", multi=FALSE, filters=Filters["pdf",]))
+    targetFile <- as.character(utils::choose.files(caption="Select Your File", multi=FALSE, filters=utils::Filters["pdf",]))
   } else targetFile <- file
   
   if (output_folder == "choose") {

@@ -80,7 +80,8 @@ floodReport <-
     #####Generate reports#####
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == FALSE) {
       #deals with mistakes
-      stop("You cannot specify a both report_name AND custom_report_stations. Choose one and try again.")
+      print("You specified custom report stations while the preset report was also set. I've set the preset to Custom Hydrometric Report so you get a custom report instead.")
+      report_name <- "Custom Hydrometric Report"
     }
     
     if (is.null(report_name) == FALSE & is.null(custom_report_stations) == TRUE) {
@@ -429,14 +430,21 @@ floodReport <-
       
     ### Generate a custom report ###
     if (is.null(custom_report_stations)==FALSE){
-      if (custom_report_stations != "choose" & class(custom_report_stations)=="character") {
-        stations <- custom_report_stations
+      if (methods::is(custom_report_stations, "character")==TRUE) {
+        #Check for existence of all stations in hydat
+        stop_go <- "go"
+        for (i in custom_report_stations){
+          if (!(i %in% tidyhydat::allstations$STATION_NUMBER)){
+            stop_go <- "stop"
+            warning(paste0("Station ", i, " is not a station listed in the tidyhydat database. Please correct this discrepancy or omit the station before proceeding."))
+          }}
         
-        if (is.null(extra_years)==FALSE) {
-          extra_years <- extra_years
-        } else {
-          extra_years <- NULL
-        }
+        if (stop_go == "go"){
+          stations <- custom_report_stations
+          
+          if (is.null(extra_years)==FALSE) {
+            extra_years <- extra_years
+          } else { extra_years <- NULL}
         
         rmarkdown::render(
           input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
@@ -444,7 +452,7 @@ floodReport <-
           output_dir = save_path,
           params = list(
             stations = stations,
-            report_name = paste0("Condition Report for Station(s) ", toString(custom_report_stations)),
+            report_name = report_name,
             extra_years = extra_years,
             image_path = image_path,
             report_type = report_type,
@@ -459,12 +467,13 @@ floodReport <-
             meteogram = meteogram,
             plot_titles = plot_titles)
           )
+        } else {stop("Please correct your station inputs by referencing the message above.")}
       } #End of custom report
     }
     
     if (is.null(report_name) == TRUE &
         is.null(custom_report_stations) == TRUE) {
-      print("You must specify either a report_name or provide a character vector for custom_report_station.")   #to catch an error where no parameter was entered in both of these
+      stop("You must specify either a report_name or provide a character vector for custom_report_station.")   #to catch an error where no parameter was entered in both of these
     }
     
   } #End of function.

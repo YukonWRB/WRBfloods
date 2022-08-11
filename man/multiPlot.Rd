@@ -11,7 +11,7 @@ multiPlot(stations, type, days = 30, title = NULL, save_path = "choose")
 
 \item{type}{"Level" or "Flow"?}
 
-\item{days}{Number from 2 to 730 representing the number of days to plot}
+\item{days}{Number from 2 to 730 representing the number of days to plot.}
 
 \item{title}{Do you want a title added to the plot? Leave as NULL for no title, otherwise enter it here as a character string.}
 

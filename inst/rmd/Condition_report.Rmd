@@ -24,9 +24,7 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#Normally there would not be a library call in a package, but this package doesn't handle internal data properly.
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyhydat.ws)
 ```
 
 ```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
@@ -85,8 +83,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
         levelData <- utils_level_data(
           station_number = i,
-          select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-          level_zoom = TRUE,
+          select_years = as.numeric(unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ","))),
+          high_res = TRUE,
           filter = TRUE,
           recent_prctile = FALSE,
           rate = FALSE,
@@ -96,7 +94,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         levelData <- utils_level_data(
           station_number = i,
           select_years = lubridate::year(Sys.Date()),
-          level_zoom = TRUE,
+          high_res = TRUE,
           filter = TRUE,
           recent_prctile = FALSE,
           rate = FALSE,
@@ -303,8 +301,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
           flowData <- utils_flow_data(
             station_number = i,
-            select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
-            flow_zoom = TRUE,
+            select_years = as.numeric(unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ","))),
+            high_res = TRUE,
             filter = TRUE,
             recent_prctile = FALSE
           )
@@ -312,7 +310,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           flowData <- utils_flow_data(
             station_number = i,
             select_years = lubridate::year(Sys.Date()),
-            flow_zoom = TRUE,
+            high_res = TRUE,
             filter = TRUE,
             recent_prctile = FALSE
           )
@@ -405,7 +403,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
             freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
             
             tbl$Current_return_period <- 
-              if (tail(freq, n=1)$`Return Period` < 2) {
+              if (tail(freq, n=1)$`Return Period` <= 2) {
                 "<2 year*"
               } else if (tail(freq, n=1)$`Return Period` < 5) {
                 " 2 to 5 year*"
