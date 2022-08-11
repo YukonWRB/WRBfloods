@@ -403,7 +403,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
             freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
             
             tbl$Current_return_period <- 
-              if (tail(freq, n=1)$`Return Period` < 2) {
+              if (tail(freq, n=1)$`Return Period` <= 2) {
                 "<2 year*"
               } else if (tail(freq, n=1)$`Return Period` < 5) {
                 " 2 to 5 year*"

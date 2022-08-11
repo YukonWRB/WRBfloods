@@ -43,7 +43,7 @@ utils_daily_flow_plot <- function(
   flow_years <- flow_years %>%
     dplyr::group_by(.data$Year_Real) %>%
     dplyr::filter(!all(is.na(.data$Flow))) %>%
-    dplyr::bind_rows(.data, ribbon) %>%
+    dplyr::bind_rows(ribbon) %>%
     dplyr::arrange(.data$Year_Real)
   
   legend_length <- length(unique(stats::na.omit(flow_years$Year_Real)))

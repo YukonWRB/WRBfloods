@@ -6,15 +6,15 @@
 
 #' Download flow data
 #' 
-#' Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::flowData function instead.
+#' Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::WSCdata function instead.
 #'
-#' @param station_number The WSC station for which you want data.
-#' @param select_years The years for which you want data.
-#' @param high_res TRUE/FALSE, should high-res data be kept for zoomed-in plots?
-#' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station.
-#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical flows calculated? Adds about 30 seconds.
+#' @param station_number The WSC station number for which you want data.
+#' @param select_years The year(s) for which you want data.
+#' @param high_res TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
+#' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
+#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
 #' @param rate TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
-#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution flow data; specify a smaller number of days as an integer to lessen processing time.
+#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
 #' @export
@@ -39,6 +39,9 @@ utils_flow_data <- function(
 	if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {
 	  token_out <- suppressMessages(tidyhydat.ws::token_ws())
 	  
+	  #TODO: remove line below once tidyhydat.ws is fixed.
+	  param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
+	  
 	  flow_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
 	    station_number = station_number, 
 	    parameters = 47, 
@@ -51,7 +54,7 @@ utils_flow_data <- function(
 	    IQR <- stats::IQR(flow_real_time$Value, na.rm=TRUE)
 	    quartiles <- stats::quantile(flow_real_time$Value, na.rm=TRUE, probs = c(.25, .75))
 	    
-	    flow_real_time <- subset(flow_real_time, flow_real_time$Value > (quartiles[1] - 1.5*IQR) & flow_real_time$Value < (quartiles[2] + 1.5*IQR))
+	    flow_real_time <- subset(flow_real_time, flow_real_time$Value > (quartiles[1] - 4*IQR) & flow_real_time$Value < (quartiles[2] + 4*IQR))
 	  }
 	  
 

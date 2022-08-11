@@ -6,7 +6,7 @@
 
 #' Download level data
 #' 
-#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::levelData function instead.
+#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::WSCdata function instead.
 #' 
 #' @param station_number The WSC station number for which you want data.
 #' @param select_years The year(s) for which you want data.
@@ -53,6 +53,9 @@ utils_level_data <- function(
   if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {
     token_out <- suppressMessages(tidyhydat.ws::token_ws())
     
+    #TODO: remove line below once tidyhydat.ws is fixed.
+    param_id <- tidyhydat.ws::param_id #This is necessary because data is not stored properly in tidyhydat.ws. Reassess in future to see if param_id is stored in a sysdata.rda file.
+    
     level_real_time <- suppressMessages(tidyhydat.ws::realtime_ws(
       station_number = station_number, 
       parameters = 46, 
@@ -66,7 +69,7 @@ utils_level_data <- function(
       IQR <- stats::IQR(level_real_time$Value, na.rm=TRUE)
       quartiles <- stats::quantile(level_real_time$Value, na.rm=TRUE, probs = c(.25, .75))
       
-      level_real_time <- subset(level_real_time, level_real_time$Value > (quartiles[1] - 1.5*IQR) & level_real_time$Value < (quartiles[2] + 1.5*IQR))
+      level_real_time <- subset(level_real_time, level_real_time$Value > (quartiles[1] - 4*IQR) & level_real_time$Value < (quartiles[2] + 4*IQR))
     }
     
     if (high_res == TRUE){ #If requesting high-res data
