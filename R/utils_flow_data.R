@@ -29,7 +29,9 @@ utils_flow_data <- function(
 	rate = FALSE,
 	rate_days = "all"
 ){
-	
+  
+	as.numeric(select_years) #In case it somehow got fed through as a character vector
+  
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
 	
 	flow_historic <- (tidyhydat::hy_daily_flows(station_number = station_number)[,-c(3,5)])

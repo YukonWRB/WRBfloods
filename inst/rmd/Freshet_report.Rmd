@@ -153,7 +153,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
         levelData <- utils_level_data(
           station_number = i,
-          select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
+          select_years = as.numeric(unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ","))),
           high_res = TRUE,
           filter = TRUE,
           recent_prctile = FALSE,
@@ -369,7 +369,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         if (is.null(extra_years)==FALSE & i %in% years$station==TRUE){
           flowData <- utils_flow_data(
             station_number = i,
-            select_years = unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ",")),
+            select_years = as.numeric(unlist(strsplit(paste0(lubridate::year(Sys.Date()), ",", subset(years, station == i, select=years)[1,]), ","))),
             high_res = TRUE,
             filter = TRUE,
             recent_prctile = FALSE

@@ -30,6 +30,8 @@ utils_level_data <- function(
     rate_days = "all"
 ){
   
+  select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
+  
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
   
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
