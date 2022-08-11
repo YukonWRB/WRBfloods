@@ -2,7 +2,7 @@
 % Please edit documentation in R/flowPlot.R
 \name{flowPlot}
 \alias{flowPlot}
-\title{Flow plots of WSC data}
+\title{Plot WSC flow data}
 \usage{
 flowPlot(
   station,
