@@ -22,6 +22,7 @@
 #' @param rate Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.
 #' @param level_returns Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
 #' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
+#' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
 #' @param MESH Should MESH forecasts be incorporated into the graphs?
 #' @param CLEVER Should CLEVER forecasts be incorporated into the graphs?
 #' @param precip Should precipitation data (accumulated precip above stations) and images (precip across whole territory) be included? TRUE or FALSE
@@ -50,6 +51,7 @@ freshetReport <-
            level_returns = "both",
            flow_returns = "both",
            MESH = FALSE,
+           force_CGVD28 = FALSE,
            CLEVER = FALSE,
            precip = FALSE,
            meteogram = FALSE,
@@ -118,7 +120,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of territory report
       
@@ -154,7 +157,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Dawson report
       
@@ -190,7 +194,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Carmacks report
       
@@ -226,7 +231,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Carmacks report
       
@@ -262,7 +268,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Pelly report
       
@@ -298,7 +305,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Old Crow report
       
@@ -334,7 +342,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Liard/Watson report
       
@@ -370,7 +379,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of Mayo/Stewart report
       
@@ -407,7 +417,8 @@ freshetReport <-
             plot_titles = plot_titles,
             flow_returns = flow_returns,
             level_returns = level_returns,
-            rate = rate)
+            rate = rate,
+            force_CGVD28 = force_CGVD28)
         )
       } #End of lakes of Southern Lakes report
     }
@@ -451,7 +462,8 @@ freshetReport <-
               plot_titles = plot_titles,
               flow_returns = flow_returns,
               level_returns = level_returns,
-              rate = rate)
+              rate = rate,
+              force_CGVD28 = force_CGVD28)
           )
         } else {stop("Please correct your station inputs by referencing the message above.")}
       } #End of custom report

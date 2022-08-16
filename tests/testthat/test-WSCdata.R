@@ -8,8 +8,8 @@ test_that("Each station fetched gets a level and a flow list", {
   expect_length(test$`09EA004`, 2)
 })
 
-test_that("Flow and Level lists each have three elements", {
-  expect_true(length(test$`09EA004`$level)==3 & length(test$`09EA004`$flow)==3)
+test_that("Flow list has 3 elements and Level list has 4", {
+  expect_true(length(test$`09EA004`$level)==4 & length(test$`09EA004`$flow)==3)
 })
 rm(test)
 

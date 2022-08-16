@@ -23,6 +23,7 @@ params:
   flow_returns: flow_returns
   level_returns: level_returns
   rate: rate
+  force_CGVD28: force_CGVD28
 ---
 
 ```{r setup, include=FALSE}
@@ -158,7 +159,8 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           filter = TRUE,
           recent_prctile = FALSE,
           rate = FALSE,
-          rate_days = zoom_days
+          rate_days = zoom_days,
+          force_CGVD28 = force_CGVD28
         )
       } else{
         levelData <- utils_level_data(
@@ -168,11 +170,13 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           filter = TRUE,
           recent_prctile = FALSE,
           rate = FALSE,
-          rate_days = zoom_days
+          rate_days = zoom_days,
+          force_CGVD28 = force_CGVD28
         )
       }
       
-      datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(i)[,4]))))
+      datum_na <- is.na(as.numeric(tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
+
       
       #Level data processing
       if (datum_na==TRUE) { #then there is no datum elevation
@@ -530,7 +534,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
 
 ```{r Compile station info, echo=FALSE, results='asis', message=FALSE}
 
-if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+if (force_CGVD28 == TRUE){
   stationInfo <- lapply(stations, function(x) dplyr::bind_cols(tidyhydat::hy_stations(x)[c(2,1,7,8)], if(nrow(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(x)[,3])))==1) as.data.frame(tidyhydat::hy_stn_datum_conv(x)[1,3]) else (data.frame(DATUM_TO="Local datum")))) %>%
   purrr::reduce(dplyr::bind_rows)
 } else {
@@ -594,18 +598,11 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
   info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 20)]
   
   if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
-    #adjust elevations to CGVD28 (all are in 2013 at this point)
-    convert <- vector()
-    for (i in stations){ #CGVD2013 minus CGVD28
-      convert[i] <- as.numeric(tail(tidyhydat::hy_stn_datum_conv(i)[,4], n=1)) - as.numeric(head(tidyhydat::hy_stn_datum_conv(i)[,4], n=1))
-    }
-    info$Level_masl <- info$Level_masl - convert
-    
-    
+
+# Populate vectors with distance to 2021 and 2007 peaks    
     distpeak2007 <- vector()
     distpeak2021 <- vector()
-    # distday2007 <- vector()
-    # distday2021 <- vector()
+
     for (i in stations){
       if (length(levelDataList[[i]]) == 3){ #if the list element isn't properly filled, don't run
         df <- fasstr::calc_annual_peaks(levelDataList[[i]][[1]], values = Level, start_year=2000, ignore_missing = TRUE)
@@ -616,14 +613,10 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
         if (length(dplyr::filter(df, Year == 2021)$Max_1_Day) != 0){
           distpeak2021[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(df, Year == 2021)$Max_1_Day) * 100, 1)
         } else { distpeak2021[i] <- NA}
-        
-        # distday2007[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(levelDataList[[i]][[1]], Date == paste0("2007-", substr(Sys.Date(), 6, 10)))$Level) * 100, 1)
-        # distday2021[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(levelDataList[[i]][[1]], Date == paste0("2021-", substr(Sys.Date(), 6, 10)))$Level) * 100, 1)
+
       } else {
         distpeak2007[i] <- NA
         distpeak2021[i] <- NA
-        # distday2007[i] <- NA
-        # distday2021[i] <- NA
       }
     }
   }
@@ -640,18 +633,18 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
   
   if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
     rateTable$`Difference from 2007 peak (cm)` <- distpeak2007
-    # rateTable$`Difference from this date 2007 (cm)` <- distday2007
     rateTable$`Difference from 2021 peak (cm)` <- distpeak2021
-    # rateTable$`Difference from this date 2021 (cm)` <- distday2021
     
     print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
     
-    cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
-    
-  } else {  print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
-    
-    cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration to the datum used. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
+  } else {print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
   }
+    
+    if (force_CGVD28 == TRUE){
+      cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
+    } else {
+      cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration to the datum used. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
+    }
 }
 
 ```
@@ -813,7 +806,8 @@ for(i in stations) {
           cat("  \n### Level  \n")
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
-                                              level_years = levelDataList[[n]][[2]])
+                                              level_years = levelDataList[[n]][[2]],
+                                              force_CGVD28 = TRUE)
           
           if (plot_titles == TRUE){
             levelPlot <- levelPlot +
@@ -878,7 +872,8 @@ for(i in stations) {
               zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
                                                      level_years = levelDataList[[n]][[2]],
                                                      zoom_data = levelDataList[[n]][[3]],
-                                                     zoom_days = zoom_days)
+                                                     zoom_days = zoom_days,
+                                                     force_CGVD28 = TRUE)
             #}
             
             if (plot_titles == TRUE){

@@ -15,6 +15,7 @@
 #' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
 #' @param rate TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
 #' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+#' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
 #' @export
@@ -27,7 +28,8 @@ utils_level_data <- function(
     filter = TRUE,
     recent_prctile = FALSE,
     rate = FALSE,
-    rate_days = "all"
+    rate_days = "all",
+    force_CGVD28 = FALSE
 ){
   
   select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
@@ -42,11 +44,19 @@ utils_level_data <- function(
     level_historic <- level_historic[level_historic$Date > "2014-01-01",]
   }
   
-  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))) #Check if there is a datum on record - any datum
+  datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
+  if (datum_na == FALSE){
+    if (force_CGVD28 == FALSE){
+    datum <- as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
+    } else if (force_CGVD28 == TRUE) {
+      datum <- as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
+    }
+  }
+
   
   level_historic$Level_masl <- level_historic$Level #create col here so we end up with two cols filled out
   if(datum_na == FALSE) {
-    level_historic$Level_masl[level_historic$Level_masl < 50 & !is.na(level_historic$Level_masl)] <- level_historic$Level_masl[level_historic$Level_masl <50 & !is.na(level_historic$Level_masl)] + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data
+    level_historic$Level_masl[level_historic$Level_masl < 50 & !is.na(level_historic$Level_masl)] <- level_historic$Level_masl[level_historic$Level_masl <50 & !is.na(level_historic$Level_masl)] + datum #This deals with instances where at least part of the historic data has the station datum already added to it, so long as the base level is <50. The if statement ensures that stations with no datum don't have anything applied to them so as to keep the data. Applies the last (most recent) datum.
   } else {
     level_historic$Level_masl <- as.numeric(NA)
   }
@@ -88,8 +98,8 @@ utils_level_data <- function(
     level_real_time <- level_real_time[,-c(2,3)]
     
     if (datum_na == FALSE){ #Generate new column to hold masl levels in level_real_time and recent_level. At this point level_real_time has a single point per day, recent_level has the data at max resolution.
-      level_real_time$Level_masl <- level_real_time$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))) #adjusting to MASL if there is a datum
-      if (high_res == TRUE) {recent_level$Level_masl <- recent_level$Level + as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))}
+      level_real_time$Level_masl <- level_real_time$Level + datum #adjusting to MASL if there is a datum
+      if (high_res == TRUE) {recent_level$Level_masl <- recent_level$Level + datum}
     } else {
       level_real_time$Level_masl <- as.numeric(NA)
       if(high_res == TRUE) {recent_level$Level_masl <- as.numeric(NA)}

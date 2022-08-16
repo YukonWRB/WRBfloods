@@ -12,13 +12,25 @@
 #' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
 #' @param forecast Not currently in use; will eventually work similarly to forecast in flowPlot.
 #' @param returns Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
 #' @param save_path Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
 #'
 #' @return A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 #' @export
 #'
 
-levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filter=FALSE, forecast=NULL, returns="both", save_path="none") {
+levelPlot <- function(station, 
+                      years, 
+                      title=TRUE, 
+                      zoom=FALSE, 
+                      zoom_days=30, 
+                      filter=FALSE, 
+                      forecast=NULL, 
+                      returns="both", 
+                      force_CGVD28 = FALSE, 
+                      save_path="none"
+                      ) 
+{
   
   oldw <- getOption("warn") #get the initial warning state
   options(warn = -1) #disable warnings so that ggplot doesn't give a whole pile of them
@@ -34,7 +46,8 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filt
     select_years = years,
     high_res = zoom,
     filter = filter,
-    recent_prctile = FALSE
+    recent_prctile = FALSE,
+    force_CGVD28 = force_CGVD28
   )
   
   # Plot the data
@@ -42,7 +55,9 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filt
     plot <- utils_daily_level_plot(station_number = station,
                                    level_years = levelData[[2]],
                                    returns = returns,
-                                   complete_df = levelData[[1]])
+                                   complete_df = levelData[[1]],
+                                   force_CGVD28 = force_CGVD28
+                                   )
   }
   
   if (zoom == TRUE){ #Plot zoomed-in level data
@@ -51,7 +66,9 @@ levelPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filt
                                   zoom_data = levelData[[3]],
                                   zoom_days = zoom_days,
                                   returns = returns,
-                                  complete_df = levelData[[1]])
+                                  complete_df = levelData[[1]],
+                                  force_CGVD28 = force_CGVD28
+                                  )
   }
   
   if (title == TRUE){

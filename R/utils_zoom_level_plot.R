@@ -11,6 +11,7 @@
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
 #' @param returns Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
 #' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"
 #'
 #' @return A plot for the station requested and for the duration requested.
@@ -27,12 +28,12 @@ utils_zoom_level_plot <- function(
     line_size = 1,
     point_size = 0.75,
     returns = "none",
+    force_CGVD28 = FALSE,
     complete_df = NULL
 )
 
 {
-  #check if datum exists
-  datum_na <- is.na(as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4]))))
+  datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
   
   extra_days <- round(zoom_days/3, 0)
   #subset the data according to days to plot and find the most recent range
@@ -123,7 +124,7 @@ utils_zoom_level_plot <- function(
   
   #Add return periods if they exist for this station
   if (station_number %in% data$level_returns$ID==TRUE){
-    levelConvert <- as.numeric(dplyr::slice_tail(as.data.frame(tidyhydat::hy_stn_datum_conv(station_number)[,4])))
+    levelConvert <- if (force_CGVD28 == FALSE) as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
     stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
     plot <- plot + 
