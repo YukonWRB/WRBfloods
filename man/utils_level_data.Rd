@@ -11,7 +11,8 @@ utils_level_data(
   filter = TRUE,
   recent_prctile = FALSE,
   rate = FALSE,
-  rate_days = "all"
+  rate_days = "all",
+  force_CGVD28 = FALSE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ utils_level_data(
 \item{rate}{TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.}
 
 \item{rate_days}{Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.}
+
+\item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum?}
 }
 \value{
 A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.

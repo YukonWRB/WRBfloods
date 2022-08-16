@@ -3,12 +3,14 @@
 #' Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
 #'
 #' @param stations The stations for which you want to download data.
-#' @param level_flow Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both".
+#' @param level_flow Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both". Levels will be in the most recent datum available.
 #' @param years The years for which you want easy-to-plot daily means. The resultant data.frame includes calculated To simplify plotting multiple years together, each daily mean data point is dated as if it was collected in the year 2022. Individual years are identified by the Year_Real column. Defaults to the current year.
 #' @param recent_percentile Should the percent of historical max flows be calculated for recent data? Adds about 30 seconds per station.
 #' @param filter Should the recent_data (if requested) be filtered to remove spikes? Adds about a minute of processing time per station.
 #' @param rate TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. This data will likely be noisy.
 #' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+#' @param force_CGVD28 For stations with a datum and when levels information is requested, should CGVD28 be used even if there is a more recent datum?
+
 #'
 #' @return A list with an element for each station requested.
 #' @export
@@ -20,11 +22,13 @@ WSCdata <- function(
     recent_percentile = FALSE,
     filter = TRUE,
     rate = FALSE,
-    rate_days = "all"
-) {
+    rate_days = "all",
+    force_CGVD28 = FALSE
+    ) 
+  {
   
 
-    data <- list()
+  data <- list()
   if (level_flow %in% c("Both", "both")){
     for (i in stations){
       level <- list()
@@ -34,8 +38,12 @@ WSCdata <- function(
                                   recent_prctile = recent_percentile, 
                                   filter = filter, 
                                   rate = rate, 
-                                  rate_days = rate_days)
+                                  rate_days = rate_days,
+                                  force_CGVD28 = force_CGVD28
+                                  )
+        
         names(level) <- c("historical", "requested_years", "recent_5_minute")
+        level$Datum_applied <- if (force_CGVD28 == FALSE) utils::tail(tidyhydat::hy_stn_datum_conv(i), n=1)[,c(1,3,4)] else if (force_CGVD28 == TRUE) utils::head(tidyhydat::hy_stn_datum_conv(i), n=1)[,c(1,3,4)]
       }, error=function(e) {}
       )
       
@@ -59,8 +67,11 @@ WSCdata <- function(
                                   recent_prctile = recent_percentile, 
                                   filter = filter,
                                   rate = rate,
-                                  rate_days = rate_days)
+                                  rate_days = rate_days,
+                                  force_CGVD28 = force_CGVD28
+                                  )
         names(level) <- c("historical", "requested_years", "recent_5_minute")
+        level$Datum_applied <- if (force_CGVD28 == FALSE) utils::tail(tidyhydat::hy_stn_datum_conv(i), n=1)[,c(1,3,4)] else if (force_CGVD28 == TRUE) utils::head(tidyhydat::hy_stn_datum_conv(i), n=1)[,c(1,3,4)]
       }, error=function(e) {}
       )
       data[[i]] <- list(level=level)

@@ -18,6 +18,7 @@ freshetReport(
   level_returns = "both",
   flow_returns = "both",
   MESH = FALSE,
+  force_CGVD28 = FALSE,
   CLEVER = FALSE,
   precip = FALSE,
   meteogram = FALSE,
@@ -52,6 +53,8 @@ freshetReport(
 \item{flow_returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".}
 
 \item{MESH}{Should MESH forecasts be incorporated into the graphs?}
+
+\item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum?}
 
 \item{CLEVER}{Should CLEVER forecasts be incorporated into the graphs?}
 

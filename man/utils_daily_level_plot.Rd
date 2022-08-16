@@ -13,6 +13,7 @@ utils_daily_level_plot(
   line_size = 1,
   point_size = 0.75,
   returns = "both",
+  force_CGVD28 = FALSE,
   complete_df = NULL
 )
 }
@@ -30,6 +31,8 @@ utils_daily_level_plot(
 \item{point_size}{Self explanatory.}
 
 \item{returns}{Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+
+\item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum?}
 
 \item{complete_df}{If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"}
 }

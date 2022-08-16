@@ -11,13 +11,14 @@ WSCdata(
   recent_percentile = FALSE,
   filter = TRUE,
   rate = FALSE,
-  rate_days = "all"
+  rate_days = "all",
+  force_CGVD28 = FALSE
 )
 }
 \arguments{
 \item{stations}{The stations for which you want to download data.}
 
-\item{level_flow}{Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both".}
+\item{level_flow}{Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both". Levels will be in the most recent datum available.}
 
 \item{years}{The years for which you want easy-to-plot daily means. The resultant data.frame includes calculated To simplify plotting multiple years together, each daily mean data point is dated as if it was collected in the year 2022. Individual years are identified by the Year_Real column. Defaults to the current year.}
 
@@ -28,6 +29,8 @@ WSCdata(
 \item{rate}{TRUE/FALSE, should the difference from one data point compared to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. This data will likely be noisy.}
 
 \item{rate_days}{Number days for which to calculate a rate of change, applied only to high-resolution data recent data (historical daily means data is quick to calculate). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.}
+
+\item{force_CGVD28}{For stations with a datum and when levels information is requested, should CGVD28 be used even if there is a more recent datum?}
 }
 \value{
 A list with an element for each station requested.
