@@ -175,7 +175,7 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         )
       }
       
-      datum_na <- is.na(as.numeric(tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
+      datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(i)[,4], n=1)))#Check if there is a datum on record - any datum
 
       
       #Level data processing
@@ -473,27 +473,27 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
             freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
             
             tbl$Current_return_period <- 
-              if (tail(freq, n=1)$`Return Period` <= 2) {
+              if (utils::tail(freq, n=1)$`Return Period` <= 2) {
                 "<2 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 5) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 5) {
                 " 2 to 5 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 10) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 10) {
                 "5 to 10 year*"
-              } else if(tail(freq, n=1)$`Return Period` < 20) {
+              } else if(utils::tail(freq, n=1)$`Return Period` < 20) {
                 "10 to 20 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 50) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 50) {
                 "20 to 50 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 100) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 100) {
                 "50 to 100 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 200) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 200) {
                 "100 to 200 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 500) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 500) {
                 "200 to 500 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 1000) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 1000) {
                 "500 to 100 year*"
-              } else if (tail(freq, n=1)$`Return Period` < 2000) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 2000) {
                 "1000 to 2000 year*"
-              } else if (tail(freq, n=1)$`Return Period` > 2000) {
+              } else if (utils::tail(freq, n=1)$`Return Period` > 2000) {
                 "> 2000 year*"
               }
           }
@@ -827,7 +827,7 @@ for(i in stations) {
             # if (i %in% names(MESH) & i %in% names(CLEVER)){
             #   #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
             #   
-            #   last_value <- tail(levelDataList[[n]][[3]], n=1)
+            #   last_value <- utils::tail(levelDataList[[n]][[3]], n=1)
             #   dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
             #   nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
             #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range compasses two points
@@ -845,7 +845,7 @@ for(i in stations) {
             #   
             # } else if (i %in% names(MESH)){
             #   #Add in the MESH data, nudge it to match WSC at forecast time.
-            #   last_value <- tail(levelDataList[[n]][[3]], n=1)
+            #   last_value <- utils::tail(levelDataList[[n]][[3]], n=1)
             #   dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
             #   nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
             #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range encompass two points
@@ -918,7 +918,7 @@ for(i in stations) {
               if (i %in% names(MESH) & i %in% names(CLEVER)){
                 #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
                 
-                last_value <- tail(flowDataList[[n]][[3]], n=1)
+                last_value <- utils::tail(flowDataList[[n]][[3]], n=1)
                 dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
                 nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
                 diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range compasses two points
@@ -938,7 +938,7 @@ for(i in stations) {
                 
               } else if (i %in% names(MESH)){
                 #Add in the MESH data, nudge it to match WSC at forecast time.
-                last_value <- tail(flowDataList[[n]][[3]], n=1)
+                last_value <- utils::tail(flowDataList[[n]][[3]], n=1)
                 dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
                 nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
                 diff <- mean(nrst_MESH$MESH_prediction) - last_value$Flow #Use the mean of MESH prediction in case the range encompass two points
