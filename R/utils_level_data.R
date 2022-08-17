@@ -79,9 +79,9 @@ utils_level_data <- function(
     #Filter the data here if requested (option exists in case user wants to see the outliers). Note that this step happens before creating recent_level!
     if (filter == TRUE) {
       IQR <- stats::IQR(level_real_time$Value, na.rm=TRUE)
-      quartiles <- stats::quantile(level_real_time$Value, na.rm=TRUE, probs = c(.25, .75))
+      quantiles <- stats::quantile(level_real_time$Value, na.rm=TRUE, probs = c(.05, .95))
       
-      level_real_time <- subset(level_real_time, level_real_time$Value > (quartiles[1] - 4*IQR) & level_real_time$Value < (quartiles[2] + 4*IQR))
+      level_real_time <- subset(level_real_time, level_real_time$Value > (quantiles[1] - 2*IQR) & level_real_time$Value < (quantiles[2] + 2*IQR))
     }
     
     if (high_res == TRUE){ #If requesting high-res data
