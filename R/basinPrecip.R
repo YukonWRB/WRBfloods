@@ -8,3 +8,6 @@
 
 
 #Also explore possibility of asking for precip above certain xy coords
+
+#Determine which WSC polygon a point is in, then determine precip for that basin?
+#Map of precip accumulated in the basin too?
