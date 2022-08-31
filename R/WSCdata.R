@@ -27,7 +27,17 @@ WSCdata <- function(
     ) 
   {
   
+  #Basic checks on options and inputs
+  station_check_ok <- stringr::str_detect(stations, "[0-9]{2}[A-Za-z]{2}[0-9]{3}")
+  if (FALSE %in% station_check_ok){
+    stop(paste0("You have requested one or more station(s) with improperly formated codes: please fix ", crayon::bold$blue(stations[!station_check_ok]), " and try again."))
+  }
+  station_check_exist <- stations %in% tidyhydat::realtime_stations()$STATION_NUMBER
+  if (FALSE %in% station_check_exist){
+    stop(paste0("You have requested stations with no matching record in the WSC HYDAT database: ", crayon::bold$blue(stations[!station_check_exist])))
+  }
 
+  
   data <- list()
   if (level_flow %in% c("Both", "both")){
     for (i in stations){
