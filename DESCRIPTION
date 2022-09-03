@@ -44,7 +44,10 @@ Imports:
     tidyselect,
     utils,
     XML,
-    xml2
+    xml2,
+    cli,
+    terra,
+    WRBtools
 Suggests: 
     testthat (>= 3.0.0)
 VignetteBuilder: 
