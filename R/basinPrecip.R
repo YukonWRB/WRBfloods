@@ -31,11 +31,6 @@
 #IDEA: Allow multiple plots to be fetched, or a time-lapse of plots (better). Allow setting increments and number of plots.
 #IDEA: use leaflet to display maps
 
-# location <- "09AB001"
-# start <- Sys.time()-60*60*24
-# end <- Sys.time() + 60*60*48
-# org_defaults <- "YWRB"
-
 basinPrecip <- function(location,
                         start = Sys.time()-60*60*24,
                         end = Sys.time(),
@@ -112,7 +107,6 @@ basinPrecip <- function(location,
   
   #Determine the sequence of rasters from start to end and if the clip is adequate. If not, call WRBtools::getHRDPA to fill the gap.
   
-  #TODO: must split the requested sequence between past and future somehow
   start <- as.POSIXct(start)
   end <- as.POSIXct(end)
   attr(start, "tzone") <- "UTC"
@@ -122,12 +116,12 @@ basinPrecip <- function(location,
     stop("The start time you specified is *after* the end time. R is not a time travel machine, please try again.")
   }
   
-  if (start > Sys.time()) { #if TRUE, the start is in the future and so is the end. Only a sequence for forecast will be generated.
+  if (start > Sys.time()-60*60) { #if TRUE, the start is in the future and so is the end. Only a sequence for forecast will be generated.
     hrdpa <- FALSE
     actual_times_hrdpa <- NULL
     if (end > (Sys.time() + 60*60*44)){
-      warning("You specified an end time that is beyond the current HRDPS forecast of 48 hours. The end time has been changed to reflect the available forecast times.")
       end <- Sys.time() + 60*60*44
+      attr(end, "tzone") <- "UTC"
     }
   } else { #start is not in future, there might be hrdpa available
     hrdpa <- TRUE
@@ -291,14 +285,13 @@ basinPrecip <- function(location,
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
     past_precip <- available_hrdps[available_hrdps$to == start_hrdps,] #this is subtracted from the total hrdps to match with the requested start time
     end_precip <- available_hrdps[available_hrdps$to == end_hrdps,]$files
-    if (nrow(end_precip) == 0) {
+    if (is.null(nrow(end_precip))) {
       end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
     }
     actual_times_hrdps <- c(past_precip$to, end_precip$to)
     forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
     forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
     names(forecast_precip) <- "precip"
-    
     
   } else if (hrdpa == TRUE & end > (Sys.time()-60*60*6)) { #There might be a need for some hrdps to fill in to the requested end time. Determine the difference between the actual end time and requested end time, fill in with hrdps if necessary
     WRBtools::getHRDPS(clip = NULL, save_path = hrdps_loc, param = "APCP_SFC_0") #This will not run through if the files are already present
@@ -310,8 +303,20 @@ basinPrecip <- function(location,
     available_hrdps$from <- as.POSIXct(available_hrdps$from, format = "%Y%m%d%H", tz="UTC")
     available_hrdps <- available_hrdps[!is.na(available_hrdps$from),]
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
-    if (actual_times_hrdpa[2] %in% available_hrdps$from){ #if TRUE, the hrdps is suitable to use
+    if (actual_times_hrdpa[2] %in% available_hrdps$from){ #if TRUE, the hrdps is suitable to use without special considerations
       forecast <- available_hrdps[available_hrdps$to == end_hrdps,]
+      if (nrow(forecast)==0){
+        forecast <- available_hrdps[available_hrdps$to == max(available_hrdps$to),]
+      }
+      if (nrow(forecast)==1){
+        hrdps <- TRUE
+        actual_times_hrdps <- c(forecast$from, forecast$to)
+        forecast_precip <- terra::rast(forecast$files)
+        forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
+        names(forecast_precip) <- "precip"
+      }
+    } else if ((actual_times_hrdpa[2] - 60*60*6) %in% avalable_hrdps$from) { #If this is true, it likely means that the requested time is *just* falling in the gap before the next available hrdps. Resolve the problem by using the latest actually available hrdps.
+      forecast <- available_hrdps[available_hrdps$to == end_hrdps, ]
       if (nrow(forecast)==0){
         forecast <- available_hrdps[available_hrdps$to == max(available_hrdps$to),]
       }
@@ -369,6 +374,38 @@ basinPrecip <- function(location,
     total <- total_hrdpa + forecast_precip
   }
 
+  #Add zeros for the actual_times so that they are not ambiguous at midnight
+  actual_times <- as.character(actual_times)
+  for (i in 1:2){
+    if (nchar(actual_times[i]) < 13){
+      actual_times[i] <- paste0(actual_times[i], " 00:00")
+    }
+    if (nchar(actual_times[i]) > 16){
+      actual_times[i] <- substr(actual_times[i], 1, 16)
+    }
+  }
+  if (hrdpa){
+    actual_times_hrdpa <- as.character(actual_times_hrdpa)
+    for (i in 1:2){
+      if (nchar(actual_times_hrdpa[i]) < 13){
+        actual_times_hrdpa[i] <- paste0(actual_times_hrdpa[i], " 00:00")
+      }
+      if (nchar(actual_times_hrdpa[i]) > 16){
+        actual_times_hrdpa[i] <- substr(actual_times_hrdpa[i], 1, 16)
+      }
+    }
+  }
+  if (hrdps){
+    actual_times_hrdps <- as.character(actual_times_hrdps)
+    for (i in 1:2){
+      if (nchar(actual_times_hrdps[i]) < 13){
+        actual_times_hrdps[i] <- paste0(actual_times_hrdps[i], " 00:00")
+      }
+      if (nchar(actual_times_hrdps[i]) > 16){
+        actual_times_hrdps[i] <- substr(actual_times_hrdps[i], 1, 16)
+      }
+    }
+  }
   
   #crop to the watershed or to the point
   cropped_precip <- terra::mask(total, location)
@@ -416,15 +453,9 @@ basinPrecip <- function(location,
     cropped_precip_rast <- terra::trim(cropped_precip_rast)
     
     #Load supporting layers and crop
-    # roads <- sf::read_sf(dsn = spatial_loc, layer = "roads")
-    # roads <- sf::st_transform(roads, "+proj=longlat +EPSG:3347")
-    
     roads <- terra::vect(paste0(spatial_loc, "/roads.shp"))
     roads <- terra::project(roads, "+proj=longlat +EPSG:3347")
     
-    # streams <- sf::read_sf(dsn = spatial_loc, layer = "watercourses")
-    # streams <- sf::st_transform(streams, "+proj=longlat +EPSG:3347")
-    # streams <- terra::vect(streams)
     if (terra::expanse(watershed) < 30000000000){
       streams <- terra::vect(paste0(spatial_loc, "/watercourses.shp"))
       streams <- terra::project(streams, "+proj=longlat +EPSG:3347")
@@ -438,7 +469,6 @@ basinPrecip <- function(location,
     communities <- terra::vect(paste0(spatial_loc, "/communities.shp"))
     communities <- terra::project(communities, "+proj=longlat +EPSG:3347")
     
-    # borders <- sf::read_sf(dsn = spatial_loc, layer = 'borders')
     borders <- terra::vect(paste0(spatial_loc, "/borders.shp"))
     borders <- terra::project(borders, "+proj=longlat +EPSG:3347")
     
@@ -459,7 +489,7 @@ basinPrecip <- function(location,
     if (type == "longlat"){
       terra::text(location, labels = paste0(requested_point[1], ", ", requested_point[2]), col = "black", pos=4, offset = 1, font=2)
     }
-    mtext(paste0("Precipitation as mm of water equivalent from ", substr(actual_times[1], 1, 16), " to ", substr(actual_times[2], 1, 16), " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 1)
+    mtext(paste0("Precipitation as mm of water equivalent from ", actual_times[1], " to ", actual_times[2], " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 1)
 
     plot <- recordPlot()
 
