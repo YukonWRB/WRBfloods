@@ -1,54 +1,60 @@
 Package: WRBfloods
 Title: WRB's flood report functions
-Version: 1.4.0-3
+Version: 1.5.0-0
 Authors@R: 
     person("Ghislain", "de Laplante", , "ghislaindel@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5093-9185"))
-Description: This package exists to facilitate the generation of flood reports by the Yukon Water Resources Branch.
-Remotes:
-    github::bcgov/tidyhydat.ws
-Imports: 
-    readxl,
-    rmarkdown,
-    knitr,
-    utils,
-    tidyhydat,
-    tidyquant,
-    ggplot2,
-    dplyr,
-    plyr,
-    tidyr,
-    stringr,
-    tidyselect,
-    purrr,
-    lubridate,
-    fasstr,
-    scales,
-    magrittr,
-    spatstat.utils,
-    stats,
-    imager,
-    sf,
-    XML,
-    xml2,
-    httr,
-    rvest,
-    R.utils,
-    hablar,
-    foreign,
-    pdftools,
-    qpdf,
-    RCurl,
-    methods,
-    rlang
+Description: This package exists to facilitate the generation of flood
+    reports by the Yukon Water Resources Branch.
 License: AGPL (>= 3) + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
 Depends: 
     R (>= 2.10),
     tidyhydat.ws
+Imports: 
+    crayon,
+    dplyr,
+    fasstr,
+    foreign,
+    ggplot2,
+    hablar,
+    httr,
+    imager,
+    knitr,
+    lubridate,
+    magrittr,
+    methods,
+    pdftools,
+    plyr,
+    purrr,
+    qpdf,
+    R.utils,
+    RCurl,
+    readxl,
+    rlang,
+    rmarkdown,
+    rvest,
+    scales,
+    sf,
+    spatstat.utils,
+    stats,
+    stringr,
+    tidyhydat,
+    tidyquant,
+    tidyr,
+    tidyselect,
+    utils,
+    XML,
+    xml2,
+    cli,
+    terra,
+    WRBtools
 Suggests: 
     testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+Remotes:
+    github::bcgov/tidyhydat.ws
 Config/testthat/edition: 3
-VignetteBuilder: knitr
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1

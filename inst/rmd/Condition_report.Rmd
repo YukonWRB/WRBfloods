@@ -107,16 +107,16 @@ if (report_type %in% c("Both", "Level", "both", "level")){
       #Level data processing
       if (datum_na==TRUE) { #then there is no datum elevation
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level)
+        todayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level, na.rm=TRUE)
         todayLevelmasl <- NA
         todayLevelPerc <- round((todayLevel-levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (levelData[[2]]$Max[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())] - levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
-        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24), by = "5 min"))$Level)
-        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48), by = "5 min"))$Level)
-        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72), by = "5 min"))$Level)
-        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96), by = "5 min"))$Level)
-        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120), by = "5 min"))$Level)
-        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144), by = "5 min"))$Level)
-        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168), by = "5 min"))$Level)
+        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24), by = "5 min"))$Level, na.rm=TRUE)
+        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48), by = "5 min"))$Level, na.rm=TRUE)
+        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72), by = "5 min"))$Level, na.rm=TRUE)
+        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96), by = "5 min"))$Level, na.rm=TRUE)
+        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120), by = "5 min"))$Level, na.rm=TRUE)
+        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144), by = "5 min"))$Level, na.rm=TRUE)
+        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168), by = "5 min"))$Level, na.rm=TRUE)
         
         
         tbl <- data.frame(
@@ -144,16 +144,16 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         )
       } else { #There is a datum
         startYearLevel <- min(lubridate::year(levelData[[1]]$Date), na.rm = T)
-        todayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level)
-        todayLevelmasl <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level_masl)
+        todayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level, na.rm=TRUE)
+        todayLevelmasl <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date) - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)), by = "5 min"))$Level_masl, na.rm=TRUE)
         todayLevelPerc <- round((todayLevelmasl-levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (levelData[[2]]$Max[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())] - levelData[[2]]$Min[levelData[[2]]$Date==Sys.Date() & levelData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
-        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 ), by = "5 min"))$Level_masl)
-        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 ), by = "5 min"))$Level_masl)
-        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 ), by = "5 min"))$Level_masl)
-        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 ), by = "5 min"))$Level_masl)
-        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 ), by = "5 min"))$Level_masl)
-        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 ), by = "5 min"))$Level_masl)
-        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 ), by = "5 min"))$Level_masl)
+        yesterdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*24 ), by = "5 min"))$Level_masl, na.rm=TRUE)
+        twodayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*48 ), by = "5 min"))$Level_masl, na.rm=TRUE)
+        threedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*72 ), by = "5 min"))$Level_masl, na.rm=TRUE)
+        fourdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*96 ), by = "5 min"))$Level_masl, na.rm=TRUE)
+        fivedayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*120 ), by = "5 min"))$Level_masl, na.rm=TRUE)
+        sixdayLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*144 ), by = "5 min"))$Level_masl, na.rm=TRUE)
+        weekLevel <- mean(dplyr::filter(levelData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(levelData[[3]]$Date)-60*60*168 ), by = "5 min"))$Level_masl, na.rm=TRUE)
         
         
         tbl <- data.frame(
@@ -318,22 +318,15 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
         
         #Flow data processing
         startYearFlow <- min(lubridate::year(flowData[[1]]$Date), na.rm = T)
-        todayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)]
-        todayFlowPerc <- round((todayFlow-flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) /   (flowData[[2]]$Max[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())] - flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
-        yesterdayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*24]
-        twodayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*48]
-        threedayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*72]
-        fourdayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*96]
-        fivedayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*120]
-        sixdayFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*144]
-        weekFlow <- flowData[[3]]$Flow[flowData[[3]]$Date == max(flowData[[3]]$Date)-60*60*168]
-        yesterdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 ), by = "5 min"))$Flow)
-        twodayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 ), by = "5 min"))$Flow)
-        threedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 ), by = "5 min"))$Flow)
-        fourdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*96 ), by = "5 min"))$Flow)
-        fivedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*120 ), by = "5 min"))$Flow)
-        sixdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*144 ), by = "5 min"))$Flow)
-        weekFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*168 ), by = "5 min"))$Flow)
+        todayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date) - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)), by = "5 min"))$Flow, na.rm=TRUE)
+        todayFlowPerc <- round((todayFlow-flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())])/  (flowData[[2]]$Max[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())] - flowData[[2]]$Min[flowData[[2]]$Date==Sys.Date() & flowData[[2]]$Year_Real==lubridate::year(Sys.Date())]) * 100, 1) #((today - historical minimum)/historical range)
+        yesterdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*24 ), by = "5 min"))$Flow, na.rm=TRUE)
+        twodayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*48 ), by = "5 min"))$Flow, na.rm=TRUE)
+        threedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*72 ), by = "5 min"))$Flow, na.rm=TRUE)
+        fourdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*96 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*96 ), by = "5 min"))$Flow, na.rm=TRUE)
+        fivedayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*120 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*120 ), by = "5 min"))$Flow, na.rm=TRUE)
+        sixdayFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*144 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*144 ), by = "5 min"))$Flow, na.rm=TRUE)
+        weekFlow <- mean(dplyr::filter(flowData[[3]], Date %in% seq.POSIXt(from = as.POSIXct(max(flowData[[3]]$Date)-60*60*168 - 60*60), to = as.POSIXct(max(flowData[[3]]$Date)-60*60*168 ), by = "5 min"))$Flow, na.rm=TRUE)
         
         tbl <- data.frame(
           Station_name = stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME),
@@ -1091,7 +1084,7 @@ tryCatch({
 #This section will contain images in a folder specified by the user, if applicable
 if (is.null(image_path)!=TRUE){
   cat("  \n# Other Images  \n")
-  custom_images <- list.files(path-image_path)
+  custom_images <- list.files(path=image_path)
   for (i in custom_images){
     imager::load.image(i) %>% plot(axes=FALSE)
     cat("  \n")

@@ -54,9 +54,9 @@ utils_flow_data <- function(
 	  #Filter the data here if requested (option exists in case user wants to see the outliers)
 	  if (filter == TRUE) {
 	    IQR <- stats::IQR(flow_real_time$Value, na.rm=TRUE)
-	    quartiles <- stats::quantile(flow_real_time$Value, na.rm=TRUE, probs = c(.25, .75))
+	    quantiles <- stats::quantile(flow_real_time$Value, na.rm=TRUE, probs = c(.05, .95))
 	    
-	    flow_real_time <- subset(flow_real_time, flow_real_time$Value > (quartiles[1] - 4*IQR) & flow_real_time$Value < (quartiles[2] + 4*IQR))
+	    flow_real_time <- subset(flow_real_time, flow_real_time$Value > (quantiles[1] - 2*IQR) & flow_real_time$Value < (quantiles[2] + 2*IQR))
 	  }
 	  
 
