@@ -17,7 +17,7 @@ Imports:
     foreign,
     ggplot2,
     graphics,
-    grDevices
+    grDevices,
     hablar,
     httr,
     imager,
