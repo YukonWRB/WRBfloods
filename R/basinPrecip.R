@@ -59,7 +59,7 @@ basinPrecip <- function(location,
   }
   
   #Basic checks on location
-  if(class(location) !="character"){
+  if(!inherits(location, "character")){
     stop("Parameter `location` should be specified as a character vector.")
   }
 
@@ -489,9 +489,9 @@ basinPrecip <- function(location,
     if (type == "longlat"){
       terra::text(location, labels = paste0(requested_point[1], ", ", requested_point[2]), col = "black", pos=4, offset = 1, font=2)
     }
-    mtext(paste0("Precipitation as mm of water equivalent from ", actual_times[1], " to ", actual_times[2], " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 1)
+    graphics::mtext(paste0("Precipitation as mm of water equivalent from ", actual_times[1], " to ", actual_times[2], " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 1)
 
-    plot <- recordPlot()
+    plot <- grDevices::recordPlot()
 
   } else {
     watershed <- location

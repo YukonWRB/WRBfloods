@@ -16,6 +16,8 @@ Imports:
     fasstr,
     foreign,
     ggplot2,
+    graphics,
+    grDevices
     hablar,
     httr,
     imager,
