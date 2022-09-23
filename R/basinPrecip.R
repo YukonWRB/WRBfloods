@@ -42,6 +42,7 @@ basinPrecip <- function(location,
                         spatial_loc = NULL
                         )
 {
+  
   #Set organization defaults
   if (org_defaults == "YWRB"){
     if (is.null(hrdpa_loc)){
@@ -268,8 +269,8 @@ basinPrecip <- function(location,
     }
   }
   
-  end_hrdps <- lubridate::round_date(end, "1 hours")
-  start_hrdps <- lubridate::round_date(start, "1 hours")
+  end_hrdps <- lubridate::floor_date(end, "1 hours")
+  start_hrdps <- lubridate::floor_date(start, "1 hours")
   hrdps <- FALSE #overwritten if hrdps are usable
   actual_times_hrdps <- NULL
   if (hrdpa == FALSE){ #only hrdps need to be downloaded, times are in the future
@@ -284,7 +285,7 @@ basinPrecip <- function(location,
     available_hrdps <- available_hrdps[!is.na(available_hrdps$from),]
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
     past_precip <- available_hrdps[available_hrdps$to == start_hrdps,] #this is subtracted from the total hrdps to match with the requested start time
-    end_precip <- available_hrdps[available_hrdps$to == end_hrdps,]$files
+    end_precip <- available_hrdps[available_hrdps$to == end_hrdps,]
     if (is.null(nrow(end_precip))) {
       end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
     }
@@ -299,31 +300,33 @@ basinPrecip <- function(location,
     available_hrdps <- available_hrdps %>%
       dplyr::mutate(from = stringr::str_extract(.data$files, "[0-9]{10}"),
                     time = as.numeric(substr(stringr::str_extract(.data$files, "[0-9]{2}.tiff"), 1, 2))
-                    )
+      )
     available_hrdps$from <- as.POSIXct(available_hrdps$from, format = "%Y%m%d%H", tz="UTC")
     available_hrdps <- available_hrdps[!is.na(available_hrdps$from),]
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
-    if (actual_times_hrdpa[2] %in% available_hrdps$from){ #if TRUE, the hrdps is suitable to use without special considerations
-      forecast <- available_hrdps[available_hrdps$to == end_hrdps,]
-      if (nrow(forecast)==0){
-        forecast <- available_hrdps[available_hrdps$to == max(available_hrdps$to),]
+    if (actual_times_hrdpa[2] %in% available_hrdps$from) { #if TRUE, the hrdps is suitable to use without special considerations
+      past_precip <- available_hrdps[available_hrdps$to == end_hrdpa, ]
+      end_precip <- available_hrdps[available_hrdps$to == end_hrdps, ]
+      if (is.null(nrow(end_precip))) {
+        end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
       }
-      if (nrow(forecast)==1){
+      if (!identical(past_precip, end_precip)){
         hrdps <- TRUE
-        actual_times_hrdps <- c(forecast$from, forecast$to)
-        forecast_precip <- terra::rast(forecast$files)
+        actual_times_hrdps <- c(past_precip$to, end_precip$to)
+        forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
         forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
         names(forecast_precip) <- "precip"
       }
-    } else if ((actual_times_hrdpa[2] - 60*60*6) %in% avalable_hrdps$from) { #If this is true, it likely means that the requested time is *just* falling in the gap before the next available hrdps. Resolve the problem by using the latest actually available hrdps.
-      forecast <- available_hrdps[available_hrdps$to == end_hrdps, ]
-      if (nrow(forecast)==0){
-        forecast <- available_hrdps[available_hrdps$to == max(available_hrdps$to),]
+    } else if ((actual_times_hrdpa[2] - 60*60*6) %in% available_hrdps$from) { #If this is true, it likely means that the requested time is *just* falling in the gap before the next available hrdps. Resolve the problem by using the latest actually available hrdps.
+      past_precip <- available_hrdps[available_hrdps$to == end_hrdpa, ]
+      end_precip <- available_hrdps[available_hrdps$to == end_hrdps, ]
+      if (is.null(nrow(end_precip))) {
+        end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
       }
-      if (nrow(forecast)==1){
+      if (!identical(past_precip, end_precip)){
         hrdps <- TRUE
-        actual_times_hrdps <- c(forecast$from, forecast$to)
-        forecast_precip <- terra::rast(forecast$files)
+        actual_times_hrdps <- c(past_precip$to, end_precip$to)
+        forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
         forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
         names(forecast_precip) <- "precip"
       }
@@ -353,7 +356,7 @@ basinPrecip <- function(location,
   
   if (hrdpa == TRUE & hrdps == TRUE){
     #start with hrdpa
-    if (length(hrdpa_files > 1)){
+    if (length(hrdpa_files) > 1){
       hrdpa_rasters <- terra::sds(paste0(hrdpa_loc, "/", hrdpa_files))
       total_hrdpa <- hrdpa_rasters[1] #prepare to accumulate/add raster values
       for (i in 2:length(hrdpa_rasters)){
