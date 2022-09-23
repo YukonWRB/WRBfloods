@@ -117,7 +117,7 @@ basinPrecip <- function(location,
     stop("The start time you specified is *after* the end time. R is not a time travel machine, please try again.")
   }
   
-  if (start > Sys.time()-60*60) { #if TRUE, the start is in the future and so is the end. Only a sequence for forecast will be generated.
+  if (start > Sys.time()-60*60*1.2) { #if TRUE, the start is prior to any issued HRDPA so is the end. Only a sequence for forecast will be generated.
     hrdpa <- FALSE
     actual_times_hrdpa <- NULL
     if (end > (Sys.time() + 60*60*44)){
@@ -129,9 +129,12 @@ basinPrecip <- function(location,
   }
 
   if (hrdpa == TRUE){
-    start_hrdpa <- start + 60*60*4.8 #Assuming that rasters are issued a bit more than one hour post valid time, this sets the start time so that the 6 hours before the requested start time is not included.
+    start_hrdpa <- start + 60*60*4.8 #Assuming that rasters are issued at most 1.2 hours post valid time, this sets the start time so that the 6 hours before the requested start time is not included.
     start_hrdpa <- lubridate::floor_date(start_hrdpa, "6 hours")
     end_hrdpa <- lubridate::floor_date(end, "6 hours")
+    if (end_hrdpa < start_hrdpa){
+      end_hrdpa <- start_hrdpa
+    }
     sequence_hrdpa <- seq.POSIXt(start_hrdpa, end_hrdpa, by = "6 hour")
     
     #Check if any files exist yet to match sequence_hrdpa
@@ -286,7 +289,7 @@ basinPrecip <- function(location,
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
     past_precip <- available_hrdps[available_hrdps$to == start_hrdps,] #this is subtracted from the total hrdps to match with the requested start time
     end_precip <- available_hrdps[available_hrdps$to == end_hrdps,]
-    if (is.null(nrow(end_precip))) {
+    if (nrow(end_precip) < 1) {
       end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
     }
     actual_times_hrdps <- c(past_precip$to, end_precip$to)
@@ -305,9 +308,9 @@ basinPrecip <- function(location,
     available_hrdps <- available_hrdps[!is.na(available_hrdps$from),]
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
     if (actual_times_hrdpa[2] %in% available_hrdps$from) { #if TRUE, the hrdps is suitable to use without special considerations
-      past_precip <- available_hrdps[available_hrdps$to == end_hrdpa, ]
+      past_precip <- available_hrdps[available_hrdps$to == actual_times_hrdpa[2], ]
       end_precip <- available_hrdps[available_hrdps$to == end_hrdps, ]
-      if (is.null(nrow(end_precip))) {
+      if (nrow(end_precip) < 1) {
         end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
       }
       if (!identical(past_precip, end_precip)){
@@ -318,9 +321,9 @@ basinPrecip <- function(location,
         names(forecast_precip) <- "precip"
       }
     } else if ((actual_times_hrdpa[2] - 60*60*6) %in% available_hrdps$from) { #If this is true, it likely means that the requested time is *just* falling in the gap before the next available hrdps. Resolve the problem by using the latest actually available hrdps.
-      past_precip <- available_hrdps[available_hrdps$to == end_hrdpa, ]
+      past_precip <- available_hrdps[available_hrdps$to == actual_times_hrdpa[2], ]
       end_precip <- available_hrdps[available_hrdps$to == end_hrdps, ]
-      if (is.null(nrow(end_precip))) {
+      if (nrow(end_precip) < 1) {
         end_precip <- available_hrdps[available_hrdps$to == max(available_hrdps$to), ]
       }
       if (!identical(past_precip, end_precip)){
@@ -335,7 +338,7 @@ basinPrecip <- function(location,
 
   ###now the rasters are present for the extent and time required, finally! Proceed to accumulating them into a single raster.
   if (hrdpa == TRUE & hrdps == FALSE){
-    if (length(hrdpa_files > 1)){
+    if (length(hrdpa_files) > 1){
       hrdpa_rasters <- terra::sds(paste0(hrdpa_loc, "/", hrdpa_files))
       total <- hrdpa_rasters[1] #prepare to accumulate/add raster values
       for (i in 2:length(hrdpa_rasters)){
