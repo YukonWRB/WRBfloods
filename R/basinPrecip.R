@@ -498,14 +498,14 @@ basinPrecip <- function(location,
     if (type == "longlat"){
       terra::points(location, pch=17, col="darkorchid1", cex=2)
     }
-    terra::lines(roads, lwd = 1.5, alpha = 0.7)
+    terra::plot(roads, lwd = 1.5, alpha = 0.7, add=T)
     if (terra::expanse(watershed) < 30000000000){
-      terra::lines(streams, lwd=0.08, col = "blue", border = NULL, alpha = 0.5)
+      terra::plot(streams, lwd=0.08, col = "blue", border = NULL, alpha = 0.5, add=T)
     }
-    terra::polys(waterbodies, col = "blue", border = "blue", alpha = 0.1)
-    terra::points(communities, cex = 2)
+    terra::plot(waterbodies, col = "blue", border = "blue", alpha = 0.1, lwd=0.0000000001, add=T)
+    terra::points(communities, cex = 1.5)
     terra::lines(borders, lwd = 2, lty = "twodash")
-    terra::text(communities, labels = communities$PLACE_NAME, pos=4, offset = 1, font=2)
+    terra::text(communities, labels = communities$PLACE_NAME, pos=4, offset = 1, font=2, cex=0.9)
     if (type == "longlat"){
       terra::text(location, labels = paste0(requested_point[1], ", ", requested_point[2]), col = "black", pos=4, offset = 1, font=2)
     }
