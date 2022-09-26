@@ -315,10 +315,17 @@ basinPrecip <- function(location,
       }
       if (!identical(past_precip, end_precip)){
         hrdps <- TRUE
-        actual_times_hrdps <- c(past_precip$to, end_precip$to)
-        forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
-        forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
-        names(forecast_precip) <- "precip"
+        if (nrow(past_precip) == 0){
+          actual_times_hrdps <- c(end_precip$from, end_precip$to)
+          forecast_precip <- terra::rast(end_precip$files)
+          forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
+          names(forecast_precip) <- "precip"
+        } else {
+          actual_times_hrdps <- c(end_precip$from, end_precip$to)
+          forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
+          forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
+          names(forecast_precip) <- "precip"
+        }
       }
     } else if ((actual_times_hrdpa[2] - 60*60*6) %in% available_hrdps$from) { #If this is true, it likely means that the requested time is *just* falling in the gap before the next available hrdps. Resolve the problem by using the latest actually available hrdps.
       past_precip <- available_hrdps[available_hrdps$to == actual_times_hrdpa[2], ]
@@ -328,10 +335,17 @@ basinPrecip <- function(location,
       }
       if (!identical(past_precip, end_precip)){
         hrdps <- TRUE
-        actual_times_hrdps <- c(past_precip$to, end_precip$to)
-        forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
-        forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
-        names(forecast_precip) <- "precip"
+        if (nrow(past_precip) == 0){
+          actual_times_hrdps <- c(end_precip$from, end_precip$to)
+          forecast_precip <- terra::rast(end_precip$files)
+          forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
+          names(forecast_precip) <- "precip"
+        } else {
+          actual_times_hrdps <- c(end_precip$from, end_precip$to)
+          forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
+          forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
+          names(forecast_precip) <- "precip"
+        }
       }
     }
   }
