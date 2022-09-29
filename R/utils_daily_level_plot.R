@@ -29,7 +29,7 @@ utils_daily_level_plot <- function(
   
 {
   #check if datum exists
-  datum_na <- is.na(as.numeric(tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
+  datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
   
   graph_year <- max(unique(level_years$Year_Real))
   
@@ -71,7 +71,7 @@ utils_daily_level_plot <- function(
   
   #Add return periods if they exist for this station
   if (station_number %in% data$level_returns$ID==TRUE){
-    levelConvert <- if (force_CGVD28 == FALSE) as.numeric(tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
+    levelConvert <- if (force_CGVD28 == FALSE) as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
     stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
     
     plot <- plot + 

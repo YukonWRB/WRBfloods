@@ -1,6 +1,6 @@
 Package: WRBfloods
 Title: WRB's flood report functions
-Version: 1.5.0-0
+Version: 1.5.0-1
 Authors@R: 
     person("Ghislain", "de Laplante", , "ghislaindel@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5093-9185"))
@@ -16,6 +16,8 @@ Imports:
     fasstr,
     foreign,
     ggplot2,
+    graphics,
+    grDevices,
     hablar,
     httr,
     imager,
