@@ -71,16 +71,13 @@ This report provides current conditions, outlook, and technical data.
 [ENTER LEVEL OUTLOOK HERE]
 ```
 
-
-``` {r intro text, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+```{r intro text, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
   cat("  \nWater levels in the Southern Lakes are driven by a combination of snowmelt, summer precipitation and glacier melt. Winter 2021-22 snow conditions suggested that water levels would be higher than average this summer. Weather conditions through the summer will determine the peak water level in the Southern Lakes, which typically occurs in late summer in response to peak glacial runoff and precipitation events.  \n  \nThis report provides an overview of current conditions.")
 } else {
   cat("  \nRecord-setting spring snowpack across many Yukon watersheds had created high potential for flooding near streams and some lakes driven by snowmelt this spring and early summer. Now that the bulk of last winter's snow has melted flooding potential shifts to larger lake systems, particularly those receiving glacial meltwater such as the Southern Lakes.  \n  \nThis report provides an overview of current conditions at selected stations across the territory. More detailed reports are also issued periodically for regions experiencing high or rapidly rising water levels and flows.")
 }
 ```
-
-
 
 <br>
 
@@ -1236,4 +1233,12 @@ for (i in 1:length(notes)){
 if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
   cat("  \nThe stations in this report have more recent datums available (CGVD2013), but the historical CGVD28 datum is used here to align with local knowledge and with other reporting.")
 }
+```
+
+<br>
+
+# Additional information
+
+```{r version control, echo=FALSE, results='asis', message=FALSE}
+cat(paste0("This report was generated with the R package WRBfloods version ", packageVersion("WRBfloods"), "."))
 ```
