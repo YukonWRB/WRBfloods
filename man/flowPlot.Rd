@@ -17,7 +17,7 @@ flowPlot(
 )
 }
 \arguments{
-\item{station}{The WSC station for which you wish to generate a plot.}
+\item{station}{The WSC station for which you wish to generate a plot as a character vector of length 1.}
 
 \item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector. Only the current year can be plotted with MESH or CLEVER forecasts.}
 

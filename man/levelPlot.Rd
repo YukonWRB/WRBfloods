@@ -18,9 +18,9 @@ levelPlot(
 )
 }
 \arguments{
-\item{station}{The WSC station for which you wish to generate a plot.}
+\item{station}{The WSC station for which you wish to generate a plot as a character vector of length 1.}
 
-\item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector.}
+\item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a numeric vector.}
 
 \item{title}{Do you want a title added to the plot? TRUE/FALSE.}
 
@@ -34,7 +34,7 @@ levelPlot(
 
 \item{returns}{Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
 
-\item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum?}
+\item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum? Default FALSE will use the most recent available.}
 
 \item{save_path}{Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.}
 }
