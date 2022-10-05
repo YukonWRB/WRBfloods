@@ -30,7 +30,7 @@ utils_daily_level_plot(
 
 \item{point_size}{Self explanatory.}
 
-\item{returns}{Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{returns}{Should level returns be added? You have the option of using pre-determined level returns only (option "table"), auto-calculated values with no human verification (option "calculated", calculated on-the-fly using all data available from March to September, up to the current date), or "auto" (priority to pre-determined levels, fallback to auto-calculated levels), or none (option "none"). Defaults to "auto".}
 
 \item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum?}
 

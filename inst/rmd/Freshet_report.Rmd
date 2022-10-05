@@ -797,7 +797,9 @@ for(i in stations) {
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
                                               level_years = levelDataList[[n]][[2]],
-                                              force_CGVD28 = force_CGVD28)
+                                              force_CGVD28 = force_CGVD28,
+                                              returns = level_returns,
+                                              complete_df = levelDataList[[n]][[1]])
           
           if (plot_titles == TRUE){
             levelPlot <- levelPlot +
@@ -863,7 +865,9 @@ for(i in stations) {
                                                      level_years = levelDataList[[n]][[2]],
                                                      zoom_data = levelDataList[[n]][[3]],
                                                      zoom_days = zoom_days,
-                                                     force_CGVD28 = force_CGVD28)
+                                                     force_CGVD28 = force_CGVD28,
+                                                     returns = level_returns,
+                                                     complete_df = levelDataList[[n]][[1]])
             #}
             
             if (plot_titles == TRUE){

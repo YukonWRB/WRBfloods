@@ -32,7 +32,7 @@ levelPlot(
 
 \item{forecast}{Not currently in use; will eventually work similarly to forecast in flowPlot.}
 
-\item{returns}{Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{returns}{Should level returns be added? You have the option of using pre-determined level returns only (option "table"), auto-calculated values with no human verification (option "calculated", calculated on-the-fly using all data available from March to September, up to the current date), or "auto" (priority to pre-determined levels, fallback to auto-calculated levels), or none (option "none"). Defaults to "auto".}
 
 \item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum? Default FALSE will use the most recent available.}
 

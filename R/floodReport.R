@@ -26,8 +26,8 @@
 #' @param zoom_days The number of days to plot for zoomed in level plots. Defaults to 30, but not used unless level_zoom is set to TRUE.
 #' @param MESH Should MESH forecasts be incorporated into the graphs?
 #' @param CLEVER Should CLEVER forecasts be incorporated into the graphs?
-#' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flow), or none (option "none"). Defaults to "both".
-#' @param level_returns Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param flow_returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flow returns only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), "both" (with priority to pre-determined flows), or none (option "none"). Defaults to "both".
+#' @param level_returns Should level returns be calculated, plotted, and added to the level table? You have the option of using pre-determined level returns only (option "table"), auto-calculated values with no human verification (option "calculated", calculated on-the-fly using all data available from March to September, up to the current date), or "auto" (priority to pre-determined levels, fallback to auto-calculated levels), or none (option "none"). Defaults to "auto".
 #' @param rate Should rates of change for flow and level be included? The 24-hour rate of change will be plotted on zoomed-in graphs on the right y-axis, and a rate table will be included. TRUE/FALSE, defaults to TRUE.
 #' @param meteogram Should meteograms relevant to the stations in the report be generated? TRUE or FALSE.
 #' @param image_path The path to the directory (folder) containing the images you wish to include. Default to NULL to not include any extra images. Set to "choose" to navigate to the folder, or enter the folder path directly as a character string. Some reports automatically include web-hosted images, do not include them here.
@@ -52,8 +52,8 @@ floodReport <-
            zoom_days = 30,
            MESH = TRUE,
            CLEVER = TRUE,
-           flow_returns = "both",
-           level_returns = "both",
+           flow_returns = "auto",
+           level_returns = "auto",
            rate = TRUE,
            meteogram = TRUE,
            image_path = NULL,

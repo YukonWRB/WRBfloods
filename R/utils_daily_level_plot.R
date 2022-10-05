@@ -8,7 +8,7 @@
 #' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should level returns be plotted? You have the option of using pre-determined levels only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param returns Should level returns be added? You have the option of using pre-determined level returns only (option "table"), auto-calculated values with no human verification (option "calculated", calculated on-the-fly using all data available from March to September, up to the current date), or "auto" (priority to pre-determined levels, fallback to auto-calculated levels), or none (option "none"). Defaults to "auto".
 #' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
 #' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"
 #'
@@ -69,19 +69,85 @@ utils_daily_level_plot <- function(
     ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = rev(unique(level_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(level_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
-  #Add return periods if they exist for this station
-  if (station_number %in% data$level_returns$ID==TRUE){
-    levelConvert <- if (force_CGVD28 == FALSE) as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
-    stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
-    
-    plot <- plot + 
-      ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
-      ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
-      ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
-      ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear), label= c("two year return", "five year return", "ten year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+  #Add return periods if requested
+  if(!(returns %in% c("none", "None"))){
+    if (returns %in% c("calculated") & is.null(complete_df == FALSE)){
+      peaks <- fasstr::calc_annual_peaks(complete_df, values = Level, months = 5:9, allowed_missing = 5)
+      peaks <- dplyr::select(peaks, .data$Year, Value = .data$Max_1_Day)
+      peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+      levelFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+      
+      plot <- plot +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[10,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[9,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[8,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[7,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[3,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[2,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[1,4]), linetype="dashed", color = "black") +
+        
+        ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4]), as.numeric(levelFreq[3,4]), as.numeric(levelFreq[2,4]), as.numeric(levelFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      
+    } else if (returns %in% c("table") & station_number %in% data$level_returns$ID == TRUE){
+      stn <- dplyr::filter(data$level_returns, .data$ID == station_number)
+      
+      plot <- plot + 
+        ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
+        ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
+        
+        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      
+    } else if (returns %in% c("auto") & is.null(complete_df) == FALSE) {
+      if (station_number %in% data$level_returns$ID){
+        stn <- dplyr::filter(data$level_returns, .data$ID == station_number)
+        
+        plot <- plot + 
+          ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$fiveyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$tenyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$twentyyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$fiftyyear, linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=stn$onehundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$twohundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$fivehundredyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
+          ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
+          
+          ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        
+      } else {
+        peaks <- fasstr::calc_annual_peaks(complete_df, values = Level, months = 5:9, allowed_missing = 5)
+        peaks <- dplyr::select(peaks, .data$Year, Value = .data$Max_1_Day)
+        peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+        levelFreq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+        
+        plot <- plot +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[10,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[9,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[8,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[7,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[3,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[2,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[1,4]), linetype="dashed", color = "black") +
+          
+          ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4]), as.numeric(levelFreq[3,4]), as.numeric(levelFreq[2,4]), as.numeric(levelFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+      }
+    }
   }
+  
   return(plot)
 }
