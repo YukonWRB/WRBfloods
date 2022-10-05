@@ -4,7 +4,7 @@
 #' 
 #' To generate zoomed-in plots with real-time data you MUST have your HYDAT credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 #'
-#' @param station The WSC station for which you wish to generate a plot.
+#' @param station The WSC station for which you wish to generate a plot as a character vector of length 1.
 #' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector. Only the current year can be plotted with MESH or CLEVER forecasts.
 #' @param title Do you want a title added to the plot? TRUE/FALSE.
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.

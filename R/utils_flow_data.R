@@ -30,12 +30,17 @@ utils_flow_data <- function(
 	rate_days = "all"
 ){
   
-	as.numeric(select_years) #In case it somehow got fed through as a character vector
+	select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
+	
+	if (max(select_years) >= lubridate::year(Sys.Date()-577)) {high_res <- FALSE} #reset high_res if no high_res data is available
   
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
 	
 	flow_historic <- (tidyhydat::hy_daily_flows(station_number = station_number)[,-c(3,5)])
 	colnames(flow_historic) <- c("STATION_NUMBER", "Date", "Flow")
+	
+	#Truncate to the last requested year
+	flow_historic <- flow_historic[flow_historic$Date < paste0(max(select_years), "12-31"),]
 	
 	recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {

@@ -34,6 +34,8 @@ utils_level_data <- function(
   
   select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
   
+  if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {high_res <- FALSE} #reset high_res if no high-res data is available
+  
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
   
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
@@ -43,6 +45,9 @@ utils_level_data <- function(
   if (station_number == "09AB001") {
     level_historic <- level_historic[level_historic$Date > "2014-01-01",]
   }
+  
+  #Truncate all other stations to the last requested year
+  level_historic <- level_historic[level_historic$Date < paste0(max(select_years), "-12-31"),]
   
   datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
   if (datum_na == FALSE){

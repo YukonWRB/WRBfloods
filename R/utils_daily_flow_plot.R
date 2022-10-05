@@ -38,7 +38,7 @@ utils_daily_flow_plot <- function(
   max <- if (maxHist > maxLines) maxHist else maxLines
   
   #Separate out the ribbon data prior to removing NA rows
-  ribbon <- flow_years[flow_years$Year_Real==2022,] %>% dplyr::select(c(.data$Date, .data$Max, .data$Min, .data$QP25, .data$QP75))
+  ribbon <- flow_years[flow_years$Year_Real==graph_year,] %>% dplyr::select(c(.data$Date, .data$Max, .data$Min, .data$QP25, .data$QP75))
   
   flow_years <- flow_years %>%
     dplyr::group_by(.data$Year_Real) %>%
@@ -86,7 +86,7 @@ utils_daily_flow_plot <- function(
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
         
-        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
     } else if (returns %in% c("table", "Table") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
       stn <- dplyr::filter(data$flow_returns, .data$ID == station_number)

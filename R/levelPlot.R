@@ -4,15 +4,15 @@
 #' 
 #' To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 #'
-#' @param station The WSC station for which you wish to generate a plot.
-#' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector.
+#' @param station The WSC station for which you wish to generate a plot as a character vector of length 1.
+#' @param years The year(s) you wish to plot. Maximum of 10 years specified in a numeric vector.
 #' @param title Do you want a title added to the plot? TRUE/FALSE.
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
 #' @param zoom_days Number from 1 to 365. Not used unless zoom=TRUE.
 #' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
 #' @param forecast Not currently in use; will eventually work similarly to forecast in flowPlot.
 #' @param returns Should level returns be added? You have the option of using pre-determined levels only (option "calc"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
-#' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
+#' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum? Default FALSE will use the most recent available.
 #' @param save_path Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
 #'
 #' @return A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
