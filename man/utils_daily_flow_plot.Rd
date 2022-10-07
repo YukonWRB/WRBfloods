@@ -29,8 +29,6 @@ utils_daily_flow_plot(
 \item{point_size}{Self explanatory.}
 
 \item{returns}{Should flow returns be plotted? You have the option of using pre-determined flow returns only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), "both" (with priority to pre-determined flows), or none (option "none"). Defaults to "both".}
-
-\item{legend_position}{Self explanatory.}
 }
 \value{
 A plot of flow volumes for a WSC station.
