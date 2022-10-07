@@ -12,7 +12,7 @@ levelPlot(
   zoom_days = 30,
   filter = FALSE,
   forecast = NULL,
-  returns = "both",
+  returns = "auto",
   force_CGVD28 = FALSE,
   save_path = "none"
 )

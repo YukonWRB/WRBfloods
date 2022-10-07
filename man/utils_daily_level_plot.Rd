@@ -7,14 +7,13 @@
 utils_daily_level_plot(
   station_number,
   level_years,
+  complete_df,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
-  legend_position = "right",
   line_size = 1,
   point_size = 0.75,
-  returns = "both",
-  force_CGVD28 = FALSE,
-  complete_df = NULL
+  returns = "auto",
+  force_CGVD28 = FALSE
 )
 }
 \arguments{
@@ -22,9 +21,9 @@ utils_daily_level_plot(
 
 \item{level_years}{data.frame containing plotting data for all years selected, normally output from daily_level_data}
 
-\item{colours}{Colour for the lines and points}
+\item{complete_df}{data.frame containing historical data from the start of records to the last year to be plotted.}
 
-\item{legend_position}{Self explanatory.}
+\item{colours}{Colour for the lines and points}
 
 \item{line_size}{Self explanatory.}
 
@@ -33,8 +32,6 @@ utils_daily_level_plot(
 \item{returns}{Should level returns be added? You have the option of using pre-determined level returns only (option "table"), auto-calculated values with no human verification (option "calculated", calculated on-the-fly using all data available from March to September, up to the current date), or "auto" (priority to pre-determined levels, fallback to auto-calculated levels), or none (option "none"). Defaults to "auto".}
 
 \item{force_CGVD28}{For stations with a datum, should CGVD28 be used even if there is a more recent datum?}
-
-\item{complete_df}{If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table"}
 }
 \value{
 A plot for the station requested with return intervals, if it exists in the data file data$level_returns.

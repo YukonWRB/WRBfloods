@@ -12,7 +12,7 @@ flowPlot(
   zoom_days = 30,
   filter = FALSE,
   forecast = "none",
-  returns = "both",
+  returns = "auto",
   save_path = "none"
 )
 }

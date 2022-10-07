@@ -11,7 +11,8 @@
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
 #' @param returns Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "none".
-#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means.
+#' @param complete_df data.frame containing historical data from the start of records to the last year to be plotted.
+#'
 #'
 #' @return A plot for the station requested and for the duration requested.
 #' @export
@@ -21,13 +22,13 @@ utils_zoom_flow_plot <- function(
     station_number,
     flow_years,
     zoom_data,
+    complete_df,
     zoom_days = 30,
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
     legend_position = "right",
     line_size = 1,
     point_size = 0.75,
-    returns = "none",
-    complete_df = NULL
+    returns = "none"
 )
 
 {
@@ -40,6 +41,9 @@ utils_zoom_flow_plot <- function(
   
   #remove the current year from flow_years as it's in zoom_data at better resolution
   flow_years[flow_years$Date %in% ribbon_dates & flow_years$Year_Real==lubridate::year(Sys.Date()) & !is.na(flow_years$Flow),]$Flow <- NA
+  
+  graph_year <- max(unique(level_years$Year_Real), na.rm=TRUE)
+  stats_range <- c(min(unique(lubridate::year(complete_df$Date))), max(unique(lubridate::year(complete_df$Date)))-1)
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(flow_years$Min, na.rm=TRUE)
@@ -104,7 +108,7 @@ utils_zoom_flow_plot <- function(
     ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone="UTC") +
     tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date()+extra_days)) +
     ggplot2::theme_classic() +
-    ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
+    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8)) +
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T)  +
@@ -117,6 +121,7 @@ utils_zoom_flow_plot <- function(
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Min - Max" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if requested
+  type <- "none"
   if (!(returns %in% c("none", "None"))){
     if (returns %in% c("auto", "Auto") & is.null(complete_df) == FALSE){
       peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
@@ -193,6 +198,29 @@ utils_zoom_flow_plot <- function(
           ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       }
     }
+  }
+  
+  #Add some information below the legend
+  spread <- max-min
+  line1 <- paste0("        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
+  end_time <- max(zoom_data$Date)+extra_days*60*60*24
+  
+  if (type == "calc"){
+    line2 <- "        \n        \n        Return periods are calculated\n        using May-Sept data with\n        no human verification.\n        For informational purposes only."
+    lines <- paste0(line1, line2)
+    plot <- plot + 
+      ggplot2::coord_cartesian(clip="off", default=TRUE) +
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+  } else if (type == "table"){
+    line2 <- "        \n        \n        Return periods are based\n        on statistical analysis\n        of select data from the\n        start of records to 2021."
+    lines <- paste0(line1, line2)
+    plot <- plot + 
+      ggplot2::coord_cartesian(clip="off", default=TRUE) +
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+  } else {
+    plot <- plot + 
+      ggplot2::coord_cartesian(clip="off", default=TRUE) +
+      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left"), xmin=end_time, ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
   }
   
   return(plot)

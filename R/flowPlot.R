@@ -25,7 +25,7 @@ flowPlot <- function(station,
                      zoom_days=30,
                      filter=FALSE,
                      forecast = "none",
-                     returns = "both",
+                     returns = "auto",
                      save_path = "none"
                      ) 
 {
@@ -36,7 +36,7 @@ flowPlot <- function(station,
   #returns option check
   returns <- tolower(returns)
   if (!returns %in% c("table", "auto", "calculated", "none")){
-    stop("Your entry for the parameter 'return' is invalid. Please review the function documentation and try again.")
+    stop("Your entry for the parameter 'returns' is invalid. Please review the function documentation and try again.")
   }
   
   if (save_path %in% c("Choose", "choose")) {
