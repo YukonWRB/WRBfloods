@@ -512,6 +512,12 @@ basinPrecip <- function(location,
     graphics::mtext(paste0("Precipitation as mm of water equivalent from ", actual_times[1], " to ", actual_times[2], " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 1)
 
     plot <- grDevices::recordPlot()
+    
+    #TODO: look at using tidyterra for ggplot plotting.
+    # ggplot2::ggplot() +
+    #   geom_spatraster(data = cropped_precip_rast) +
+    #   geom_spatvector(data = watershed) +
+    #   geom_spatvector(data = roads)
 
   } else {
     watershed <- location

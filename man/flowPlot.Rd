@@ -12,12 +12,12 @@ flowPlot(
   zoom_days = 30,
   filter = FALSE,
   forecast = "none",
-  returns = "both",
+  returns = "auto",
   save_path = "none"
 )
 }
 \arguments{
-\item{station}{The WSC station for which you wish to generate a plot.}
+\item{station}{The WSC station for which you wish to generate a plot as a character vector of length 1.}
 
 \item{years}{The year(s) you wish to plot. Maximum of 10 years specified in a vector. Only the current year can be plotted with MESH or CLEVER forecasts.}
 
@@ -31,7 +31,7 @@ flowPlot(
 
 \item{forecast}{Do you want MESH or CLEVER forecasts, or both? Choose from "MESH", "CLEVER", "both", or "none". Default is "none"}
 
-\item{returns}{Should flow returns be added? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".}
+\item{returns}{Should flow returns be plotted? You have the option of using pre-determined flow returns only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), "both" (with priority to pre-determined flows), or none (option "none"). Defaults to "both".}
 
 \item{save_path}{Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.}
 }

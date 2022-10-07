@@ -8,14 +8,14 @@ utils_zoom_flow_plot(
   station_number,
   flow_years,
   zoom_data,
+  complete_df,
   zoom_days = 30,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
   legend_position = "right",
   line_size = 1,
   point_size = 0.75,
-  returns = "none",
-  complete_df = NULL
+  returns = "none"
 )
 }
 \arguments{
@@ -24,6 +24,8 @@ utils_zoom_flow_plot(
 \item{flow_years}{A data.frame of plotting data}
 
 \item{zoom_data}{The data frame of zoomed-in data.}
+
+\item{complete_df}{data.frame containing historical data from the start of records to the last year to be plotted.}
 
 \item{zoom_days}{The number of days to plot, counting back from the current date.}
 
@@ -36,8 +38,6 @@ utils_zoom_flow_plot(
 \item{point_size}{Self explanatory.}
 
 \item{returns}{Should flow returns be calculated, plotted, and added to the flows table? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "none".}
-
-\item{complete_df}{If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means.}
 }
 \value{
 A plot for the station requested and for the duration requested.

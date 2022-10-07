@@ -12,9 +12,9 @@
 #' @param select_years The year(s) for which you want data.
 #' @param high_res TRUE/FALSE, should high-res data be kept for zoomed-in plots? Default FALSE.
 #' @param filter TRUE/FALSE, should recent data be filtered to remove spikes? Adds about a minute for each station, default FALSE.
-#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical levels calculated? Adds about 30 seconds, default FALSE.
+#' @param recent_prctile TRUE/FALSE, should the recent (5 minute) data have a percent of maximum historical flows calculated? Adds about 30 seconds, default FALSE.
 #' @param rate TRUE/FALSE, should the difference from one data point to the previous data point be calculated into a new column? Adds about 1.5 minutes for all data points, default FALSE. If high_res == FALSE, rate is only calculated for the data.frame containing daily means. This data will likely be noisy, a rolling mean might be better.
-#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution level data; specify a smaller number of days as an integer to lessen processing time.
+#' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution flow data; specify a smaller number of days as an integer to lessen processing time.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
 #' @export
@@ -30,12 +30,22 @@ utils_flow_data <- function(
 	rate_days = "all"
 ){
   
-	as.numeric(select_years) #In case it somehow got fed through as a character vector
+	select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
+	
+	if (max(select_years) <= lubridate::year(Sys.Date()-577)) {high_res <- FALSE} #reset high_res if no high_res data is available
   
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
 	
 	flow_historic <- (tidyhydat::hy_daily_flows(station_number = station_number)[,-c(3,5)])
 	colnames(flow_historic) <- c("STATION_NUMBER", "Date", "Flow")
+	record_yrs <- unique(substr(flow_historic$Date, 1,4))
+	
+	if (min(record_yrs) > min(select_years)){
+	  stop(paste0("You are requesting data for years prior to existing records at this station. Records begin in ", min(record_yrs), ", please specify years after this date only."))
+	}
+	
+	#Truncate all to the last requested year. Only these years are used for calculating stats.
+	flow_historic <- flow_historic[flow_historic$Date < paste0(max(select_years), "-12-31"),]
 	
 	recent_flow <- data.frame() #creates it in case the if statement below does not run so that the output of the function is constant in class
 	if (max(select_years) >= lubridate::year(Sys.Date() - 577)) {

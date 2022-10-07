@@ -7,13 +7,12 @@
 utils_daily_flow_plot(
   station_number,
   flow_years,
+  complete_df,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
-  legend_position = "right",
   line_size = 1,
   point_size = 0.75,
-  returns = "both",
-  complete_df = NULL
+  returns = "auto"
 )
 }
 \arguments{
@@ -21,17 +20,17 @@ utils_daily_flow_plot(
 
 \item{flow_years}{data.frame containing plotting data for all years selected, normally output from daily_flow_data}
 
-\item{colours}{Colour for the lines and points}
+\item{complete_df}{data.frame containing historical data from the start of records to the last year to be plotted.}
 
-\item{legend_position}{Self explanatory.}
+\item{colours}{Colour for the lines and points}
 
 \item{line_size}{Self explanatory.}
 
 \item{point_size}{Self explanatory.}
 
-\item{returns}{Should flow returns be plotted? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "both".}
+\item{returns}{Should flow returns be plotted? You have the option of using pre-determined flow returns only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), "both" (with priority to pre-determined flows), or none (option "none"). Defaults to "both".}
 
-\item{complete_df}{If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table".}
+\item{legend_position}{Self explanatory.}
 }
 \value{
 A plot of flow volumes for a WSC station.

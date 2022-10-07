@@ -5,11 +5,10 @@
 #' @param station_number The station for which you want to plot data.
 #' @param flow_years data.frame containing plotting data for all years selected, normally output from daily_flow_data
 #' @param colours Colour for the lines and points
-#' @param legend_position Self explanatory.
 #' @param line_size Self explanatory.
 #' @param point_size Self explanatory.
-#' @param returns Should flow returns be plotted? You have the option of using pre-determined flows only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined flows), or none (option "none"). Defaults to "both".
-#' @param complete_df If returns="auto" or "both", specify here the DF containing combined historical and recent data as daily means. Not required if returns = "none" or "table".
+#' @param returns Should flow returns be plotted? You have the option of using pre-determined flow returns only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), "both" (with priority to pre-determined flows), or none (option "none"). Defaults to "both".
+#' @param complete_df data.frame containing historical data from the start of records to the last year to be plotted.
 #'
 #' @return A plot of flow volumes for a WSC station.
 #' @export 
@@ -18,16 +17,16 @@
 utils_daily_flow_plot <- function(
     station_number,
     flow_years,
+    complete_df,
     colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4", "gold1", "chartreuse1", "darkorange", "lightsalmon"),
-    legend_position = "right",
     line_size = 1,
     point_size = 0.75,
-    returns = "both",
-    complete_df = NULL
+    returns = "auto"
 )
   
 {
-  graph_year <- max(unique(flow_years$Year_Real))
+  graph_year <- max(unique(flow_years$Year_Real), na.rm=TRUE)
+  stats_range <- c(min(unique(lubridate::year(complete_df$Date))), max(unique(lubridate::year(complete_df$Date)))-1)
   
   #find the min/max for the y axis, otherwise it defaults to first plotted ts
   minHist <- min(flow_years$Min, na.rm=TRUE)
@@ -38,7 +37,7 @@ utils_daily_flow_plot <- function(
   max <- if (maxHist > maxLines) maxHist else maxLines
   
   #Separate out the ribbon data prior to removing NA rows
-  ribbon <- flow_years[flow_years$Year_Real==2022,] %>% dplyr::select(c(.data$Date, .data$Max, .data$Min, .data$QP25, .data$QP75))
+  ribbon <- flow_years[flow_years$Year_Real==graph_year,] %>% dplyr::select(c(.data$Date, .data$Max, .data$Min, .data$QP25, .data$QP75))
   
   flow_years <- flow_years %>%
     dplyr::group_by(.data$Year_Real) %>%
@@ -55,7 +54,7 @@ utils_daily_flow_plot <- function(
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
     tidyquant::coord_x_date(xlim = c(paste(graph_year, "-01-01", sep = ""), paste(graph_year, "-12-31", sep = ""))) +
     ggplot2::theme_classic() +
-    ggplot2::theme(legend.position = legend_position, legend.text = ggplot2::element_text(size = 8)) +
+    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8), plot.tag = ggplot2::element_text(hjust=0.65,size=9), plot.tag.position = c(1, 0.5)) +
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$Min, ymax = .data$Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$QP25, ymax = .data$QP75, fill = "25th-75th Percentile"), na.rm = T) +
@@ -67,8 +66,10 @@ utils_daily_flow_plot <- function(
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
   
   #Add return periods if requested
+  type <- "none"
   if (!(returns %in% c("none", "None"))){
-    if (returns %in% c("auto", "Auto") & is.null(complete_df) == FALSE){
+    if (returns %in% c("calculated") & is.null(complete_df) == FALSE){
+      type <- "calc"
       peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
       peaks <- dplyr::select(peaks, .data$Year, Value = .data$Max_1_Day)
       peaks <- dplyr::mutate(peaks, Measure = "1-Day")
@@ -86,10 +87,12 @@ utils_daily_flow_plot <- function(
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
         
-        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
-    } else if (returns %in% c("table", "Table") & is.null(complete_df) == FALSE & station_number %in% data$flow_returns$ID == TRUE){
+    } else if (returns == "table" & station_number %in% data$flow_returns$ID == TRUE){
+      type <- "table"
       stn <- dplyr::filter(data$flow_returns, .data$ID == station_number)
+      stn[is.na(stn)==TRUE] <- -10 #This prevents a ggplot error when it tries to plot a logical along with numerics, but keeps the values out of the plot.
       
       plot <- plot + 
         ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
@@ -103,11 +106,13 @@ utils_daily_flow_plot <- function(
         ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
         ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
         
-        ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
-    } else if (returns %in% c("both", "Both") & is.null(complete_df) == FALSE){
+    } else if (returns %in% c("auto")){
       if (station_number %in% data$flow_returns$ID){
+        type <- "table"
         stn <- dplyr::filter(data$flow_returns, .data$ID == station_number)
+        stn[is.na(stn)==TRUE] <- -10 #This prevents a ggplot error when it tries to plot a logical along with numerics, but keeps the values out of the plot.
         
         plot <- plot + 
           ggplot2::geom_hline(yintercept=stn$twoyear, linetype="dashed", color = "black") +
@@ -121,9 +126,10 @@ utils_daily_flow_plot <- function(
           ggplot2::geom_hline(yintercept=stn$thousandyear, linetype="dashed", color="black") +
           ggplot2::geom_hline(yintercept=stn$twothousandyear, linetype="dashed", color="black") +
           
-          ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+          ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
         
-      } else {
+      } else if (is.null(complete_df) == FALSE) {
+        type <- "calc"
         peaks <- fasstr::calc_annual_peaks(complete_df, values = Flow, months = 5:9, allowed_missing = 5)
         peaks <- dplyr::select(peaks, .data$Year, Value = .data$Max_1_Day)
         peaks <- dplyr::mutate(peaks, Measure = "1-Day")
@@ -141,9 +147,31 @@ utils_daily_flow_plot <- function(
           ggplot2::geom_hline(yintercept=as.numeric(flowFreq[2,4]), linetype="dashed", color = "black") +
           ggplot2::geom_hline(yintercept=as.numeric(flowFreq[1,4]), linetype="dashed", color = "black") +
           
-          ggplot2::annotate("text", x=as.Date(paste0(lubridate::year(Sys.Date()),"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+          ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(as.numeric(flowFreq[10,4]), as.numeric(flowFreq[9,4]), as.numeric(flowFreq[8,4]), as.numeric(flowFreq[7,4]), as.numeric(flowFreq[6,4]), as.numeric(flowFreq[5,4]), as.numeric(flowFreq[4,4]), as.numeric(flowFreq[3,4]), as.numeric(flowFreq[2,4]), as.numeric(flowFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       }
     }
+  }
+  
+  #Add some information below the legend
+  spread <- max-min
+  line1 <- paste0("        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
+  
+  if (type == "calc"){
+    line2 <- "        \n        \n        Return periods are calculated\n        using May-Sept data with\n        no human verification.\n        For informational purposes only."
+    lines <- paste0(line1, line2)
+    plot <- plot + 
+      ggplot2::coord_cartesian(clip="off", default=TRUE) +
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+  } else if (type == "table"){
+    line2 <- "        \n        \n        Return periods are based\n        on statistical analysis\n        of select data from the\n        start of records to 2021."
+    lines <- paste0(line1, line2)
+    plot <- plot + 
+      ggplot2::coord_cartesian(clip="off", default=TRUE) +
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+  } else {
+    plot <- plot + 
+      ggplot2::coord_cartesian(clip="off", default=TRUE) +
+      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
   }
   
   return(plot)

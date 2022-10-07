@@ -71,16 +71,13 @@ This report provides current conditions, outlook, and technical data.
 [ENTER LEVEL OUTLOOK HERE]
 ```
 
-
-``` {r intro text, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+```{r intro text, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
   cat("  \nWater levels in the Southern Lakes are driven by a combination of snowmelt, summer precipitation and glacier melt. Winter 2021-22 snow conditions suggested that water levels would be higher than average this summer. Weather conditions through the summer will determine the peak water level in the Southern Lakes, which typically occurs in late summer in response to peak glacial runoff and precipitation events.  \n  \nThis report provides an overview of current conditions.")
 } else {
   cat("  \nRecord-setting spring snowpack across many Yukon watersheds had created high potential for flooding near streams and some lakes driven by snowmelt this spring and early summer. Now that the bulk of last winter's snow has melted flooding potential shifts to larger lake systems, particularly those receiving glacial meltwater such as the Southern Lakes.  \n  \nThis report provides an overview of current conditions at selected stations across the territory. More detailed reports are also issued periodically for regions experiencing high or rapidly rising water levels and flows.")
 }
 ```
-
-
 
 <br>
 
@@ -255,46 +252,79 @@ if (report_type %in% c("Both", "Level", "both", "level")){
         )
       }
       
-      #next few lines calculate where we're at for level return periods and if there's a flag raised
-      if (i %in% data$level_returns$ID==TRUE) {
-        
-        stn <- dplyr::filter(data$level_returns, ID == i)
-        
-        tbl$Current_return_period <- 
-          if (todayLevel < stn$twoyear) {
-            "<2 year"
-          } else if (todayLevel < stn$fiveyear) {
-            "2 to 5 year"
-          } else if (todayLevel < stn$tenyear) {
-            "5 to 10 year" 
-          } else if (todayLevel < stn$twentyyear) {
-            "10 to 20 year" 
-          } else if (todayLevel < stn$fiftyyear) {
-            "20 to 50 year" 
-          } else if (todayLevel < stn$onehundredyear) {
-            "50 to 100 year"
-          } else if (todayLevel < stn$twohundredyear) {
-            "100 to 200 year"
-          } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
-            "> 200 year" 
-          } else if (todayLevel < stn$fivehundredyear) {
-            "200 to 500 year" 
-          } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
-            ">500 year"
-          } else if (todayLevel < stn$thousandyear) {
-            "500 to 1000 year"
-          } else if (todayLevel > stn$thousandyear) {
-            ">1000 year"
+#next few lines calculate where we're at for level return periods
+        if (!(level_returns %in% c("None", "none"))){ #if level_returns is "none", the column is simply not created.
+          
+          if (level_returns %in% c("auto", "Auto", "Table", "table") & i %in% data$level_returns$ID){ #where possible, plug in the verified value
+            stn <- dplyr::filter(data$level_returns, ID == i)
+            tbl$Current_return_period <-
+              if (todayLevel < stn$twoyear) {
+                "<2 year"
+              } else if (todayLevel < stn$fiveyear) {
+                "2 to 5 year"
+              } else if (todayLevel < stn$tenyear) {
+                "5 to 10 year" 
+              } else if (todayLevel < stn$twentyyear) {
+                "10 to 20 year" 
+              } else if (todayLevel < stn$fiftyyear) {
+                "20 to 50 year" 
+              } else if (todayLevel < stn$onehundredyear) {
+                "50 to 100 year"
+              } else if (todayLevel < stn$twohundredyear) {
+                "100 to 200 year"
+              } else if (todayLevel > stn$twohundredyear & is.na(stn$fivehundredyear)) {
+                "> 200 year" 
+              } else if (todayLevel < stn$fivehundredyear) {
+                "200 to 500 year" 
+              } else if (todayLevel > stn$fivehundredyear & is.na(stn$thousandyear)) {
+                "> 500 year"
+              } else if (todayLevel < stn$thousandyear) {
+                "500 to 1000 year"
+              } else if (todayLevel > stn$thousandyear & is.na(stn$twothousandyear)) {
+                "> 1000 year"
+              } else if (todayLevel < stn$twothousandyear) {
+                "1000 to 2000 year"
+              } else if (todayLevel > stn$twothousandyear) {
+                "> 2000 year"
+              }
+            
+          } else if (level_returns %in% c("Table", "table") & !(i %in% data$level_returns$ID)){ #if human-verified values only requested but not available, give NA
+            tbl$Current_return_period <- "NA"
+            
+          } else if (level_returns %in% c("calculated", "Calculated", "Auto", "auto")){ #if auto selected, run code OR if both selected and no human-verified value available.
+            peaks <- fasstr::calc_annual_peaks(levelData[[1]], values = Level, months = 5:9, allowed_missing = 5)
+            peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
+            peaks <- dplyr::mutate(peaks, Measure = "1-Day")
+            
+            freq <- fasstr::compute_frequency_analysis(data = peaks, use_max=TRUE, fit_quantiles = c(0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005))$Freq_Fitted_Quantiles
+            freq <- dplyr::filter(freq, `1-Day` > tbl$Level_m)
+            
+            tbl$Current_return_period <- 
+              if (utils::tail(freq, n=1)$`Return Period` < 2.01) {
+                "<2 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 5.01) {
+                " 2 to 5 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 10.01) {
+                "5 to 10 year*"
+              } else if(utils::tail(freq, n=1)$`Return Period` < 20.01) {
+                "10 to 20 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 50.01) {
+                "20 to 50 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 100.01) {
+                "50 to 100 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 200.01) {
+                "100 to 200 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 500.01) {
+                "200 to 500 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 1000.01) {
+                "500 to 100 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` < 2000.01) {
+                "1000 to 2000 year*"
+              } else if (utils::tail(freq, n=1)$`Return Period` > 2000) {
+                "> 2000 year*"
+              }
           }
-        tbl$Flag <- if (todayLevel >= stn$Flag_Level & !is.na(stn$Flag_Level)) {
-          stn$Note
-        } else {
-          tbl$Flag <- "NA"
         }
-      } else {
-        tbl$Current_return_period <- "NA"
-        tbl$Flag <- "NA"
-      }
       
     #Determine if the last data point is >6 hours old
       if (levelData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
@@ -361,7 +391,8 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
       Five_days_ago = NA,
       Six_days_ago = NA,
       One_week_ago = NA,
-      One_week_change = NA
+      One_week_change = NA,
+      Current_return_period = "NA"
     )    
     
     if (stringr::str_detect(station_info$STATION_NAME, "LAKE")==FALSE | stringr::str_detect(station_info$STATION_NAME, "RIVER")==TRUE){ #Lakes don't have flow measurements, but sometimes LAKE is mentioned when describing the river location
@@ -416,12 +447,13 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           Five_days_ago = if(length(fivedayFlow)==0) {as.numeric(NA)} else {fivedayFlow},
           Six_days_ago = if(length(sixdayFlow)==0) {as.nueric(NA)} else {sixdayFlow},
           One_week_ago = if(length(weekFlow)==0) {as.numeric(NA)} else {weekFlow},
-          One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow}
+          One_week_change = if(length(weekFlow)==0) {as.numeric(NA)} else {todayFlow - weekFlow},
+          Current_return_period = "NA"
         )
         
-        if (!(flow_returns %in% c("None", "none"))){ #if flow_returns is "none", the column is simply not created.
+        if (!(flow_returns %in% c("None", "none"))){
           
-          if (flow_returns %in% c("both", "Both", "Table", "table") & i %in% data$flow_returns$ID){ #where possible, plug in the verified value
+          if (flow_returns %in% c("auto", "Auto", "Table", "table") & i %in% data$flow_returns$ID){ #where possible, plug in the verified value
             stn <- dplyr::filter(data$flow_returns, ID == i)
             tbl$Current_return_period <-
               if (todayFlow < stn$twoyear) {
@@ -457,7 +489,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
           } else if (flow_returns %in% c("Table", "table") & !(i %in% data$flow_returns$ID)){ #if human-verified values only requested but not available, give NA
             tbl$Current_return_period <- "NA"
             
-          } else if (flow_returns %in% c("both", "Both", "Auto", "auto")){ #if auto selected, run code OR if both selected and no human-verified value available.
+          } else if (flow_returns %in% c("calculated", "Calculated", "Auto", "auto")){ #if calculated selected, run code OR if both selected and no human-verified value available.
             peaks <- fasstr::calc_annual_peaks(flowData[[1]], values = Flow, months = 5:9, allowed_missing = 5)
             peaks <- dplyr::select(peaks, Year, Value = Max_1_Day)
             peaks <- dplyr::mutate(peaks, Measure = "1-Day")
@@ -466,25 +498,25 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
             freq <- dplyr::filter(freq, `1-Day` > tbl$Current_flow)
             
             tbl$Current_return_period <- 
-              if (utils::tail(freq, n=1)$`Return Period` <= 2) {
+              if (utils::tail(freq, n=1)$`Return Period` < 2.01) {
                 "<2 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 5) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 5.01) {
                 " 2 to 5 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 10) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 10.01) {
                 "5 to 10 year*"
-              } else if(utils::tail(freq, n=1)$`Return Period` < 20) {
+              } else if(utils::tail(freq, n=1)$`Return Period` < 20.01) {
                 "10 to 20 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 50) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 50.01) {
                 "20 to 50 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 100) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 100.01) {
                 "50 to 100 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 200) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 200.01) {
                 "100 to 200 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 500) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 500.01) {
                 "200 to 500 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 1000) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 1000.01) {
                 "500 to 100 year*"
-              } else if (utils::tail(freq, n=1)$`Return Period` < 2000) {
+              } else if (utils::tail(freq, n=1)$`Return Period` < 2000.01) {
                 "1000 to 2000 year*"
               } else if (utils::tail(freq, n=1)$`Return Period` > 2000) {
                 "> 2000 year*"
@@ -646,10 +678,15 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
 
 if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0){
   
-  if (!(report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes"))){
+  if (rate == FALSE){
     cat("  \n# Summary of water level conditions in communities  \n")
     cat("Water level data is pulled from [historical](https://wateroffice.ec.gc.ca/mainmenu/historical_data_index_e.html) and [real-time](https://wateroffice.ec.gc.ca/mainmenu/real_time_data_index_e.html) hydrometric data published by Water Survey of Canada.  \n")
-    levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 8, 12, 19)]
+    if (!level_returns %in% c("none", "None")){
+      levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 8, 12, 19)]
+    } else {
+      levelTable <- dplyr::bind_rows(levelInfo)[c(5, 6, 8, 12)]
+    }
+
     levelTable <-  dplyr::bind_cols(stationInfo[,1], levelTable) #add in the pre-made column with links embedded.
     names(levelTable) <- gsub("\\.", " ", names(levelTable))
     names(levelTable) <- gsub("X", "", names(levelTable))
@@ -658,8 +695,12 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
     names(levelTable) <- gsub("cm", "(cm)", names(levelTable))
     names(levelTable) <- gsub("\\sm", " (m)", names(levelTable))
     
-    colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
-    
+    if (level_returns %in% c("none", "None")){
+      colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)")
+    } else {
+      colnames(levelTable) <- c("Station name (number)", "Current level (m)", "Current level (masl*)", "24 hr change (cm)", "72 hr change (cm)", "Current return period")
+    }
+
     levelTable$`Advisory in effect` <- ""
     levelTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
     levelTable <- dplyr::relocate(levelTable, Community)
@@ -676,6 +717,10 @@ if (report_type %in% c("Both", "Level", "both", "level") & length(levelInfo) > 0
       cat("Current water levels are presented relative to the local datum (column 3) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 4). The local datum is an arbitrary datum used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while CGVD2013 elevations can be compared across stations. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
     }
     cat("  \n  \nReturn periods representing 2, 10, 20, 50, 100, and 200 year levels are reported here (column 7) and plotted in the graphs below. A given return period refers to the expected frequency at which a specific flow or level will occur based on statistical analysis of historical records. For example, a 20-year return is expected to be met or exceeded once every 20 years or to have a 5% chance of being exceeded every year.")
+    
+    if (TRUE %in% stringr::str_detect(levelTable$`Current return period`, "\\*")){
+      cat("  \n* Denotes value obtained programatically by analysing May to September daily mean levels. For informational purposes only: no human checks were performed on underlying data.")
+    }
   }
 }
 ```
@@ -690,8 +735,12 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   flowTable$Community <- community #this vector is made prior to gathering station data from tidyhydat
 
+  if (!flow_returns %in% c("none", "None")){
+    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(20,1, 5, 6, 8, 12, 17, 18)] #0.0001 is the indicator for lake stations, remove those
+  } else {
+    flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(20, 1, 5, 6, 8, 12, 17)] #0.0001 is the indicator for lake stations, remove those
+  }
   
-  flowTable <- dplyr::filter(flowTable, Current_flow != 0.0001)[c(1, 2, 4, 5, 7, 11, 16)] #0.0001 is the indicator for lake stations, remove those
   
 
   
@@ -700,14 +749,21 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
   
   flowTable$Current_percent_historic <- round(flowTable$Current_percent_historic, 0)
   
-  flowTable <- dplyr::relocate(flowTable, Community)
-  
+  if (!flow_returns %in% c("none", "None")){
+    colnames(flowTable) <- c("Community", "Station name (number)", "Current flow (m^3^/s)", "Current percent of historic max", "24 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)", "Current return")
+  } else {
     colnames(flowTable) <- c("Community", "Station name (number)", "Current flow (m^3^/s)", "Current percent of historic max", "24 hr change (m^3^/s)", "72 hr change (m^3^/s)", "One week change (m^3^/s)")
+  }
   
-  print(knitr::kable(flowTable, digits=0, align="c"))
+  
+  print(knitr::kable(flowTable, digits=1, align="c"))
   
   if (NA %in% stringr::str_detect(flowTable$`Current flow (m^3^/s)`, "NA")){
-    cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.")
+    cat("**NOTE**: NA values mean that there is no current flow measurement. Some stations may have historical flow records; refer to the next table for record length information.  \n")
+  }
+  
+  if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
+      cat("*Value obtained programatically by analysing May to September daily mean flows. For informational purposes only: no human checks were performed on underlying data.")
   }
 }
 ```
@@ -800,7 +856,9 @@ for(i in stations) {
           #Level data plotting
           levelPlot <- utils_daily_level_plot(station_number = i,
                                               level_years = levelDataList[[n]][[2]],
-                                              force_CGVD28 = force_CGVD28)
+                                              force_CGVD28 = force_CGVD28,
+                                              returns = level_returns,
+                                              complete_df = levelDataList[[n]][[1]])
           
           if (plot_titles == TRUE){
             levelPlot <- levelPlot +
@@ -866,7 +924,9 @@ for(i in stations) {
                                                      level_years = levelDataList[[n]][[2]],
                                                      zoom_data = levelDataList[[n]][[3]],
                                                      zoom_days = zoom_days,
-                                                     force_CGVD28 = force_CGVD28)
+                                                     force_CGVD28 = force_CGVD28,
+                                                     returns = level_returns,
+                                                     complete_df = levelDataList[[n]][[1]])
             #}
             
             if (plot_titles == TRUE){
@@ -1236,4 +1296,12 @@ for (i in 1:length(notes)){
 if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
   cat("  \nThe stations in this report have more recent datums available (CGVD2013), but the historical CGVD28 datum is used here to align with local knowledge and with other reporting.")
 }
+```
+
+<br>
+
+# Additional information
+
+```{r version control, echo=FALSE, results='asis', message=FALSE}
+cat(paste0("This report was generated with the R package WRBfloods version ", packageVersion("WRBfloods"), "."))
 ```

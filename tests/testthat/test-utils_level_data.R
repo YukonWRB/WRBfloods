@@ -73,8 +73,8 @@ rm(test)
 
 
 #Warning message tests
-test_that("warning message exists to advise of missing years", {
-  expect_warning(utils_level_data("09EA004", c(lubridate::year(Sys.Date()), lubridate::year(Sys.Date())-1, lubridate::year(Sys.Date())-2, 1973)))
+test_that("error message exists to advise of missing years", {
+  expect_error(utils_level_data("09EA004", c(lubridate::year(Sys.Date()), lubridate::year(Sys.Date())-1, lubridate::year(Sys.Date())-2, 1973)), "You are requesting data for years prior to existing records at this station. Records begin in 2011, please specify years after this date only")
 })
 
 test_that("throws a warning message if no recent data exists but historical does", {
@@ -86,7 +86,7 @@ test_that("throws a warning when data requested does not exist", {
   expect_warning(utils_level_data("09EA004", year))
 })
 
-test_that("throws a warning when data requested does not exist and requested years are prior to data availability", {
-  expect_warning(utils_level_data("09EA004", 1973))
+test_that("throws an error when data requested does not exist and requested years are prior to data availability", {
+  expect_error(utils_level_data("09EA004", 1973), "You are requesting data for years prior to existing records at this station. Records begin in 2011, please specify years after this date only")
 })
   

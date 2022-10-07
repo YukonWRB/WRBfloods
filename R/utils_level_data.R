@@ -34,15 +34,29 @@ utils_level_data <- function(
   
   select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
   
+  if (max(select_years) <= lubridate::year(Sys.Date() - 577)) {high_res <- FALSE} #reset high_res if no high-res data is available but the user asked for it
+  
   leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
   
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
+  record_yrs <- unique(substr(level_historic$Date, 1,4))
+  
+  if (min(record_yrs) > min(select_years)){
+    stop(paste0("You are requesting data for years prior to existing records at this station. Records begin in ", min(record_yrs), ", please specify years after this date only."))
+  }
+  
   
   #Truncate the Yukon at Whitehorse at 2014, since data before that is garbage (much predates the dam for level)
   if (station_number == "09AB001") {
     level_historic <- level_historic[level_historic$Date > "2014-01-01",]
+    if (nrow(level_historic) == 0){
+      stop(paste0("Reliable data for the Yukon River at Whitehorse begins in 2014. Please specify only years after 2014."))
+    }
   }
+  
+  #Truncate all to the last requested year. Only these years are used for calculating stats.
+  level_historic <- level_historic[level_historic$Date < paste0(max(select_years), "-12-31"),]
   
   datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
   if (datum_na == FALSE){

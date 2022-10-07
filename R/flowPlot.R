@@ -4,24 +4,40 @@
 #' 
 #' To generate zoomed-in plots with real-time data you MUST have your HYDAT credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 #'
-#' @param station The WSC station for which you wish to generate a plot.
+#' @param station The WSC station for which you wish to generate a plot as a character vector of length 1.
 #' @param years The year(s) you wish to plot. Maximum of 10 years specified in a vector. Only the current year can be plotted with MESH or CLEVER forecasts.
 #' @param title Do you want a title added to the plot? TRUE/FALSE.
 #' @param zoom TRUE/FALSE. If TRUE, the plot x axis (dates) will be truncated to the number of days prior to today specified in zoom_days.
 #' @param zoom_days Number from 2 to 365. Not used unless zoom=TRUE. Note that if specifying MESH or CLEVER forecasts that the x-axis length will include the full 10 days of forecasts in addition to zoom_days!
 #' @param filter TRUE/FALSE. Should 5-minute data be filtered to remove spikes? Adds about a minute per graph.
 #' @param forecast Do you want MESH or CLEVER forecasts, or both? Choose from "MESH", "CLEVER", "both", or "none". Default is "none"
-#' @param returns Should flow returns be added? You have the option of using pre-determined flow only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), both (with priority to pre-determined levels), or none (option "none"). Defaults to "both".
+#' @param returns Should flow returns be plotted? You have the option of using pre-determined flow returns only (option "table"), auto-calculated values with no human verification (option "auto", calculated on-the-fly using all data available from March to September, up to the current date), "both" (with priority to pre-determined flows), or none (option "none"). Defaults to "both".
 #' @param save_path Default is "none", and the graph will be visible in RStudio and can be assigned to an object. Option "choose" brings up the File Explorer for you to choose where to save the file, or you can also specify a save path directly.
 #'
 #' @return A .png file of the plot requested (if a save path has been selected), plus the plot displayed in RStudio. Assign the function to a variable to also get a plot in your global environment.
 #' @export
 #'
 
-flowPlot <- function(station, years, title=TRUE, zoom=FALSE, zoom_days=30, filter=FALSE, forecast = "none", returns = "both", save_path = "none") {
+flowPlot <- function(station, 
+                     years,
+                     title=TRUE,
+                     zoom=FALSE,
+                     zoom_days=30,
+                     filter=FALSE,
+                     forecast = "none",
+                     returns = "auto",
+                     save_path = "none"
+                     ) 
+{
   
   oldw <- getOption("warn") #get the initial warning state
   options(warn = -1) #disable warnings so that ggplot doesn't give a whole pile of them
+  
+  #returns option check
+  returns <- tolower(returns)
+  if (!returns %in% c("table", "auto", "calculated", "none")){
+    stop("Your entry for the parameter 'returns' is invalid. Please review the function documentation and try again.")
+  }
   
   if (save_path %in% c("Choose", "choose")) {
     print("Select the path to the folder where you want this report saved.")
