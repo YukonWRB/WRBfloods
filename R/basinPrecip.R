@@ -16,20 +16,22 @@
 #' @param start The start of the time period over which to accumulate precipitation. Use format `"yyyy-mm-dd hh:mm"` (character vector) in local time, or a POSIXct object (e.g. Sys.time()-60*60*24 for one day in the past). See details if requesting earlier than 30 days prior to now.
 #' @param end The end of the time period over which to accumulate precipitation. Other details as per `start`
 #' @param map Should a map be output to the console? See details for more info.
-#' @param org_defaults This parameter can override the default files locations for rasters, drainages, and spatial files. As of now, only available for "WRB" (Yukon Water Resources Branch) or NULL. You can still specify any of hrdpa_loc, drainage_loc, and spatial_loc directories if only one or two needs to be redirected.
+#' @param org_defaults This parameter can override the default file locations for rasters, drainages, and spatial files. As of now, only available for "YWRB" (Yukon Water Resources Branch) or NULL. Specifying any of hrdpa_loc, hrdps_loc, drainage_loc, and/or spatial_loc directories will override the organization default for that/those parameters.
 #' @param hrdpa_loc The directory (folder) where past precipitation rasters are to be downloaded. Suggested use is to specify a repository where all such rasters are saved to speed processing time and reduce data usage. If using the default NULL, rasters will not persist beyond your current R session.
 #' @param hrdps_loc The directory (folder) where forecast precipitation rasters are to be downloaded. A folder will be created for the specific parameter (in this case, precipitation) or selected if already existing.
 #' @param drainage_loc The directory where drainage polygons are located, in a single shapefile named drainage_polygons. See Notes for more info.
 #' @param spatial_loc The directory in which spatial data (as shapefiles) is kept for making maps nicer. Will recognize the following shapefile names (case sensitive): waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. See additional notes.
+#' @param silent If TRUE, no output is printed to the console.
 #'
 #' @return The accumulated precipitation in mm of water within the drainage specified or immediately surrounding the point specified in `location` printed to the console and (optionally) a map of precipitation printed to the console. A list is also generated containing statistics and the optional plot; to save this plot to disc use either png() or dev.print(), or use the graphical device export functionality.
 #' @export
 #'
 #'
 
-#TODO: problem with extents not matching. reproduce by first calling a map for somewhere in YT, then in Ontario. will get Error:[sds] extents do not match, which means that the DL and/or file selection process didn't work well.
+#TODO: problem with extents not matching. reproduce by first calling a map for somewhere in YT, then in Ontario. will get Error:[sds] extents do not match, which means that the DL and/or file selection process didn't work properly
 #IDEA: Allow multiple plots to be fetched, or a time-lapse of plots (better). Allow setting increments and number of plots.
 #IDEA: use leaflet to display maps
+#TODO: Get precip further in future using RDPS beyond HRDPS range.
 
 basinPrecip <- function(location,
                         start = Sys.time()-60*60*24,
@@ -39,7 +41,8 @@ basinPrecip <- function(location,
                         hrdpa_loc = NULL,
                         hrdps_loc = NULL,
                         drainage_loc = NULL,
-                        spatial_loc = NULL
+                        spatial_loc = NULL,
+                        silent=FALSE
                         )
 {
   
@@ -79,7 +82,7 @@ basinPrecip <- function(location,
   } else {crayon::red(stop("Your input for `location` could not be coerced to decimal degrees or to a standard WSC or WSC-like station ID. Please review the help file for proper format and try again."))}
   
   #Load the drainages
-  drainages <- sf::read_sf(drainage_loc, "drainage_polygons")
+  drainages <- terra::vect(paste0(drainage_loc, "/drainage_polygons.shp"))
   if (type == "WSC"){
       station_check_polygon <- location %in% drainages$StationNum
       if (!station_check_polygon){
@@ -87,15 +90,12 @@ basinPrecip <- function(location,
       }
     }
   
-  #TODO: remove terra references eventually or go full terra and remove sf references
   #Determine the appropriate clip polygon for the files to minimize space requirements.
-  polygons <- WRBtools:::data$prov_buff
-  polygons <- sf::st_transform(polygons, "+proj=longlat +EPSG:3347")
-  polygons <- terra::vect(polygons)
+  polygons <- terra::vect(WRBtools:::data$prov_buff)
+  polygons <- terra::project(polygons, "+proj=longlat +EPSG:3347")
   if (type == "WSC"){
-    location <- dplyr::filter(drainages, StationNum == location)
-    location <- sf::st_transform(location, "+proj=longlat +EPSG:3347")
-    location <- terra::vect(location)
+    location <- terra::subset(drainages, drainages2$StationNum == location)
+    location <- terra::project(location, "+proj=longlat +EPSG:3347")
     within <- terra::relate(location, polygons, relation = "within")
     within <- as.data.frame(polygons[which(within)])$PREABBR
   } else if (type == "longlat"){
@@ -525,11 +525,14 @@ basinPrecip <- function(location,
   
   if (type == "longlat"){
     list <- list(mean_precip = mean_precip, total_time_range_UTC = actual_times, reanalysis_time_range_UTC = actual_times_hrdpa, forecast_time_range_UTC = actual_times_hrdps, point = requested_point, plot = if(map) plot else NULL)
-    cat("  \n  \n", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent ", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have falllen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", " at your requested point (", requested_point[1], ", ", requested_point[2], ") between ", crayon::blue(crayon::bold(as.character(actual_times[1]), "and ", as.character(actual_times[2]), "UTC.")), "The smallest watershed for which I could find a polygon is ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n")
+    if (silent == FALSE){
+      cat("  \n  \n", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent ", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have falllen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", " at your requested point (", requested_point[1], ", ", requested_point[2], ") between ", crayon::blue(crayon::bold(as.character(actual_times[1]), "and ", as.character(actual_times[2]), "UTC.")), "The smallest watershed for which I could find a polygon is ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n")
+    }
   } else {
     list <- list(mean_precip = mean_precip, min = min, max = max, total_time_range_UTC = actual_times, reanalysis_time_range_UTC = actual_times_hrdpa, forecast_time_range_UTC = actual_times_hrdps, watershed = watershed$StationNum, plot = if(map) plot else NULL)
-    cat("  \n  \nOn average,", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent (range:", round(min,2), "to", round(max,2), "mm)", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have fallen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", "across the watershed requested (", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), ") between", crayon::blue(crayon::bold(as.character(actual_times[1]), "and", as.character(actual_times[2]), "UTC.")), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n")
+    if (silent == FALSE){
+      cat("  \n  \nOn average,", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent (range:", round(min,2), "to", round(max,2), "mm)", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have fallen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", "across the watershed requested (", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), ") between", crayon::blue(crayon::bold(as.character(actual_times[1]), "and", as.character(actual_times[2]), "UTC.")), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n")
+    }
   }
-  
   return(list)
 }
