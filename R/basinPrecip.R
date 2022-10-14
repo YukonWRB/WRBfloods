@@ -94,7 +94,7 @@ basinPrecip <- function(location,
   polygons <- terra::vect(WRBtools:::data$prov_buff)
   polygons <- terra::project(polygons, "+proj=longlat +EPSG:3347")
   if (type == "WSC"){
-    location <- terra::subset(drainages, drainages2$StationNum == location)
+    location <- terra::subset(drainages, drainages$StationNum == location)
     location <- terra::project(location, "+proj=longlat +EPSG:3347")
     within <- terra::relate(location, polygons, relation = "within")
     within <- as.data.frame(polygons[which(within)])$PREABBR
