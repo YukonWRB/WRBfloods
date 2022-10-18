@@ -12,7 +12,6 @@ utils_zoom_flow_plot(
   zoom_days = 30,
   colours = c("blue", "black", "darkorchid3", "cyan2", "firebrick3", "aquamarine4",
     "gold1", "chartreuse1", "darkorange", "lightsalmon"),
-  legend_position = "right",
   line_size = 1,
   point_size = 0.75,
   returns = "none"
@@ -30,8 +29,6 @@ utils_zoom_flow_plot(
 \item{zoom_days}{The number of days to plot, counting back from the current date.}
 
 \item{colours}{Colour of the lines/points.}
-
-\item{legend_position}{Self explanatory.}
 
 \item{line_size}{Self explanatory.}
 

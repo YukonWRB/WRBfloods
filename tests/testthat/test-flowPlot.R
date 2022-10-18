@@ -1,3 +1,4 @@
+#Tests on full year plots
 test_that("expected plots are created with auto returns", {
   dir <- paste0(tempdir(), "/flowPlot")
   dir.create(dir)
@@ -33,3 +34,7 @@ test_that("expected plots are created with `calculated` returns", {
   
   unlink(dir, recursive=TRUE)
 })
+
+
+#Tests on zoomed in plots
+#This requires ability to plot without today's data being the end date
