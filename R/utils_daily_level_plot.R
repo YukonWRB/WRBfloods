@@ -55,7 +55,7 @@ utils_daily_level_plot <- function(
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
-    tidyquant::coord_x_date(xlim = c(paste(graph_year, "-01-01", sep = ""), paste(graph_year, "-12-31", sep = ""))) +
+    ggplot2::coord_cartesian(xlim = c(as.Date(paste0(graph_year, "-01-01")), as.Date(paste0(graph_year, "-12-31")))) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8))+
     
@@ -111,8 +111,8 @@ utils_daily_level_plot <- function(
         ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
     } else if (returns %in% c("auto")) {
-      type <- "table"
       if (station_number %in% data$level_returns$ID){
+        type <- "table"
         levelConvert <- if (force_CGVD28 == FALSE) as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
         stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
         stn[is.na(stn)==TRUE] <- -10 #This prevents a ggplot error when it tries to plot a logical along with numerics, but keeps the values out of the plot.
@@ -163,17 +163,17 @@ utils_daily_level_plot <- function(
    lines <- paste0(line1, line2)
    plot <- plot + 
      ggplot2::coord_cartesian(clip="off", default=TRUE) +
-     ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+     ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
  } else if (type == "table"){
    line2 <- "        \n        \n        Return periods are based\n        on statistical analysis\n        of select data from the\n        start of records to 2021."
    lines <- paste0(line1, line2)
    plot <- plot + 
      ggplot2::coord_cartesian(clip="off", default=TRUE) +
-     ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+     ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
  } else {
    plot <- plot + 
      ggplot2::coord_cartesian(clip="off", default=TRUE) +
-     ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
+     ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=8), just = "left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
  }
  
   return(plot)

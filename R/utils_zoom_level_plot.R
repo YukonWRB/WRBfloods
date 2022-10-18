@@ -34,6 +34,7 @@ utils_zoom_level_plot <- function(
   datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
   
   extra_days <- round(zoom_days/3, 0)
+  if (extra_days < 1) extra_days <- 1
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
   ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+extra_days, 'days')
@@ -59,17 +60,16 @@ utils_zoom_level_plot <- function(
   
   #Make dates as posixct
   level_years$DateOnly <- level_years$Date
-  level_years$Date <- as.POSIXct(format(level_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute
-  
-  #Correct the time to Yukon Time
-  zoom_data$Date <- zoom_data$Date-7*60*60
+  level_years$Date <- as.POSIXct(format(level_years$Date), tz="UTC") #this is necessary because the high-res data has hour:minute. tz is UTC because the data is in UTC; this is changed later.
+  level_years$Date <- level_years$Date + 60*60*12 #makes the daily mean sit in the middle of the day, important for very zoomed in plots
+  attr(level_years$Date, "tzone") <- Sys.timezone()
   
   #Separate out the ribbon data prior to removing NA rows and combining data.frames
   ribbon <- level_years[level_years$Year_Real==2022,] %>% dplyr::select(c(Date, Max, Min, QP25, QP75))
   
   #combine the data.frames now that they both have posixct columns
-  zoom_data <- dplyr::mutate(zoom_data, Year_Real = lubridate::year(Date))
-  level_years <- dplyr::bind_rows(level_years, zoom_data)
+  zoom_data$Year_Real <- lubridate::year(zoom_data$Date)
+  level_years <- dplyr::bind_rows(level_years, zoom_data) #IMPORTANT: since level_years is first here, its tz attribute takes over.
   
   #Remove NAs and reintegrate ribbon
   level_years <- level_years %>%
@@ -85,32 +85,32 @@ utils_zoom_level_plot <- function(
   #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
   
   # x axis settings
-  if (zoom_days > 14) {
+  if (zoom_days > 60) {
+    date_breaks = "1 month"
+    labs = scales::label_date("%b %d", tz=Sys.timezone())
+  } else if (zoom_days > 14) {
     date_breaks="1 week"
-    labs = scales::label_date("%b %d")
+    labs = scales::label_date("%b %d", tz = Sys.timezone())
   } else if (zoom_days > 7) {
     date_breaks="2 days"
-    labs=scales::label_date("%b %d")
-  } else if (zoom_days > 3){
+    labs=scales::label_date("%b %d", tz = Sys.timezone())
+  } else if (zoom_days >= 2) {
     date_breaks="1 days"
-    labs=scales::label_date("%b %d")
-  } else if (zoom_days > 2) {
-    date_breaks="12 hours"
-    labs=scales::label_date("%b %d %H:%M")
+    labs=scales::label_date("%b %d", tz = Sys.timezone())
   } else if (zoom_days > 1){
-    date_breaks="4 hours"
-    labs=scales::label_date("%b %d %H:%M")
-  } else if (zoom_days ==1) {
-    date_breaks="1 hour"
-    labs=scales::label_time(format="%b %d %H:%M")
+    date_breaks="24 hours"
+    labs=scales::label_time("%H:%M", tz = Sys.timezone())
+  } else if (zoom_days == 1) {
+    date_breaks="12 hour"
+    labs=scales::label_time(format="%H:%M", tz = Sys.timezone())
   }
   
   # Generate the plot
   plot <- ggplot2::ggplot(level_years, ggplot2::aes(x = Date, y = if(datum_na==TRUE) Level else Level_masl)) + 
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = (if(datum_na==FALSE) {"Level (masl)"} else {"Level (relative to station)"})) +
-    ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone="UTC") +
-    tidyquant::coord_x_datetime(xlim = c((Sys.Date()-zoom_days+1), Sys.Date()+extra_days)) +
+    ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone=NULL) +
+    ggplot2::coord_cartesian(xlim = c(Sys.time()-zoom_days*60*60*24, Sys.time()+extra_days*60*60*24)) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8)) +
     
@@ -166,8 +166,8 @@ utils_zoom_level_plot <- function(
         ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(stn$twoyear, stn$fiveyear, stn$tenyear, stn$twentyyear, stn$fiftyyear, stn$onehundredyear, stn$twohundredyear, stn$fivehundredyear, stn$thousandyear, stn$twothousandyear), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
     } else if (returns %in% c("auto")) {
-      type <- "table"
       if (station_number %in% data$level_returns$ID){
+        type <- "table"
         levelConvert <- if (force_CGVD28 == FALSE) as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
         stn <- dplyr::filter(data$level_returns, ID == station_number) %>% purrr::map_if(is.numeric, ~.+levelConvert) #modify the return intervals with the same datum as the database
         stn[is.na(stn)==TRUE] <- -10 #This prevents a ggplot error when it tries to plot a logical along with numerics, but keeps the values out of the plot.
@@ -219,19 +219,25 @@ utils_zoom_level_plot <- function(
     lines <- paste0(line1, line2)
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
   } else if (type == "table"){
     line2 <- "        \n        \n        Return periods are based\n        on statistical analysis\n        of select data from the\n        start of records to 2021."
     lines <- paste0(line1, line2)
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
   } else {
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left"), xmin=end_time, ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=8), just = "left"), xmin=end_time, ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
   }
+  # 
+  # 
+  # plot +
+  #   ggplot2::annotation_custom(grobTree(textGrob("Hello world!", x=0.8, hjust=0, y=1, vjust=1)))
+  # return(plot)
+  # 
+  # plot +
+  #   ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left", x=0.9))
   
-  return(plot)
 }
-
