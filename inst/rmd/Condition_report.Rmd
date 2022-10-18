@@ -528,7 +528,7 @@ stationInfo$Station <- gsub("Morely", "Morley", stationInfo$Station)
 ```{r Rates table for levels, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, results='asis'}
 
 if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
-  cat("# Water levels and trajectory  \n")
+  cat("# Summary of water levels and trajectories  \n")
   info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 20)]
   
   if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){ #adjust elevations to CGVD28 (all are in 2013 at this point)
@@ -537,7 +537,6 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
       convert[i] <- as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(i)[,4], n=1)) - as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(i)[,4], n=1))
     }
     info$Level_masl <- info$Level_masl - convert
-  }
     
     distpeak2007 <- vector()
     distpeak2021 <- vector()
@@ -563,6 +562,7 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
         # distday2021[i] <- NA
       }
     }
+  }
   
   Trajectory <- vector()
   for (i in 1:nrow(info)){
@@ -679,7 +679,7 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
     }
     
     if (TRUE %in% stringr::str_detect(flowTable$`Current return period`, "\\*")){
-      cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. For informational purposes only:o human checks were performed on underlying data.")
+      cat("*Value obtained programatically by analysing May to September daily mean flows and fitting a log-Pearson Type 3 distribution using HEC-SSP methodology. For informational purposes only: no human checks were performed on underlying data.")
     }
   }
   
@@ -692,39 +692,45 @@ if (report_type %in% c("Both", "Flow", "both", "flow") & length(flowInfo) > 0){
 # Accumulated Precipitation Above Stations
 
 ```{r Precip table, echo=FALSE, results='asis', message=FALSE}
-
-now <- Sys.time() #setting now prevents running basinPrecip with different start/end times.
-precip <- list()
-for (i in stations){
-  lastweek <- basinPrecip(i, start = now-60*60*24*7, end=now, silent=TRUE)
-  last48 <- basinPrecip(i, start = now-60*60*24*2, end=now, silent=TRUE)
-  last24 <- basinPrecip(i, start = now-60*60*24, end=now, silent=TRUE)
-  next24 <- basinPrecip(i, start = now, end = now+60*60*24, silent=TRUE)
-  next48 <- basinPrecip(i, start = now, end = now+60*60*24*2, silent=TRUE)
-  precip[[i]] <- list(lastweek = lastweek, last48=last48, last24=last24, next24=next24, next48=next48)
+tryCatch({
+  now <- Sys.time() #setting now prevents running basinPrecip with different start/end times.
+  precip <- list()
+  for (i in stations){
+    lastweek <- basinPrecip(i, start = now-60*60*24*7, end=now, silent=TRUE)
+    last48 <- basinPrecip(i, start = now-60*60*24*2, end=now, silent=TRUE)
+    last24 <- basinPrecip(i, start = now-60*60*24, end=now, silent=TRUE)
+    next24 <- basinPrecip(i, start = now, end = now+60*60*24, silent=TRUE)
+    next48 <- basinPrecip(i, start = now, end = now+60*60*24*2, silent=TRUE)
+    precip[[i]] <- list(lastweek = lastweek, last48=last48, last24=last24, next24=next24, next48=next48)
+  }
+  
+  precipTable <- data.frame("Station" = stations, stationInfo[,1])
+  
+  for (i in 1:length(stations)){
+    precipTable$lastweek[precipTable$Station == stations[i]] <- precip[[i]]$lastweek$mean_precip
+    precipTable$last48[precipTable$Station == stations[i]] <- precip[[i]]$last48$mean_precip
+    precipTable$last24[precipTable$Station == stations[i]] <- precip[[i]]$last24$mean_precip
+    precipTable$next24[precipTable$Station == stations[i]] <- precip[[i]]$next24$mean_precip
+    precipTable$next48[precipTable$Station == stations[i]] <- precip[[i]]$next48$mean_precip
+  }
+  
+  precipTable <- precipTable[,-1]
+  
+  last48hours <- as.character(difftime(as.POSIXct(precip[[1]]$last48$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$last48$total_time_range_UTC[1])))
+  last24hours <- as.character(difftime(as.POSIXct(precip[[1]]$last24$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$last24$total_time_range_UTC[1])))
+  next24hours <- as.character(difftime(as.POSIXct(precip[[1]]$next24$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$next24$total_time_range_UTC[1])))
+  next48hours <- as.character(difftime(as.POSIXct(precip[[1]]$next48$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$next48$total_time_range_UTC[1])))
+  
+  
+  colnames(precipTable) <- c("Station name (number)", "Last week", paste0("Last ", last48hours, " hours"), paste0("Last ", last24hours, " hours"), paste0("Next ", next24hours, " hours"), paste0("Next ", next48hours, " hours"))
+  
+  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) over various time periods. Values are generated from Environment and Climate Change Canada's HRDPA model (past) and HRDPS model (forecast). Note that past and forecast time ranges vary depending on weather product availability."), align="lccccc")
+}, error = function(e) {
+  cat("Precipitation data could not be fetched at this time. This likely reflects a network, server, or data availability issue.")
+}, warning = function (w) {
+  cat("Precipitation data could not be fetched at this time. This likely reflects a network, server, or data availability issue.")
 }
-
-precipTable <- data.frame("Station" = stations, stationInfo[,1])
-
-for (i in 1:length(stations)){
-  precipTable$lastweek[precipTable$Station == stations[i]] <- precip[[i]]$lastweek$mean_precip
-  precipTable$last48[precipTable$Station == stations[i]] <- precip[[i]]$last48$mean_precip
-  precipTable$last24[precipTable$Station == stations[i]] <- precip[[i]]$last24$mean_precip
-  precipTable$next24[precipTable$Station == stations[i]] <- precip[[i]]$next24$mean_precip
-  precipTable$next48[precipTable$Station == stations[i]] <- precip[[i]]$next48$mean_precip
-}
-
-precipTable <- precipTable[,-1]
-
-last48hours <- as.character(difftime(as.POSIXct(precip[[1]]$last48$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$last48$total_time_range_UTC[1])))
-last24hours <- as.character(difftime(as.POSIXct(precip[[1]]$last24$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$last24$total_time_range_UTC[1])))
-next24hours <- as.character(difftime(as.POSIXct(precip[[1]]$next24$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$next24$total_time_range_UTC[1])))
-next48hours <- as.character(difftime(as.POSIXct(precip[[1]]$next48$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$next48$total_time_range_UTC[1])))
-
-
-colnames(precipTable) <- c("Station name (number)", "Last week", paste0("Last ", last48hours, " hours"), paste0("Last ", last24hours, " hours"), paste0("Next ", next24hours, " hours"), paste0("Next ", next48hours, " hours"))
-
-knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) over various time periods. Values are generated from Environment and Climate Change Canada's HRDPA model (past) and HRDPS model (forecast). Note that past and forecast time ranges vary depending on weather product availability."), align="lccccc")
+)
 ```
 
 \newpage
@@ -1114,5 +1120,5 @@ for (i in 1:length(notes)){
 # Additional information
 
 ```{r version control, echo=FALSE, results='asis', message=FALSE}
-cat(paste0("This report was generated with the R package WRBfloods version ", packageVersion("WRBfloods"), "."))
+cat(paste0("This report was generated with the R package WRBfloods version ", packageVersion("WRBfloods"), ", built and maintained by the Yukon Department of Environment, Water Resources Branch. Please [contact us](mailto:waterlevels@yukon.ca) to report erroneous or missing data."))
 ```
