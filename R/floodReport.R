@@ -15,7 +15,7 @@
 #' ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word
 #' document for more information.
 #'
-#' @param report_name The name of the report you wish to generate. One of "Dawson", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", "Old Crow", "Aishihik", or "Territory". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
+#' @param report_name The name of the report you wish to generate. One of "Dawson", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", "Old Crow", "Aishihik", "Alsek", or "Territory". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
 #' @param custom_report_stations A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!
 #' @param extra_years Specify extra years of data to plot for one or multiple stations. Use the form "09AB001:1990,2020", "09EB003:1985". Concatenate if more than one station. Can be used together with preset_extra_years.
 #' @param preset_extra_years TRUE or FALSE, defaults to FALSE. Can be used together with extra_years.
@@ -425,6 +425,40 @@ floodReport <-
             plot_titles = plot_titles)
         )
       } #End of Aishihik report
+      
+      ### Generate a report for Alsek###
+      if (report_name %in% c("Alsek", "alsek")) {
+        stations <- c("08AC002", "08AC001", "08AB001", "08AA003")
+        preset_extras <- NULL
+        
+        if (preset_extra_years==TRUE){
+          extra_years <- c(preset_extras, extra_years) 
+        } else {
+          extra_years <- extra_years
+        }
+        
+        rmarkdown::render(
+          input = system.file("rmd", "Condition_report.Rmd", package="WRBfloods"),
+          output_file = paste0("Alsek Condition Report ", Sys.Date()),
+          output_dir = save_path,
+          params = list(
+            stations = stations,
+            report_name = "Alsek Condition Report",
+            extra_years = extra_years,
+            image_path = image_path,
+            report_type = report_type,
+            level_zoom = level_zoom,
+            flow_zoom = flow_zoom,
+            zoom_days = zoom_days,
+            MESH = MESH,
+            CLEVER = CLEVER,
+            flow_returns = flow_returns,
+            level_returns = level_returns,
+            rate = rate,
+            meteogram = meteogram,
+            plot_titles = plot_titles)
+        )
+      } #End of Alsek report
       
     }
       
