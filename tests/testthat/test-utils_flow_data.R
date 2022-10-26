@@ -71,8 +71,8 @@ test_that("column classes  for element 3 are as expected (NULL in this case)", {
 rm(test)
 
 #Warning message tests
-test_that("error message exists to advise of missing years", {
-  expect_error(utils_flow_data("09EA004", c(lubridate::year(Sys.Date()), lubridate::year(Sys.Date())-1, lubridate::year(Sys.Date())-2, 1973)), "You are requesting data for years prior to existing records at this station. Records begin in 1974, please specify years after this date only")
+test_that("warning message exists to advise of missing years", {
+  expect_warning(utils_flow_data("09EA004", c(lubridate::year(Sys.Date()), lubridate::year(Sys.Date())-1, lubridate::year(Sys.Date())-2, 1973)))
 })
 
 test_that("throws a warning message if no recent data exists but historical does", {
@@ -81,9 +81,9 @@ test_that("throws a warning message if no recent data exists but historical does
 
 test_that("throws a warning when data requested does not exist", {
   year <- lubridate::year(Sys.Date()-577)-1
-  expect_warning(utils_flow_data("09EA004", year))
+  expect_warning(utils_flow_data("09EA004", year), "No data exists for the years you requested. Only historical data was returned. Note that the historical data range is from .*")
 })
 
 test_that("throws an error when data requested does not exist and requested years are prior to data availability", {
-  expect_error(utils_flow_data("09EA004", 1973), "You are requesting data for years prior to existing records at this station. Records begin in 1974, please specify years after this date only")
+  expect_error(utils_flow_data("09EA004", 1973), "There is no data for the years you have requested. Years of record for historical data at this station are .*")
 })

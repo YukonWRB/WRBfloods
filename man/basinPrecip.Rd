@@ -13,7 +13,8 @@ basinPrecip(
   hrdpa_loc = NULL,
   hrdps_loc = NULL,
   drainage_loc = NULL,
-  spatial_loc = NULL
+  spatial_loc = NULL,
+  silent = FALSE
 )
 }
 \arguments{
@@ -25,7 +26,7 @@ basinPrecip(
 
 \item{map}{Should a map be output to the console? See details for more info.}
 
-\item{org_defaults}{This parameter can override the default files locations for rasters, drainages, and spatial files. As of now, only available for "WRB" (Yukon Water Resources Branch) or NULL. You can still specify any of hrdpa_loc, drainage_loc, and spatial_loc directories if only one or two needs to be redirected.}
+\item{org_defaults}{This parameter can override the default file locations for rasters, drainages, and spatial files. As of now, only available for "YWRB" (Yukon Water Resources Branch) or NULL. Specifying any of hrdpa_loc, hrdps_loc, drainage_loc, and/or spatial_loc directories will override the organization default for that/those parameters.}
 
 \item{hrdpa_loc}{The directory (folder) where past precipitation rasters are to be downloaded. Suggested use is to specify a repository where all such rasters are saved to speed processing time and reduce data usage. If using the default NULL, rasters will not persist beyond your current R session.}
 
@@ -34,6 +35,8 @@ basinPrecip(
 \item{drainage_loc}{The directory where drainage polygons are located, in a single shapefile named drainage_polygons. See Notes for more info.}
 
 \item{spatial_loc}{The directory in which spatial data (as shapefiles) is kept for making maps nicer. Will recognize the following shapefile names (case sensitive): waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. See additional notes.}
+
+\item{silent}{If TRUE, no output is printed to the console.}
 }
 \value{
 The accumulated precipitation in mm of water within the drainage specified or immediately surrounding the point specified in \code{location} printed to the console and (optionally) a map of precipitation printed to the console. A list is also generated containing statistics and the optional plot; to save this plot to disc use either png() or dev.print(), or use the graphical device export functionality.

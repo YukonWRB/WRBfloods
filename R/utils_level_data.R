@@ -41,17 +41,16 @@ utils_level_data <- function(
   level_historic <- (tidyhydat::hy_daily_levels(station_number = station_number)[,-c(3,5)])
   colnames(level_historic) <- c("STATION_NUMBER", "Date", "Level")
   record_yrs <- unique(substr(level_historic$Date, 1,4))
+  record_yrs <- c(as.character(lubridate::year(Sys.Date())-2), record_yrs, as.character(lubridate::year(Sys.Date())-1), as.character(lubridate::year(Sys.Date())))
   
-  if (min(record_yrs) > min(select_years)){
-    stop(paste0("You are requesting data for years prior to existing records at this station. Records begin in ", min(record_yrs), ", please specify years after this date only."))
+  if (!(TRUE %in% (select_years %in% record_yrs))){
+    stop(paste0("There is no data for the years you have requested. Years of record for historical data at this station are ", paste0(record_yrs, collapse = ", "), ". In addition, later high-resolution data may be available if the station is currently active."))
   }
-  
-  
   #Truncate the Yukon at Whitehorse at 2014, since data before that is garbage (much predates the dam for level)
   if (station_number == "09AB001") {
     level_historic <- level_historic[level_historic$Date > "2014-01-01",]
     if (nrow(level_historic) == 0){
-      stop(paste0("Reliable data for the Yukon River at Whitehorse begins in 2014. Please specify only years after 2014."))
+      warning(paste0("Reliable data for the Yukon River at Whitehorse begins in 2014. Please use caution if using data prior to this date."))
     }
   }
   

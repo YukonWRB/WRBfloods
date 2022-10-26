@@ -37,7 +37,7 @@ utils_zoom_level_plot <- function(
   if (extra_days < 1) extra_days <- 1
   #subset the data according to days to plot and find the most recent range
   point_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date(), "days")
-  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+extra_days, 'days')
+  ribbon_dates <- seq.Date(Sys.Date()-(zoom_days+1), Sys.Date()+extra_days+1, 'days')
   zoom_data <- zoom_data[zoom_data$DateOnly %in% point_dates,]
   level_years <- level_years[level_years$Date %in% ribbon_dates,]
   
@@ -141,8 +141,11 @@ utils_zoom_level_plot <- function(
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[3,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[2,4]), linetype="dashed", color = "black") +
+        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[1,4]), linetype="dashed", color = "black") +
         
-        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4]), as.numeric(levelFreq[3,4]), as.numeric(levelFreq[2,4]), as.numeric(levelFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       
     } else if (returns %in% c("table") & station_number %in% data$level_returns$ID == TRUE){
       type <- "table"
@@ -197,8 +200,11 @@ utils_zoom_level_plot <- function(
           ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
           ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
           ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[3,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[2,4]), linetype="dashed", color = "black") +
+          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[1,4]), linetype="dashed", color = "black") +
           
-          ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
+          ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4]), as.numeric(levelFreq[3,4]), as.numeric(levelFreq[2,4]), as.numeric(levelFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
       }
     }
   }
@@ -213,25 +219,26 @@ utils_zoom_level_plot <- function(
     lines <- paste0(line1, line2)
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
   } else if (type == "table"){
     line2 <- "        \n        \n        Return periods are based\n        on statistical analysis\n        of select data from the\n        start of records to 2021."
     lines <- paste0(line1, line2)
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=end_time, ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
   } else {
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=8), just = "left"), xmin=end_time, ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left"), xmin=end_time, ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
   }
-  # 
-  # 
-  # plot +
-  #   ggplot2::annotation_custom(grobTree(textGrob("Hello world!", x=0.8, hjust=0, y=1, vjust=1)))
-  # return(plot)
-  # 
-  # plot +
-  #   ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left", x=0.9))
+
+
+  plot +
+    ggplot2::annotation_custom(grobTree(textGrob("Hello world!", x=0.8, hjust=0, y=1, vjust=1)))
+  return(plot)
+
+  plot +
+    ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left", x=0.9)) +
+    ggplot2::coord_cartesian(clip="off", default=TRUE)
   
 }

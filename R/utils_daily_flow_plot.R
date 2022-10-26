@@ -52,7 +52,7 @@ utils_daily_flow_plot <- function(
     ggplot2::ylim(min, max) +
     ggplot2::labs(x= "", y = "Flow (" ~m^3* "/s)") +
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
-    tidyquant::coord_x_date(xlim = c(paste(graph_year, "-01-01", sep = ""), paste(graph_year, "-12-31", sep = ""))) +
+    ggplot2::coord_cartesian(xlim = c(as.Date(paste0(graph_year, "-01-01")), as.Date(paste0(graph_year, "-12-31")))) +
     ggplot2::theme_classic() +
     ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8), plot.tag = ggplot2::element_text(hjust=0.65,size=9), plot.tag.position = c(1, 0.5)) +
     
@@ -161,17 +161,17 @@ utils_daily_flow_plot <- function(
     lines <- paste0(line1, line2)
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
   } else if (type == "table"){
     line2 <- "        \n        \n        Return periods are based\n        on statistical analysis\n        of select data from the\n        start of records to 2021."
     lines <- paste0(line1, line2)
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=10), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(lines, gp = grid::gpar(fontsize=8), just="left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = (max-spread/2)-8*spread/30, ymax =(max-spread/2)-8*spread/30)
   } else {
     plot <- plot + 
       ggplot2::coord_cartesian(clip="off", default=TRUE) +
-      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=10), just = "left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
+      ggplot2::annotation_custom(grid::textGrob(line1, gp = grid::gpar(fontsize=8), just = "left"), xmin=as.Date(paste0(graph_year,"-12-31"), "%Y-%m-%d"), ymin = max-spread/2-7*spread/30, ymax=max-spread/2-7*spread/30)
   }
   
   return(plot)

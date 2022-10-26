@@ -58,7 +58,7 @@ flowPlot <- function(station,
   flowData <- utils_flow_data(
     station_number = station,
     select_years = years,
-    high_res = TRUE,
+    high_res = zoom,
     filter = filter,
     recent_prctile = FALSE
   )

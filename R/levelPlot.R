@@ -25,7 +25,7 @@ levelPlot <- function(station,
                       zoom=FALSE, 
                       zoom_days=30, 
                       filter=FALSE, 
-                      forecast=NULL, 
+                      forecast="none", 
                       returns="auto", 
                       force_CGVD28 = FALSE, 
                       save_path="none"
@@ -44,6 +44,16 @@ levelPlot <- function(station,
   if (save_path %in% c("Choose", "choose")) {
     print("Select the path to the folder where you want this report saved.")
     save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
+  }
+  
+  if (!(forecast %in% c("none", "None")) & zoom == FALSE){
+    forecast <- "none"
+    print ("Forecasts/predictions cannot be added to whole-year plots. Select zoom=TRUE if you want a plot with MESH or CLEVER predictions.")
+  }
+  
+  if (length(years) > 1 & !(forecast %in% c("none", "None"))) {
+    years <- lubridate::year(Sys.Date())
+    print ("Multiple years cannot be plotted along with a MESH or CLEVER forecast. Plotting only the current year.")
   }
   
   #Get the data
@@ -83,7 +93,6 @@ levelPlot <- function(station,
       ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
   }
   
-  
   #Save it if requested
   if (!(save_path %in% c("none", "None"))){
     ggplot2::ggsave(filename=paste0(save_path,"/", station, "_LEVEL_", if(zoom==TRUE) "ZOOM_" else "", Sys.Date(), "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), lubridate::minute(as.POSIXct(format(Sys.time()), tz='America/Whitehorse')), ".png"), plot=plot, height=8, width=12, units="in", device="png", dpi=500)
@@ -92,5 +101,3 @@ levelPlot <- function(station,
   return(plot)
   options(warn = oldw) #re-enable warnings
 }
-
-

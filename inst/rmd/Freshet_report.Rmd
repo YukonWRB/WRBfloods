@@ -326,26 +326,20 @@ if (report_type %in% c("Both", "Level", "both", "level")){
           }
         }
       
-    #Determine if the last data point is >6 hours old
+      #Determine if the last data point is > 6 hours old
       if (levelData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
         tbl$Last_data <- "< 1 hr"
-      }
-      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
         tbl$Last_data <- "1-2 hrs"
-      }
-      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*2)) {
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*2)) {
         tbl$Last_data <- "2-3 hrs"
-      }
-      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*3)) {
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*3)) {
         tbl$Last_data <- "3-4 hrs"
-      }
-      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*4)) {
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*4)) {
         tbl$Last_data <- "4-5 hrs"
-      }
-      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*5)) {
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*5)) {
         tbl$Last_data <- "5-6 hrs"
-      }
-      if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*6)) {
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*6)) {
         tbl$Last_data <- "> 6 hrs"
       }
       
@@ -523,29 +517,22 @@ if (report_type %in% c("Both", "Flow", "both", "flow")){
               }
           }
         }
-        #Determine if the last data point is >6 hours old
-        tbl$Last_data <- " "
-        if (flowData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
-          tbl$Last_data <- "< 1 hr"
-        }
-        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
-          tbl$Last_data <- "1-2 hrs"
-        }
-        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*2)) {
-          tbl$Last_data <- "2-3 hrs"
-        }
-        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*3)) {
-          tbl$Last_data <- "3-4 hrs"
-        }
-        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*4)) {
-          tbl$Last_data <- "4-5 hrs"
-        }
-        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*5)) {
-          tbl$Last_data <- "5-6 hrs"
-        }
-        if (flowData[[3]]$Date[1] < (Sys.time() - 60*60*6)) {
-          tbl$Last_data <- "> 6 hrs"
-        }
+        #Determine if the last data point is > 6 hours old
+      if (levelData[[3]]$Date[1] > (Sys.time() - 60*60*1)) {
+        tbl$Last_data <- "< 1 hr"
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*1)) {
+        tbl$Last_data <- "1-2 hrs"
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*2)) {
+        tbl$Last_data <- "2-3 hrs"
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*3)) {
+        tbl$Last_data <- "3-4 hrs"
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*4)) {
+        tbl$Last_data <- "4-5 hrs"
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*5)) {
+        tbl$Last_data <- "5-6 hrs"
+      } else if (levelData[[3]]$Date[1] < (Sys.time() - 60*60*6)) {
+        tbl$Last_data <- "> 6 hrs"
+      }
         
       }, error=function(e) {}
       ) #End of tryCatch for station existence
@@ -1055,129 +1042,69 @@ for(i in stations) {
    cat("  \n\\newpage\n\n")
 
   }
-} #End of For loop
+} #End of For loop generating plots at each station.
 
 cat("  \n")
 ```
 
 ```{r Precipitation, echo=FALSE, results='asis', message=FALSE}
-  if (precip == TRUE){
-tryCatch({
-
-  #Get the links from the web, turn it into a usable table
-  htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/") #6 hour products for first day
-  nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
-    rvest::html_attr("href")
-  dbf6 <- as.data.frame(as.character(nodes))
-  names(dbf6) <- "link"
-  dbf6 <- dbf6 %>% 
-    dplyr::mutate(watershed = substr(link, 65,66), #Create watershed column 
-                  cutoff = substr(link, 25, 28), #find the cutoff time
-                  datetime = substr(link, 50,59)) #find the valid date/time
-  
-  htmlcode <- xml2::read_html("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/24/") #24 hour products for subsequent days
-  nodes <- rvest::html_elements(htmlcode,xpath='//*[contains(@href, ".dbf")]') %>%
-    rvest::html_attr("href")
-  dbf24 <- as.data.frame(as.character(nodes))
-  names(dbf24) <- "link"
-  dbf24 <- dbf24 %>% 
-    dplyr::mutate(watershed = substr(link, 65,66), #Create watershed column 
-                  cutoff = substr(link, 25, 28), #find the cutoff time
-                  datetime = substr(link, 50,59)) #find the valid date/time
-  
-  
-  watersheds <- unique(substr(stations, 1,2)) #determine in which watershed(s) we want to look
-  
-  first6 <- list() #lists created here to populate in for loop
-  subsequent <- list()
-  
-  for (i in watersheds){
-    
-    #FIRST use 6 hour data for the first 24 hour period
-    first <- dplyr::filter(dbf6, watershed==i, cutoff=="0100") %>% dplyr::arrange(desc(datetime)) #uses cutoff 0100 to get as recent data as possible.
-    
-    validdatetime <- as.POSIXct(first$datetime[1], format="%Y%m%d%H", tz="UTC")
-    
-    temp <- tempfile(fileext=".dbf")
-    R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/CMC_HRDPA_WATERSHED-006-0100cutoff_SFC_0_ps2.5km_", first$datetime[1], "_000_", i, ".dbf"), temp) #sadly overwrite=TRUE does not work!
-    first6[[i]] <- foreign::read.dbf(temp)
-    unlink(temp)
-    
-    #THEN get the next 27 6 hour periods
-    for (j in 1:27) {
-      subsequent6 <- dplyr::filter(dbf6, watershed==i, cutoff=="0700") %>% dplyr::arrange(desc(datetime)) #uses cutoff 0700 from here on because we might as well use the more accurate data
-      
-      temp <- tempfile(fileext=".dbf")
-      R.utils::downloadFile(paste0("https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/CMC_HRDPA_WATERSHED-006-0700cutoff_SFC_0_ps2.5km_", subsequent6$datetime[j], "_000_", i, ".dbf"), temp)
-      subsequent[[i]][[j]] <- foreign::read.dbf(temp)
-      unlink(temp)
+if (precip == TRUE){
+  cat("# Accumulated Precipitation Above Stations  \n")
+  tryCatch({
+    now <- Sys.time() #setting now prevents running basinPrecip with different start/end times.
+    precip <- list()
+    for (i in stations){
+      lastweek <- basinPrecip(i, start = now-60*60*24*7, end=now, silent=TRUE)
+      last48 <- basinPrecip(i, start = now-60*60*24*2, end=now, silent=TRUE)
+      last24 <- basinPrecip(i, start = now-60*60*24, end=now, silent=TRUE)
+      next24 <- basinPrecip(i, start = now, end = now+60*60*24, silent=TRUE)
+      next48 <- basinPrecip(i, start = now, end = now+60*60*24*2, silent=TRUE)
+      precip[[i]] <- list(lastweek = lastweek, last48=last48, last24=last24, next24=next24, next48=next48)
     }
     
-  }
-  
-  first6 <- subset(data.table::rbindlist(first6), Station %in% stations) #combine the stations to one data.frame
-  
-  all6hr <- list(first6) #make a list and insert the first element
-  
-  for (i in 2:28){ #populate the rest of the list so we can bind_rows to those data.frames later
-    all6hr[[i]] <- data.frame()
-  }
-  
-  for (i in 1:length(subsequent)){ #bind it all together to make a simple list of 28.
-    for (j in 2:28){
-      all6hr[[j]] <- subset(dplyr::bind_rows(all6hr[[j]], subsequent[[i]][[j-1]]), Station %in% stations)
+    precipTable <- data.frame("Station" = stations, stationInfo[,1])
+    
+    for (i in 1:length(stations)){
+      precipTable$lastweek[precipTable$Station == stations[i]] <- precip[[i]]$lastweek$mean_precip
+      precipTable$last48[precipTable$Station == stations[i]] <- precip[[i]]$last48$mean_precip
+      precipTable$last24[precipTable$Station == stations[i]] <- precip[[i]]$last24$mean_precip
+      precipTable$next24[precipTable$Station == stations[i]] <- precip[[i]]$next24$mean_precip
+      precipTable$next48[precipTable$Station == stations[i]] <- precip[[i]]$next48$mean_precip
     }
-  }
-  
-  #now do something with that precip data
-  cat("\newpage  \n")
-  cat("# Precipitation  \n")
-  cat("## Recent Precipitation Above Stations  \n")
-  
-  precip12hr <- all6hr[[1]]$PR_mm + all6hr[[2]]$PR_mm
-  precip24hr <- precip12hr + all6hr[[3]]$PR_mm + all6hr[[4]]$PR_mm
-  precip48hr <- 0
-  for (i in 1:8){
-    precip48hr <- all6hr[[i]]$PR_mm + precip48hr
-  }
-  precip72hr <- 0
-  for (i in 1:12){
-    precip72hr <- all6hr[[i]]$PR_mm + precip72hr
-  }
-  precip96hr <- 0
-  for(i in 1:16){
-    precip96hr <- all6hr[[i]]$PR_mm + precip96hr
-  }
-  precip1wk <- 0
-  for (i in 1:28){
-    precip1wk <- all6hr[[i]]$PR_mm + precip1wk
-  }
-  
-  precipTable <- data.frame(stringr::str_to_title(all6hr[[1]]$StationNam), all6hr[[1]]$Station, precip24hr, precip72hr, precip1wk)
-  
-  colnames(precipTable) <- c("Station name", "ID", "One day", "Three days", "One week")
-  
-  knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) prior to ", substr(validdatetime-7*60*60, 1, 16), " Yukon Time where available. Precipitation totals are generated from Environment and Climate Change Canada's HRDPA model: for more information, click [here](https://eccc-msc.github.io/open-data/msc-data/nwp_hrdpa/readme_hrdpa_en/)."), align="c")
-  }, error=function(e) {cat("  \nPrecipitation shapefiles could not be downloaded or processed from the following URL: https://dd.weather.gc.ca/analysis/precip/hrdpa_watershed/shapefile/06/. Check to see if it can be reached, if that checks out ask Ghislain to look further into the problem.")})
-
+    
+    precipTable <- precipTable[,-1]
+    
+    last48hours <- as.character(difftime(as.POSIXct(precip[[1]]$last48$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$last48$total_time_range_UTC[1])))
+    last24hours <- as.character(difftime(as.POSIXct(precip[[1]]$last24$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$last24$total_time_range_UTC[1])))
+    next24hours <- as.character(difftime(as.POSIXct(precip[[1]]$next24$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$next24$total_time_range_UTC[1])))
+    next48hours <- as.character(difftime(as.POSIXct(precip[[1]]$next48$total_time_range_UTC[2]), units = "hours", as.POSIXct(precip[[1]]$next48$total_time_range_UTC[1])))
+    
+    
+    colnames(precipTable) <- c("Station name (number)", "Last week", paste0("Last ", last48hours, " hours"), paste0("Last ", last24hours, " hours"), paste0("Next ", next24hours, " hours"), paste0("Next ", next48hours, " hours"))
+    
+    knitr::kable(precipTable, digits=1, caption=paste0("Accumulated precipitation (mm of water) over various time periods. Values are generated from Environment and Climate Change Canada's HRDPA model (past) and HRDPS model (forecast). Note that past and forecast time ranges vary depending on weather product availability."), align="lccccc")
+  }, error = function(e) {
+    cat("Precipitation data could not be fetched at this time. This likely reflects a network, server, or data availability issue.")
+  }, warning = function (w) {
+  cat("Precipitation data could not be fetched at this time. This likely reflects a network, server, or data availability issue.")
+}
+  )
   
   
   # And now for some images
   cat("  \n ## Recent Precipitation Images  \n")
-  cat(" The following images represent precipitation in and around Yukon. Each image integrates precipitation (from observations and remote sensing) over the 24 hours prior to the image's valid date/time (Yukon time).  \n")
-
-tryCatch({
-  wxfiles<- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", pattern="\\.png$")
-  par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
-  
-  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-  
-  cat("  \n  \n  ")
-  imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)-2])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
-}, error=function(e) {
-  cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
-})
-  
+  tryCatch({
+    cat(" The following images represent precipitation in and around Yukon. Each image integrates precipitation (from observations and remote sensing) over the 24 hours prior to the image's valid date/time (Yukon time).  \n")
+    wxfiles<- list.files("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", pattern="\\.png$")
+    par(mar=c(0,0,0,0)) #sets the plot margins to 0 - important
+    
+    imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+    
+    cat("  \n  \n  ")
+    imager::load.image(paste0("//cs-fs2/cs-data/PS/Weather/WeatherFiles/Common/Grads_images/sumRDPA/hrdpa/24/", wxfiles[length(wxfiles)-2])) %>% imager::crop.borders(nx=0, ny=18) %>% plot(axes=FALSE)
+  }, error=function(e) {
+    cat("HRDPA images cannot be fetched from the YG server. Are you on a different network?  \n  \n  ")
+  })
 }
 
 ```
@@ -1255,7 +1182,6 @@ if (is.null(image_path)!=TRUE){
     cat("  \n")
   }
 }
-
 ```
 
 # Hydrometric station information
@@ -1303,5 +1229,5 @@ if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
 # Additional information
 
 ```{r version control, echo=FALSE, results='asis', message=FALSE}
-cat(paste0("This report was generated with the R package WRBfloods version ", packageVersion("WRBfloods"), "."))
+cat(paste0("This report was generated with the R package WRBfloods version ", packageVersion("WRBfloods"), " built and maintained by the Yukon Department of Environment, Water Resources Branch. Please [contact us](mailto:waterlevels@yukon.ca) to report erroneous or missing data."))
 ```

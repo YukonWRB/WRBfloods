@@ -39,9 +39,10 @@ utils_flow_data <- function(
 	flow_historic <- (tidyhydat::hy_daily_flows(station_number = station_number)[,-c(3,5)])
 	colnames(flow_historic) <- c("STATION_NUMBER", "Date", "Flow")
 	record_yrs <- unique(substr(flow_historic$Date, 1,4))
+	record_yrs <- c(as.character(lubridate::year(Sys.Date())-2), record_yrs, as.character(lubridate::year(Sys.Date())-1), as.character(lubridate::year(Sys.Date())))
 	
-	if (min(record_yrs) > min(select_years)){
-	  stop(paste0("You are requesting data for years prior to existing records at this station. Records begin in ", min(record_yrs), ", please specify years after this date only."))
+	if (!(TRUE %in% (select_years %in% record_yrs))){
+	  stop(paste0("There is no data for the years you have requested. Years of record for historical data at this station are ", paste0(record_yrs, collapse = ", "), ". In addition, later high-resolution data may be available if the station is currently active."))
 	}
 	
 	#Truncate all to the last requested year. Only these years are used for calculating stats.
@@ -239,10 +240,7 @@ utils_flow_data <- function(
 	    } 
 	  }
 	}
-	
-	
-	
-	
+
 	
 	flowData <- list(all_historical = flow_df, requested_years = flow_years, recent_flow = recent_flow)
 	return(flowData)
