@@ -441,7 +441,7 @@ basinPrecip <- function(location,
   ###Map the output if requested
   if (map == TRUE){
     if (type == "longlat"){ #Special treatment so we can return a watershed with the point for context
-      WSC_polygons <- terra::vect(data$WSC_polygons)
+      WSC_polygons <- drainages
       WSC_polygons <- terra::project(WSC_polygons, "+proj=longlat +EPSG:3347")
       watershed <- terra::relate(location, WSC_polygons, relation = "within")
       watershed <- WSC_polygons[which(watershed)]

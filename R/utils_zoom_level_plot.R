@@ -141,11 +141,8 @@ utils_zoom_level_plot <- function(
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[3,4]), linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[2,4]), linetype="dashed", color = "black") +
-        ggplot2::geom_hline(yintercept=as.numeric(levelFreq[1,4]), linetype="dashed", color = "black") +
         
-        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4]), as.numeric(levelFreq[3,4]), as.numeric(levelFreq[2,4]), as.numeric(levelFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+        ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
       
     } else if (returns %in% c("table") & station_number %in% data$level_returns$ID == TRUE){
       type <- "table"
@@ -200,11 +197,8 @@ utils_zoom_level_plot <- function(
           ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
           ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
           ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
-          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[3,4]), linetype="dashed", color = "black") +
-          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[2,4]), linetype="dashed", color = "black") +
-          ggplot2::geom_hline(yintercept=as.numeric(levelFreq[1,4]), linetype="dashed", color = "black") +
           
-          ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4]), as.numeric(levelFreq[3,4]), as.numeric(levelFreq[2,4]), as.numeric(levelFreq[1,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return", "five hundred year return", "one-thousand year return", "two-thousand year return"), size=2.6, vjust=-.2)
+          ggplot2::annotate("text", x=mean(zoom_data$Date), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
       }
     }
   }
