@@ -469,6 +469,7 @@ basinPrecip <- function(location,
       watershed <- location
     }
     
+    
     cropped_precip_rast <- terra::mask(total, watershed_buff)
     cropped_precip_rast <- terra::trim(cropped_precip_rast)
     
@@ -526,7 +527,11 @@ basinPrecip <- function(location,
   if (type == "longlat"){
     list <- list(mean_precip = mean_precip, total_time_range_UTC = actual_times, reanalysis_time_range_UTC = actual_times_hrdpa, forecast_time_range_UTC = actual_times_hrdps, point = requested_point, plot = if(map) plot else NULL)
     if (silent == FALSE){
-      cat("  \n  \n", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent ", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have falllen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", " at your requested point (", requested_point[1], ", ", requested_point[2], ") between ", crayon::blue(crayon::bold(as.character(actual_times[1]), "and ", as.character(actual_times[2]), "UTC.")), "The smallest watershed for which I could find a polygon is ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n")
+      if (map == TRUE){
+        cat("  \n  \n", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent ", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have falllen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", " at your requested point (", requested_point[1], ", ", requested_point[2], ") between ", crayon::blue(crayon::bold(as.character(actual_times[1]), "and ", as.character(actual_times[2]), "UTC.")), "The smallest watershed for which I could find a polygon is ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n\n")
+      } else {
+        cat("  \n  \n", crayon::blue(crayon::bold(crayon::underline(round(mean_precip, 2)))), " mm of rain or water equivalent ", if(hrdps == FALSE) "fell" else if (hrdps == TRUE & hrdpa == TRUE) "will have falllen" else if (hrdps == TRUE & hrdpa == FALSE) "will fall", " at your requested point (", requested_point[1], ", ", requested_point[2], ") between ", crayon::blue(crayon::bold(as.character(actual_times[1]), "and ", as.character(actual_times[2]), "UTC.")), "  \n  \nNOTES:  \n Your requested times have been adjusted to align with available data.\n", if(hrdps == FALSE) "Precipitation is based solely on retrospective-looking data produced by the HRDPA" else if (hrdps == TRUE & hrdpa == TRUE) "Precipitation is based on a mixture of retrospective-looking data from the HRDPA re-analysis and modelled precipitation using the HRDPS." else if (hrdps == TRUE & hrdpa == FALSE) "Precipitation is based on the HRDPS climate model outputs.", "  \n\n")
+      }
     }
   } else {
     list <- list(mean_precip = mean_precip, min = min, max = max, total_time_range_UTC = actual_times, reanalysis_time_range_UTC = actual_times_hrdpa, forecast_time_range_UTC = actual_times_hrdps, watershed = watershed$StationNum, plot = if(map) plot else NULL)
