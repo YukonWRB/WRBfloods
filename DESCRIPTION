@@ -6,7 +6,7 @@ Authors@R:
            comment = c(ORCID = "0000-0002-5093-9185"))
 Description: This package exists to facilitate the generation of flood
     reports by the Yukon Water Resources Branch.
-License: AGPL (>= 3) + file LICENSE
+License: AGPL (>= 3)
 Depends: 
     R (>= 2.10),
     tidyhydat.ws
