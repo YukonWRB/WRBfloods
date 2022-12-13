@@ -1,3 +1,5 @@
 ^LICENSE\.md$
 ^WRBfloods\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+^development_files$
