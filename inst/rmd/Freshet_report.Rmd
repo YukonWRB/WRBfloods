@@ -30,7 +30,7 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r code save, eval=FALSE, include=FALSE}
+```{r intro, eval=FALSE, include=FALSE}
 
 Record-setting May 1 snowpack in many Yukon watersheds creates a high potential for flooding driven by spring snowmelt in Yukon communities. Critical during the snowmelt period are snowpack conditions, weather conditions, and water levels and flows in lakes and rivers.
 

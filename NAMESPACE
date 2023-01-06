@@ -3,6 +3,7 @@
 export("%>%")
 export(WSCdata)
 export(basinPrecip)
+export(bridgeReport)
 export(floodReport)
 export(flowPlot)
 export(freshetReport)
