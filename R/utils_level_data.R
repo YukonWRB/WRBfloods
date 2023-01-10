@@ -300,7 +300,7 @@ utils_level_data <- function(
           try(recent_level$rate[i] <- recent_level$Level[i] - recent_level$Level[i+1], silent=TRUE)
         }
       } else {
-        last_row <- which(recent_level$Date== (recent_level$Date[1] - rate_days*60*60*24))
+        last_row <- which(recent_level$Date == (recent_level$Date[1] - rate_days*60*60*24))
         for (i in 1:last_row){
           try(recent_level$rate[i] <- recent_level$Level[i] - recent_level$Level[i+1], silent=TRUE)
         }
