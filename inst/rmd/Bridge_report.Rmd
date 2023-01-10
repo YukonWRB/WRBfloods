@@ -126,7 +126,7 @@ colnames(levels) <- c("Location", "Latest distance (m)", "24 hr change (cm)", "4
 
 for (i in 1:length(locations)){
   latest <- bridge_rt[[i]][bridge_rt[[i]]$datetime_UTC == max(as.POSIXct(bridge_rt[[i]]$datetime_UTC)), ]
-  current <- latest$value
+  current <- round(latest$value, 1)
   day <- round(100 * (current - mean(bridge_rt[[i]][bridge_rt[[i]]$datetime_UTC < (latest$datetime_UTC - 60*60*23.5) & bridge_rt[[i]]$datetime_UTC > (latest$datetime_UTC - 60*60*24.5), ]$value)), 1)
   twoday <- round(100 * (current - mean(bridge_rt[[i]][bridge_rt[[i]]$datetime_UTC < (latest$datetime_UTC - 60*60*23.5*2) & bridge_rt[[i]]$datetime_UTC > (latest$datetime_UTC - 60*60*24.5*2), ]$value)), 1)
   threeday <- round(100* (current - mean(bridge_rt[[i]][bridge_rt[[i]]$datetime_UTC < (latest$datetime_UTC - 60*60*23.5*3) & bridge_rt[[i]]$datetime_UTC > (latest$datetime_UTC - 60*60*24.5*3), ]$value)), 1)
@@ -139,7 +139,7 @@ for (i in 1:length(locations)){
   levels[i,4] <- twoday
   levels[i,5] <- threeday
   levels[i,6] <- week
-  levels[i,7] <- paste0(round(age[1], 1), " ", units(age))
+  levels[i,7] <- paste0(round(age[1], 0), " ", units(age))
 }
 
 print(knitr::kable(levels, align = "lcccccc"))
