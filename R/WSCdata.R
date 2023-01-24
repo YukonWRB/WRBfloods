@@ -1,6 +1,6 @@
 #' Download and process WSC flow or level data
 #' 
-#' Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
+#' Important: it's preferable to get flow/level data from the local database created with WRBdatabase in most cases. However, if you need to get WSC data outside of the database then this is the function. Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Output for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
 #'
 #' @param stations The stations for which you want to download data.
 #' @param level_flow Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both". Levels will be in the most recent datum available.
