@@ -1,0 +1,447 @@
+---
+title: "Tabular hydrometric report"
+subtitle: "`r paste0(format(Sys.Date(), '%B %e'), ', ', lubridate::year(Sys.Date()), ' at ', stringr::str_remove(tolower(format(Sys.time(), '%I %p', tz='America/Whitehorse')), '^0+'))`"
+date:
+output: 
+  word_document:
+    reference_docx: style_template_tabular.docx
+params:
+  database: database
+  locations: locations
+  past: past
+  pillows: pillows
+  level: level
+  flow: flow
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Concept: An R script (function) will prepare the table. From there, the table can be exported as a .csv or simply pasted into the body of an email. This Markdown script will then take the tabular output and produce a .pdf, with **bolded** text or color-coded cells to draw the reader's attention.
+```
+
+
+```{r Get location data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+level_daily <- list()
+flow_daily <- list()
+level_rt <- list()
+flow_rt <- list()
+names_level <- NULL
+names_flow <- NULL
+
+if (!is.null(database)){ #Get the data from the database. Connection already performed in the .R file.
+  for (i in locations){
+    if (level){
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, max, min, percent_historic_range FROM daily WHERE parameter = 'level' AND location = '", i, "' AND date BETWEEN '", Sys.Date()-30, "' AND '", Sys.Date(), "'" ))
+      if (nrow(daily) > 0){
+        daily$date <- as.Date(daily$date, tz = "UTC")
+        level_daily[[i]] <- daily
+      }
+      rt <-  DBI::dbGetQuery(database, paste0("SELECT value, datetime_UTC FROM realtime WHERE parameter = 'level' AND location = '", i, "' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-past * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
+      if (nrow(rt) > 0){
+        rt$datetime_UTC <- as.POSIXct(rt$datetime_UTC, tz = "UTC")
+        level_rt[[i]] <- rt
+        names_level[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "' AND parameter = 'level' AND type = 'continuous'"))))
+      }
+    }
+    if (flow){
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, max, min, percent_historic_range FROM daily WHERE parameter = 'flow' AND location = '", i, "' AND date BETWEEN '", Sys.Date()-365, "' AND '", Sys.Date(), "'" ))
+      if (nrow(daily) >0 ){
+        daily$date <- as.Date(daily$date, tz = "UTC")
+        flow_daily[[i]] <- daily
+      }
+      rt <-  DBI::dbGetQuery(database, paste0("SELECT value, datetime_UTC FROM realtime WHERE parameter = 'flow' AND location = '", i, "' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-past * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
+      if (nrow(rt) > 0){
+        rt$datetime_UTC <- as.POSIXct(rt$datetime_UTC, tz = "UTC")
+        flow_rt[[i]] <- rt
+        names_flow[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "' AND parameter = 'flow' AND type = 'continuous'"))))
+      }
+    }
+  }
+  
+  if (pillows[1] != FALSE){
+    pillows_daily <- list()
+    pillows_rt <- list()
+    names_pillows <- NULL
+    for (i in pillows){
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, max, min, percent_historic_range FROM daily WHERE parameter = 'SWE' AND location = '", i, "' AND date BETWEEN '", Sys.Date()-365, "' AND '", Sys.Date(), "'" ))
+      if (nrow(daily) > 0){
+        daily$date <- as.Date(daily$date, tz = "UTC")
+        pillows_daily[[i]] <- daily
+      }
+      rt <-  DBI::dbGetQuery(database, paste0("SELECT value, datetime_UTC FROM realtime WHERE parameter = 'SWE' AND location = '", i, "' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-past * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
+      if (nrow(rt) > 0){
+        rt$datetime_UTC <- as.POSIXct(rt$datetime_UTC, tz = "UTC")
+        pillows_rt[[i]] <- rt
+        names_pillows[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "' AND parameter = 'SWE' AND type = 'continuous'"))))
+      }
+    }
+  }
+  
+} else { #Get the data directly from the WSC or Aquarius
+  level_daily <- list()
+  flow_daily <- list()
+  level_rt <- list()
+  flow_rt <- list()
+  names_level <- NULL
+  names_flow <- NULL
+  for (i in locations){
+    data <- WSCdata(i)
+    if (length(data[[i]]$level) == 4){
+      level_daily[[i]] <- data[[i]]$level$historical
+      level_rt[[i]] <- data[[i]]$level$recent_5_minute
+      names_level[i] <- stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)
+    }
+    if (length(data[[i]]$flow) == 4){
+      flow_daily[[i]] <- data[[i]]$flow$historical
+      flow_rt[[i]] <- data[[i]]$flow$recent_5_minute
+      names_flow[i] <- stringr::str_to_title(tidyhydat::hy_stations(i)$STATION_NAME)
+    }
+  }
+  if (pillows[1] != FALSE){
+    pillows_daily <- list()
+    names_pillows <- NULL
+    for (i in pillows){
+      data <- WRBtools::aq_download(i, "SWE.Corrected", start = Sys.Date()-past)
+      if (length(data$timeseries) > 0){
+        pillows_rt[[i]] <- data$timeseries
+        names_pillows[i] <- data$metadata[1,2]
+      }
+    }
+  }
+}
+```
+
+```{r Level table, echo=FALSE, results='asis', message=FALSE}
+if (level){
+  cat("  \n# Summary of levels \n")
+  levels <- data.frame()
+  for (i in names(level_rt)){
+    rt <- level_rt[[i]]
+    last_time <- rt[rt$datetime_UTC == max(rt$datetime_UTC) ,]$datetime_UTC
+    age <- Sys.time() - last_time
+    #take the median value from latest to 30 minutes before latest
+    latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value)
+    day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value)
+    twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value)
+    threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value)
+    week <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*167 & rt$datetime_UTC >= last_time - 60*60*169 , ]$value)
+    if (is.na(week)){
+      week <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*165 & rt$datetime_UTC >= last_time - 60*60*171 , ]$value)
+    }
+    if (past <= 8){
+      levels <- rbind(levels, 
+                      data.frame("loc" = paste0(names_level[i], " (", i, ")"),
+                                 "level" = latest,
+                                 "24" = round((latest - day) * 100, 1),
+                                 "48" = round((latest - twoday) * 100, 1),
+                                 "72" = round((latest - threeday) * 100, 1),
+                                 "week" = round((latest - week) * 100, 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 8 & past <= 15){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      levels <- rbind(levels, 
+                      data.frame("loc" = paste0(names_level[i], " (", i, ")"),
+                                 "level" = latest,
+                                 "24" = round((latest - day) * 100, 1),
+                                 "48" = round((latest - twoday) * 100, 1),
+                                 "72" = round((latest - threeday) * 100, 1),
+                                 "week" = round((latest - week) * 100, 1),
+                                 "twoweek" = round((latest - twoweek) * 100, 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 15 & past <= 22){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*503 & rt$datetime_UTC >= last_time - 60*60*505 , ]$value)
+      if (is.na(threeweek)){
+        threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*497 & rt$datetime_UTC >= last_time - 60*60*511 , ]$value)
+      }
+      levels <- rbind(levels, 
+                      data.frame("loc" = paste0(names_level[i], " (", i, ")"),
+                                 "level" = latest,
+                                 "24" = round((latest - day) * 100, 1),
+                                 "48" = round((latest - twoday) * 100, 1),
+                                 "72" = round((latest - threeday) * 100, 1),
+                                 "week" = round((latest - week) * 100, 1),
+                                 "twoweek" = round((latest - twoweek) * 100, 1),
+                                 "threeweek" = round((latest - threeweek) * 100, 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 22){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*503 & rt$datetime_UTC >= last_time - 60*60*505 , ]$value)
+      if (is.na(threeweek)){
+        threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*497 & rt$datetime_UTC >= last_time - 60*60*511 , ]$value)
+      }
+      month <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*719 & rt$datetime_UTC >= last_time - 60*60*721 , ]$value)
+      if (is.na(month)){
+        month <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*710 & rt$datetime_UTC >= last_time - 60*60*730 , ]$value)
+      }
+      levels <- rbind(levels, 
+                      data.frame("loc" = paste0(names_level[i], " (", i, ")"),
+                                 "level" = latest,
+                                 "24" = round((latest - day) * 100, 1),
+                                 "48" = round((latest - twoday) * 100, 1),
+                                 "72" = round((latest - threeday) * 100, 1),
+                                 "week" = round((latest - week) * 100, 1),
+                                 "twoweek" = round((latest - twoweek) * 100, 1),
+                                 "threeweek" = round((latest - threeweek) * 100, 1),
+                                 "month" = round((latest - month) * 100, 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+  }
+  if (past <= 8){
+    colnames(levels) <- c("Location", "Latest level (m)", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "1 week change (cm)", "Last data age")
+  }
+  if (past > 8 & past <= 15){
+    colnames(levels) <- c("Location", "Latest level (m)", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "1 week change (cm)", "2 week change (cm)", "Last data age")
+  }
+  if (past > 15 & past <= 22){
+    colnames(levels) <- c("Location", "Latest level (m)", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "1 week change (cm)", "2 week change (cm)", "3 week change (cm)", "Last data age")
+  }
+  if (past > 22){
+    colnames(levels) <- c("Location", "Latest level (m)", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "1 week change (cm)", "2 week change (cm)", "3 week change (cm)", "month change (cm)", "Last data age")
+  }
+  print(knitr::kable(levels, align = "lccccccccccccc"))
+}
+```
+
+\newpage
+
+```{r Flow table, echo=FALSE, results='asis', message=FALSE}
+if (flow){
+  cat("  \n# Summary of flows \n")
+  
+  flows <- data.frame()
+  for (i in names(flow_rt)){
+    rt <- flow_rt[[i]]
+    last_time <- rt[rt$datetime_UTC == max(rt$datetime_UTC) ,]$datetime_UTC
+    age <- Sys.time() - last_time
+    #take the median value from latest to 30 minutes before latest
+    latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value)
+    day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value)
+    twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value)
+    threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value)
+    week <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*167 & rt$datetime_UTC >= last_time - 60*60*169 , ]$value)
+    if (is.na(week)){
+      week <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*165 & rt$datetime_UTC >= last_time - 60*60*171 , ]$value)
+    }
+    if (past <= 8){
+      flows <- rbind(flows, 
+                      data.frame("loc" = paste0(names_flow[i], " (", i, ")"),
+                                 "flow" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 8 & past <= 15){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      flows <- rbind(flows, 
+                      data.frame("loc" = paste0(names_flow[i], " (", i, ")"),
+                                 "flow" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "twoweek" = round((latest - twoweek), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 15 & past <= 22){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*503 & rt$datetime_UTC >= last_time - 60*60*505 , ]$value)
+      if (is.na(threeweek)){
+        threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*497 & rt$datetime_UTC >= last_time - 60*60*511 , ]$value)
+      }
+      flows <- rbind(flows, 
+                      data.frame("loc" = paste0(names_flow[i], " (", i, ")"),
+                                 "flow" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "twoweek" = round((latest - twoweek), 1),
+                                 "threeweek" = round((latest - threeweek), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 22){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*503 & rt$datetime_UTC >= last_time - 60*60*505 , ]$value)
+      if (is.na(threeweek)){
+        threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*497 & rt$datetime_UTC >= last_time - 60*60*511 , ]$value)
+      }
+      month <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*719 & rt$datetime_UTC >= last_time - 60*60*721 , ]$value)
+      if (is.na(month)){
+        month <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*710 & rt$datetime_UTC >= last_time - 60*60*730 , ]$value)
+      }
+      flows <- rbind(flows, 
+                      data.frame("loc" = paste0(names_flow[i], " (", i, ")"),
+                                 "flow" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "twoweek" = round((latest - twoweek), 1),
+                                 "threeweek" = round((latest - threeweek), 1),
+                                 "month" = round((latest - month), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+  }
+  if (past <= 8){
+    colnames(flows) <- c("Location", "Latest flow (m3/s)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "Last data age")
+  }
+  if (past > 8 & past <= 15){
+    colnames(flows) <- c("Location", "Latest flow (m3/s)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "2 week change", "Last data age")
+  }
+  if (past > 15 & past <= 22){
+    colnames(flows) <- c("Location", "Latest flow (m3/s)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "2 week change", "3 week change", "Last data age")
+  }
+  if (past > 22){
+    colnames(flows) <- c("Location", "Latest flow (m3/s)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "2 week change", "3 week change", "month change", "Last data age")
+  }
+  
+  print(knitr::kable(flows, align = "lccccccccccccc"))
+}
+```
+
+\newpage
+
+```{r Pillows table, echo=FALSE, results='asis', message=FALSE}
+if (pillows[1] != FALSE){
+  cat("  \n# Summary of SWE \n")
+
+  SWE <- data.frame()
+  for (i in names(pillows_rt)){
+    rt <- pillows_rt[[i]]
+    last_time <- rt[rt$datetime_UTC == max(rt$datetime_UTC) ,]$datetime_UTC
+    age <- Sys.time() - last_time
+    #take the median value from latest to 30 minutes before latest
+    latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value)
+    day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value)
+    twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value)
+    threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value)
+    week <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*167 & rt$datetime_UTC >= last_time - 60*60*169 , ]$value)
+    if (is.na(week)){
+      week <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*165 & rt$datetime_UTC >= last_time - 60*60*171 , ]$value)
+    }
+    
+    if (past <= 8){
+      SWE <- rbind(SWE, 
+                      data.frame("loc" = paste0(names_pillows[i], " (", i, ")"),
+                                 "SWE" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 8 & past <= 15){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      SWE <- rbind(SWE, 
+                      data.frame("loc" = paste0(names_pillows[i], " (", i, ")"),
+                                 "SWE" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "twoweek" = round((latest - twoweek), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 15 & past <= 22){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*503 & rt$datetime_UTC >= last_time - 60*60*505 , ]$value)
+      if (is.na(threeweek)){
+        threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*497 & rt$datetime_UTC >= last_time - 60*60*511 , ]$value)
+      }
+      SWE <- rbind(SWE, 
+                      data.frame("loc" = paste0(names_pillows[i], " (", i, ")"),
+                                 "SWE" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "twoweek" = round((latest - twoweek), 1),
+                                 "threeweek" = round((latest - threeweek), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+    if (past > 22){
+      twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*335 & rt$datetime_UTC >= last_time - 60*60*337 , ]$value)
+      if (is.na(twoweek)){
+        twoweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*331 & rt$datetime_UTC >= last_time - 60*60*341 , ]$value)
+      }
+      threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*503 & rt$datetime_UTC >= last_time - 60*60*505 , ]$value)
+      if (is.na(threeweek)){
+        threeweek <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*497 & rt$datetime_UTC >= last_time - 60*60*511 , ]$value)
+      }
+      month <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*719 & rt$datetime_UTC >= last_time - 60*60*721 , ]$value)
+      if (is.na(month)){
+        month <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*710 & rt$datetime_UTC >= last_time - 60*60*730 , ]$value)
+      }
+      SWE <- rbind(SWE, 
+                      data.frame("loc" = paste0(names_pillows[i], " (", i, ")"),
+                                 "SWE" = latest,
+                                 "24" = round((latest - day), 1),
+                                 "48" = round((latest - twoday), 1),
+                                 "72" = round((latest - threeday), 1),
+                                 "week" = round((latest - week), 1),
+                                 "twoweek" = round((latest - twoweek), 1),
+                                 "threeweek" = round((latest - threeweek), 1),
+                                 "month" = round((latest - month), 1),
+                                 "age" = paste0(round(age[1], 0), " ", units(age))
+                      ))
+    }
+  }
+  if (past <= 8){
+    colnames(SWE) <- c("Location", "Latest SWE (mm)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "Last data age")
+  }
+  if (past > 8 & past <= 15){
+    colnames(SWE) <- c("Location", "Latest SWE (mm)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "2 week change", "Last data age")
+  }
+  if (past > 15 & past <= 22){
+    colnames(SWE) <- c("Location", "Latest SWE (mm)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "2 week change", "3 week change", "Last data age")
+  }
+  if (past > 22){
+    colnames(SWE) <- c("Location", "Latest SWE (mm)", "24 hr change", "48 hr change", "72 hr change", "1 week change", "2 week change", "3 week change", "month change", "Last data age")
+  }
+  print(knitr::kable(SWE, align = "lccccccccccccc"))
+}
+
+```

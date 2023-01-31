@@ -17,19 +17,16 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r Get station data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+```{r Get location data, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 bridge_daily <- list()
 names <- NULL
 bridge_rt <- list()
 
-if (!is.null(database)){ #Get the data from the database. Checks on database existence and type have already been performed in the .R file.
-  hydro <- DBI::dbConnect(RSQLite::SQLite(), database)
-  on.exit(DBI::dbDisconnect(hydro))
-  DBI::dbExecute(hydro, "PRAGMA busy_timeout=60000")
+if (!is.null(database)){ #Get the data from the database. Connection already performed in the .R file.
   for (i in locations){
-    bridge_daily[[i]] <- DBI::dbGetQuery(hydro, paste0("SELECT value, date, max, min, QP90, QP75, QP50, QP25, QP10 FROM distance_daily WHERE location = '", i, "' AND date BETWEEN '", Sys.Date()-365, "' AND '", Sys.Date(), "'" ))
-    names[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(hydro, paste0("SELECT name FROM locations WHERE location = '", i, "' AND data_type = 'distance'"))))
-    bridge_rt[[i]] <-  DBI::dbGetQuery(hydro, paste0("SELECT value, datetime_UTC FROM distance_realtime WHERE location = '", i, "' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-zoom_days * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
+    bridge_daily[[i]] <- DBI::dbGetQuery(database, paste0("SELECT value, date, max, min, QP90, QP75, QP50, QP25, QP10 FROM distance_daily WHERE location = '", i, "' AND date BETWEEN '", Sys.Date()-365, "' AND '", Sys.Date(), "'" ))
+    names[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "' AND data_type = 'distance'"))))
+    bridge_rt[[i]] <-  DBI::dbGetQuery(database, paste0("SELECT value, datetime_UTC FROM distance_realtime WHERE location = '", i, "' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-zoom_days * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
   }
   
 } else { #Get the data directly from Aquarius and/or the WSC
@@ -118,9 +115,8 @@ for (i in names(bridge_rt)){
 ```
 
 ```{r create tables, echo=FALSE, results='asis', message=FALSE}
-cat("  \n# Summary of freeboard and freeboard changes \n")
+cat("  \n# Summary of freeboard measurements and changes \n")
 
-# levels <- data.frame("Location" = unlist(unname(names)), "Current distance" = NA, "24 hr change (cm)" = NA, "48 hr change (cm)" = NA, "72 hr change (cm)" = NA, "1 week change (cm)" = NA, "Last data age" = NA)
 levels <- data.frame("Location" = NA, "Current distance" = NA, "24 hr change (cm)" = NA, "48 hr change (cm)" = NA, "72 hr change (cm)" = NA, "1 week change (cm)" = NA, "Last data age" = NA)
 colnames(levels) <- c("Location", "Latest distance (m)", "24 hr change (cm)", "48 hr change (cm)", "72 hr change (cm)", "1 week change (cm)", "Last data age")
 
