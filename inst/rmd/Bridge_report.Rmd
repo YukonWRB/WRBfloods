@@ -24,9 +24,9 @@ bridge_rt <- list()
 
 if (!is.null(database)){ #Get the data from the database. Connection already performed in the .R file.
   for (i in locations){
-    bridge_daily[[i]] <- DBI::dbGetQuery(database, paste0("SELECT value, date, max, min, QP90, QP75, QP50, QP25, QP10 FROM distance_daily WHERE location = '", i, "' AND date BETWEEN '", Sys.Date()-365, "' AND '", Sys.Date(), "'" ))
-    names[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "' AND data_type = 'distance'"))))
-    bridge_rt[[i]] <-  DBI::dbGetQuery(database, paste0("SELECT value, datetime_UTC FROM distance_realtime WHERE location = '", i, "' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-zoom_days * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
+    bridge_daily[[i]] <- DBI::dbGetQuery(database, paste0("SELECT value, date, max, min, QP90, QP75, QP50, QP25, QP10 FROM daily WHERE location = '", i, "' AND parameter = 'distance' AND date BETWEEN '", Sys.Date()-365, "' AND '", Sys.Date(), "'" ))
+    names[i] <- DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))[1,1]
+    bridge_rt[[i]] <-  DBI::dbGetQuery(database, paste0("SELECT value, datetime_UTC FROM realtime WHERE location = '", i, "' AND parameter = 'distance' AND datetime_UTC BETWEEN '", .POSIXct(Sys.time(), "UTC")-zoom_days * 60*60*24, "' AND '", .POSIXct(Sys.time(), "UTC"), "'"))
   }
   
 } else { #Get the data directly from Aquarius and/or the WSC

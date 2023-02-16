@@ -13,15 +13,15 @@ bridgeReport(
 )
 }
 \arguments{
-\item{database}{If using a local SQLite database created using WRBdatabase package, specify its path here. Leave NULL to download from Aquarius instead.}
+\item{database}{If using a local database created using WRBdatabase package, specify its path here. Leave NULL to download from Aquarius instead.}
+
+\item{locations}{The list of locations for which you want a distance measurement. These must either be reporting radar distance in Aquarius as Distance.Corrected or in the WRB database as type distance.}
 
 \item{zoom}{Set TRUE if you want a zoomed-in plot.}
 
 \item{zoom_days}{Set the number of days on the x-axis of the zoomed in plot.}
 
 \item{save_path}{The path to the directory (folder) where the report should be saved. Default "choose" lets you select your folder, otherwise enter the path as a character string.}
-
-\item{aquarius}{Do you wish to have information from relevant WRB stations in the report?}
 }
 \value{
 A Microsoft Word report containing bridge radar information, saved in the location specified.
