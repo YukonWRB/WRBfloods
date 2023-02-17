@@ -11,8 +11,8 @@
 #' @param complete_df data.frame containing historical data from the start of records to the last year to be plotted.
 #'
 #' @return A plot of flow volumes for a WSC station.
-#' @export 
-#'
+#' @keywords Internal
+#' @noRd
 
 utils_daily_flow_plot <- function(
     station_number,

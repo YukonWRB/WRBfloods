@@ -1,6 +1,9 @@
 #' Tabular output of hydrometric data
+#' 
+#' Creates a report of hydrometric and snow pack conditions, each table separated by a page break, landscape format. List of hydrometric stations/locations can be user-defined, snow pillow locations are present to include all active pillows as of 2023-01-31. 
+#' Database connection should be prefered over direct pulls for speed, with nearly no lag in data availability between the two. Connection is established using WRBtools::hydroConnect, so ensure that WRBtools is up to date if the database type has changed.
 #'
-#' @param database  If using a local database created using WRBdatabase package, specify its path here. Leave NULL to download from the Water Survey of Canada and/or Aquarius instead.
+#' @param database  If using a local database created using WRBdatabase package, specify its path here. Leave NULL to download from the Water Survey of Canada and/or Aquarius instead. See details.
 #' @param water_locations List of hydrometric locations to include in the report, as a character vector. Default is a pre-determined list of locations across the territory.
 #' @param past The number of days in the past for which you want data. Will be rounded to yield table columns covering up to 1 month, in 1-week increments. At minimum a 1-week column will be populated, at maximum a 1-month column and 1, 2, 3 week columns.
 #' @param level Level table, TRUE/FALSE
@@ -8,7 +11,7 @@
 #' @param pillows Snow pillow table, TRUE/FALSE
 #' @param save_path
 #'
-#' @return
+#' @return A Word document containing the report.
 #' @export
 #'
 

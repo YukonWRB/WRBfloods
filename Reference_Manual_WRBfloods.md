@@ -1,53 +1,77 @@
----
-title: "WRBfloods"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{WRBfloods}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+<!-- toc -->
 
-```{r, echo = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
+February 17, 2023
+
+# DESCRIPTION
+
 ```
+Package: WRBfloods
+Title: WRB's flood report functions
+Version: 1.7.0-1
+Authors@R: 
+    person("Ghislain", "de Laplante", , "ghislaindel@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-5093-9185"))
+Description: This package exists to facilitate the generation of flood
+    reports by the Yukon Water Resources Branch.
+License: AGPL (>= 3)
+Depends: 
+    R (>= 2.10),
+    tidyhydat.ws
+Imports: 
+    crayon,
+    dplyr,
+    DBI,
+    fasstr,
+    foreign,
+    ggplot2,
+    graphics,
+    grid,
+    grDevices,
+    hablar,
+    httr,
+    imager,
+    knitr,
+    lubridate,
+    magrittr,
+    methods,
+    pdftools,
+    plyr,
+    purrr,
+    qpdf,
+    R.utils,
+    RCurl,
+    readxl,
+    rlang,
+    rmarkdown,
+    rvest,
+    scales,
+    RSQLite,
+    sf,
+    spatstat.utils,
+    stats,
+    stringr,
+    tidyhydat,
+    tidyquant,
+    tidyr,
+    tidyselect,
+    utils,
+    XML,
+    xml2,
+    cli,
+    terra,
+    WRBtools
+Suggests: 
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+Remotes:
+    github::bcgov/tidyhydat.ws,
+    github::YukonWRB/WRBtools
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3```
 
-```{r setup, include = FALSE}
-library(WRBfloods)
-```
-
-The Water Resources Branch (Yukon Department of Environment) hydrology-related functions. Easy generation of public and internal-facing reports incorporating data from multiple agencies, various plots, processing of Water Survey of Canada data, processing of MESH prediction outputs, and importation of BC CLEVER predictions.
-
-
-
-## Author
-
-Ghislain de Laplante; ghislaindel@gmail.com ( [ORCID](https://orcid.org/0000-0002-5093-9185) )
-
-
-------------------------------------------------------------------------
-
-## Introduction
-
-The idea behind this package lies in automated RMarkdown reports shared with the Yukon Water Resources Branch by our colleagues at the Northwest Territories Government. At the onset our intent was to build a simple tool to augment our situation awareness of water level and flow conditions; this quickly evolved into a set of tools to generate public and private facing reports, as well as more basic tools to create standardized graphs, retrieve MESH and CLEVER forecast information, as well as retrieve and process Water Survey of Canada data. The "workhorse" functions of this package are labelled with the utils- prefix and are not intended for direct use; rather, they form the building blocks of the RMarkdown reports, of the data-fetching functions, and of the plotting functions.
-
-Development on this package began in the summer of 2022 and is expected to continue in anticipation of the 2023 high-water season.
-
-
-## Getting started with the WRBfloods package
-
-### Installing the package
-
-The latest version of the package can be installed from the GitHub repository YukonWRB/WRBfloods. Previous versions are kept in the Water Resources Branch G drive, in Common_GW_SW/R-packages/WRBfloods.
-
-### Updating package dependencies
-
-This package depends on (too) many other packages to execute its code. Please ensure that any packages required for the function of WRBfloods are up to date when you install, re-install, or update WRBfloods. Note that not all packages can be updated from an active RStudio session, and that you may need to perform updates using the basic R interface; at the same time you should ensure that your version of R is up to date. A convenient package exists to perform both of these tasks at once: the [installr](https://www.rdocumentation.org/packages/installr/versions/0.23.2) package.
-
-
-------------------------------------------------------------------------
 
 # `basinPrecip`
 
@@ -635,4 +659,5 @@ Argument      |Description
 ## Value
 
 A list with an element for each station requested.
+
 

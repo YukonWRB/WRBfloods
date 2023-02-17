@@ -14,8 +14,8 @@
 #'
 #'
 #' @return A plot for the station requested and for the duration requested.
-#' @export
-#'
+#' @keywords Internal
+#' @noRd
 
 utils_zoom_flow_plot <- function(
     station_number,

@@ -12,7 +12,8 @@
 #' @param complete_df data.frame containing historical data from the start of records to the last year to be plotted.
 #'
 #' @return A plot for the station requested with return intervals, if it exists in the data file data$level_returns.
-#' @export
+#' @keywords Internal
+#' @noRd
 
 utils_daily_level_plot <- function(
     station_number,
