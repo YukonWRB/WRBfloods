@@ -80,10 +80,6 @@ utils_zoom_level_plot <- function(
   
   legend_length <- length(unique(stats::na.omit(level_years[level_years$DateOnly %in% point_dates,]$Year_Real)))
   
-  #TODO: get this information on the plot, above/below the legend
-  # last_data <- list(value = as.character(round(zoom_data[nrow(zoom_data),3], 2)),
-  #                   time = substr(as.POSIXlt.numeric(as.numeric(zoom_data[nrow(zoom_data),2]), origin="1970-01-01", tz="America/Whitehorse"), 1, 16))
-  
   # x axis settings
   if (zoom_days > 60) {
     date_breaks = "1 month"
@@ -112,13 +108,13 @@ utils_zoom_level_plot <- function(
     ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone=NULL) +
     ggplot2::coord_cartesian(xlim = c(Sys.time()-zoom_days*60*60*24, Sys.time()+extra_days*60*60*24)) +
     ggplot2::theme_classic() +
-    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8)) +
+    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.9), legend.text = ggplot2::element_text(size = 8)) +
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T)  +
     
     ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
+    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), linewidth = line_size, na.rm = T) +
     
     ggplot2::scale_colour_manual(name = "Levels", labels = c(paste0(lubridate::year(Sys.Date()), " (5 minutes)"), rev(unique(level_years$Year_Real)[1:legend_length-1])), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(stats::na.omit(level_years$Year_Real))[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))
@@ -205,7 +201,7 @@ utils_zoom_level_plot <- function(
   
   #Add some information below the legend
   spread <- max-min
-  line1 <- paste0("        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
+  line1 <- paste0("\n         \n         \n        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
   end_time <- max(zoom_data$Date)+extra_days*60*60*24
   
   if (type == "calc"){

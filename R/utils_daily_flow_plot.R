@@ -54,7 +54,7 @@ utils_daily_flow_plot <- function(
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
     ggplot2::coord_cartesian(xlim = c(as.Date(paste0(graph_year, "-01-01")), as.Date(paste0(graph_year, "-12-31")))) +
     ggplot2::theme_classic() +
-    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8), plot.tag = ggplot2::element_text(hjust=0.65,size=9), plot.tag.position = c(1, 0.5)) +
+    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.9), legend.text = ggplot2::element_text(size = 8), plot.tag = ggplot2::element_text(hjust=0.65,size=9), plot.tag.position = c(1, 0.5)) +
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$Min, ymax = .data$Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$QP25, ymax = .data$QP75, fill = "25th-75th Percentile"), na.rm = T) +
@@ -154,7 +154,7 @@ utils_daily_flow_plot <- function(
   
   #Add some information below the legend
   spread <- max-min
-  line1 <- paste0("        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
+  line1 <- paste0("\n         \n         \n        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
   
   if (type == "calc"){
     line2 <- "        \n        \n        Return periods are calculated\n        using May-Sept data with\n        no human verification.\n        For informational purposes only."

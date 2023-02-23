@@ -106,7 +106,7 @@ utils_zoom_flow_plot <- function(
     ggplot2::scale_x_datetime(date_breaks = date_breaks, labels = labs, timezone=NULL) +
     ggplot2::coord_cartesian(xlim = c(Sys.time()-zoom_days*60*60*24, Sys.time()+extra_days*60*60*24)) +
     ggplot2::theme_classic() +
-    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8)) +
+    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.9), legend.text = ggplot2::element_text(size = 8)) +
     
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Min - Max"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T)  +
@@ -205,7 +205,7 @@ utils_zoom_flow_plot <- function(
   
   #Add some information below the legend
   spread <- max-min
-  line1 <- paste0("        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
+  line1 <- paste0("\n         \n         \n        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
   end_time <- max(zoom_data$Date)+extra_days*60*60*24
   
   if (type == "calc"){

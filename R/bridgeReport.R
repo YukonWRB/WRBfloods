@@ -2,7 +2,7 @@
 #' 
 #' This function generates a report of distance between the water surface and bridges or other important infrastructure. The output is a Microsoft Word document on a Yukon Government template.
 #'
-#' @param database If using a local database created using WRBdatabase package, specify its path here. Leave NULL to download from Aquarius instead.
+#' @param database If using a local database created using WRBdatabase package, specify its path here or use 'default' to use the WRBtools::hydroConnect default path. Leave NULL to download from Aquarius instead.
 #' @param locations The list of locations for which you want a distance measurement. These must either be reporting radar distance in Aquarius as Distance.Corrected or in the WRB database as type distance.
 #' @param zoom Set TRUE if you want a zoomed-in plot.
 #' @param zoom_days Set the number of days on the x-axis of the zoomed in plot.
@@ -12,7 +12,7 @@
 #' @export
 #'
 
-bridgeReport <- function(database = NULL,
+bridgeReport <- function(database = "default",
                          locations = c("29AH001", "09AH005", "29AE007", "29AB011", "29AB010"),
                          zoom = TRUE,
                          zoom_days = 30,

@@ -168,13 +168,7 @@ utils_flow_data <- function(
 	  single_year <- single_year[,c(1, 13, 3:11, 2, 12)]
 	  flow_years <- dplyr::bind_rows(flow_years, single_year)
 	}
-	
-	
-	
-	
-	
-	
-	
+
 	#If loop below modifies recent_flow if high_res is TRUE
 	if (high_res == TRUE & max(select_years) >= lubridate::year(Sys.Date() - 577)){ # Create a few columns here depending on other options
 	  recent_flow <- recent_flow %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(.data$Date) %in% leap_list,
@@ -240,7 +234,6 @@ utils_flow_data <- function(
 	    } 
 	  }
 	}
-
 	
 	flowData <- list(all_historical = flow_df, requested_years = flow_years, recent_flow = recent_flow)
 	return(flowData)
