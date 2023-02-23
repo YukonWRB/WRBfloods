@@ -5,34 +5,37 @@
 \title{Tabular output of hydrometric data}
 \usage{
 tabularReport(
-  database = NULL,
-  water_locations = "default",
-  past = 31,
-  level = TRUE,
-  flow = TRUE,
-  pillows = TRUE,
+  database = "default",
+  level_locations = "all",
+  flow_locations = "all",
+  snow_locations = "all",
+  bridge_locations = "all",
+  precip_locations = "all",
+  past = 28,
   save_path = "choose"
 )
 }
 \arguments{
 \item{database}{If using a local database created using WRBdatabase package, specify its path here. Leave NULL to download from the Water Survey of Canada and/or Aquarius instead. See details.}
 
-\item{water_locations}{List of hydrometric locations to include in the report, as a character vector. Default is a pre-determined list of locations across the territory.}
+\item{level_locations}{List of water level locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory, "all" fetches all level reporting locations in the DB. NULL will not create the table.}
 
-\item{past}{The number of days in the past for which you want data. Will be rounded to yield table columns covering up to 1 month, in 1-week increments. At minimum a 1-week column will be populated, at maximum a 1-month column and 1, 2, 3 week columns.}
+\item{flow_locations}{List of flow locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory. "all" fetches all flow reporting locations in the DB. NULL will not create the table.}
 
-\item{level}{Level table, TRUE/FALSE}
+\item{snow_locations}{List of snow pillow locations to include in the report, as a character vector. "default" includes all of the WRB snow pillows as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.}
 
-\item{flow}{Flow table, TRUE/FALSE}
+\item{bridge_locations}{List of bridge freeboard radar locations to include in the report, as a character vector. "default" includes all of the radars as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.}
 
-\item{pillows}{Snow pillow table, TRUE/FALSE}
+\item{precip_locations}{List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information).}
 
-\item{save_path}{}
+\item{past}{The number of days in the past for which you want data. Will be rounded to yield table columns covering at least one week, at most 4 weeks. 24, 28, and 72 hour change columns are always rendered.}
+
+\item{save_path}{The path where you wish to save the Excel workbook.}
 }
 \value{
-A Word document containing the report.
+An Excel workbook containing the report with one tab per timeseries type.
 }
 \description{
-Creates a report of hydrometric and snow pack conditions, each table separated by a page break, landscape format. List of hydrometric stations/locations can be user-defined, snow pillow locations are present to include all active pillows as of 2023-01-31.
+Creates a report of hydrometric and snow pack conditions in Excel format, each table on a separate tab. List of stations/locations can be user-defined if desired.
 Database connection should be prefered over direct pulls for speed, with nearly no lag in data availability between the two. Connection is established using WRBtools::hydroConnect, so ensure that WRBtools is up to date if the database type has changed.
 }
