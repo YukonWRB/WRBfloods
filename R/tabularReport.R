@@ -18,6 +18,7 @@
 
 #TODO: Sites with no data should still show up\
 #TODO: Add precipitation using WRBtools::basinPrecip function. First, that function has to be made to work with the database and scheduled to pull data to the db. Then, basinPrecip should default to looking for precip rasters in the DB.
+#TODO: conditional formatting for bridge table needs to be the *opposite* of other tables, since more freeboard = good!
 
 tabularReport <- function(database = "default", level_locations = "all", flow_locations = "all", snow_locations = "all", bridge_locations = "all", precip_locations = "all", past = 28, save_path = "choose") {
   
@@ -666,7 +667,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                      NA,
                      NA,
                      NA,
-                     paste0("Created with WRBfloods ", packageVersion("WRBfloods")))
+                     paste0("Created with WRBfloods ", utils::packageVersion("WRBfloods")))
   headStyle <- openxlsx::createStyle(fgFill = "turquoise2")
   fodNameStyle <- openxlsx::createStyle(fgFill = "darkorange", border = "TopBottomLeftRight", borderStyle = "medium")
   fodCommentStyle <- openxlsx::createStyle(fgFill = "lightyellow")
