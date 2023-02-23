@@ -16,7 +16,7 @@ tabularReport(
 )
 }
 \arguments{
-\item{database}{If using a local database created using WRBdatabase package, specify its path here. Leave NULL to download from the Water Survey of Canada and/or Aquarius instead. See details.}
+\item{database}{Specify the path to the local hydromet database here, which must be created and maintained by the WRBdatabase package. Passed to WRBtools::hydroConnect to establish connection.}
 
 \item{level_locations}{List of water level locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory, "all" fetches all level reporting locations in the DB. NULL will not create the table.}
 
@@ -26,7 +26,7 @@ tabularReport(
 
 \item{bridge_locations}{List of bridge freeboard radar locations to include in the report, as a character vector. "default" includes all of the radars as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.}
 
-\item{precip_locations}{List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information).}
+\item{precip_locations}{List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information). NULL will not create the table.}
 
 \item{past}{The number of days in the past for which you want data. Will be rounded to yield table columns covering at least one week, at most 4 weeks. 24, 28, and 72 hour change columns are always rendered.}
 
@@ -36,6 +36,6 @@ tabularReport(
 An Excel workbook containing the report with one tab per timeseries type.
 }
 \description{
-Creates a report of hydrometric and snow pack conditions in Excel format, each table on a separate tab. List of stations/locations can be user-defined if desired.
-Database connection should be prefered over direct pulls for speed, with nearly no lag in data availability between the two. Connection is established using WRBtools::hydroConnect, so ensure that WRBtools is up to date if the database type has changed.
+Creates a report of hydrometric, snow pack, and precipitation conditions in Excel format, each table on a separate tab. List of stations/locations can be user-defined if desired. Connection is established using WRBtools::hydroConnect, so ensure that WRBtools is up to date if the database type has changed.
+Note that data can only be as recent as the last incorporation to the database. If you need the most up to date data possible, run WRBdatabase::hydro_update_hourly first.
 }
