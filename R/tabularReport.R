@@ -64,10 +64,10 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   if (past < 8){
     past <- 7
   }
-  if (past >= 8){
+  if (past >=8 & past < 15){
     past <- 14
   }
-  if (past >= 15){
+  if (past >= 15 & past < 22){
     past <- 21
   }
   if (past >= 22){
@@ -81,9 +81,9 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     level_rt <- list()
     names_level <- NULL
     for (i in level_locations){
-      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min FROM daily WHERE parameter = 'level' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min, QP50 FROM daily WHERE parameter = 'level' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
       if (nrow(daily) == 0){
-        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min FROM daily WHERE parameter = 'level' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
+        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min, QP50 FROM daily WHERE parameter = 'level' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
       }
       if (nrow(daily) > 0){
         daily$date <- as.Date(daily$date, tz = "UTC")
@@ -104,9 +104,9 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     flow_rt <- list()
     names_flow <- NULL
     for (i in flow_locations){
-      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min FROM daily WHERE parameter = 'flow' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min, QP50 FROM daily WHERE parameter = 'flow' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
       if (nrow(daily) == 0){
-        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min FROM daily WHERE parameter = 'flow' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
+        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min, QP50 FROM daily WHERE parameter = 'flow' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
       }
       if (nrow(daily) > 0){
         daily$date <- as.Date(daily$date, tz = "UTC")
@@ -127,9 +127,9 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     snow_rt <- list()
     names_snow <- NULL
     for (i in snow_locations){
-      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, min, max FROM daily WHERE parameter = 'SWE' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, min, max, QP50 FROM daily WHERE parameter = 'SWE' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
       if (nrow(daily) == 0){
-        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min FROM daily WHERE parameter = 'SWE' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
+        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min, QP50 FROM daily WHERE parameter = 'SWE' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
       }
       if (nrow(daily) > 0){
         daily$date <- as.Date(daily$date, tz = "UTC")
@@ -150,9 +150,9 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     bridge_rt <- list()
     names_bridge <- NULL
     for (i in bridge_locations){
-      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, min, max FROM daily WHERE parameter = 'distance' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
+      daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, min, max, QP50 FROM daily WHERE parameter = 'distance' AND location = '", i, "' AND date = '", Sys.Date(), "'" ))
       if (nrow(daily) == 0){
-        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min FROM daily WHERE parameter = 'distance' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
+        daily <- DBI::dbGetQuery(database, paste0("SELECT value, date, percent_historic_range, max, min, QP50 FROM daily WHERE parameter = 'distance' AND location = '", i, "' AND date = '", Sys.Date()-1, "'" ))
       }
       if (nrow(daily) > 0){
         daily$date <- as.Date(daily$date, tz = "UTC")
@@ -167,8 +167,8 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
         names_bridge[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))))
       }
     }
-  }
-  #End of data acquisition
+  }  #End of data acquisition
+
   
   
   #Make the tables
@@ -182,6 +182,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       age <- difftime(Sys.time(), last_time, units = "hours")
       latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value) #median of last 30 minutes of data
       percent_historic <- round(((latest - level_daily[[i]]$min) / (level_daily[[i]]$max - level_daily[[i]]$min)) * 100, 0)
+      percent_mean <- round(((latest - level_daily[[i]]$min) / (level_daily[[i]]$QP50 - level_daily[[i]]$min)) * 100, 0)
       day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value) #median of 30 minutes
       twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value) #median of 1 hour
       threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value) #median of 1 hour
@@ -196,6 +197,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_level[i],
                                    "level" = if (!is.na(latest)) round(latest, 3) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -214,6 +216,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_level[i],
                                    "level" = if (!is.na(latest)) round(latest, 3) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -237,6 +240,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_level[i],
                                    "level" = if (!is.na(latest)) round(latest, 3) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -265,6 +269,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_level[i],
                                    "level" = if (!is.na(latest)) round(latest, 3) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -278,16 +283,16 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       }
     }
     if (past <= 7){
-      colnames(levels) <- c("Location", "Name", " Level (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "Last data MST", "Hrs")
+      colnames(levels) <- c("Location", "Name", " Level (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "Last data MST", "Hrs")
     }
     if (past > 7 & past <= 14){
-      colnames(levels) <- c("Location", "Name", " Level (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "Last data MST", "Hrs")
+      colnames(levels) <- c("Location", "Name", " Level (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "Last data MST", "Hrs")
     }
     if (past > 14 & past <= 21){
-      colnames(levels) <- c("Location", "Name", " Level (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "Last data MST", "Hrs")
+      colnames(levels) <- c("Location", "Name", " Level (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "Last data MST", "Hrs")
     }
     if (past > 21){
-      colnames(levels) <- c("Location", "Name", " Level (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "4 week chg (cm)", "Last data MST", "Hrs")
+      colnames(levels) <- c("Location", "Name", " Level (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "4 week chg (cm)", "Last data MST", "Hrs")
     }
     levels$`Location specific comments` <- NA
     levels <- hablar::rationalize(levels)
@@ -303,6 +308,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       age <- difftime(Sys.time(), last_time, units = "hours")
       latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value) #median of last 30 minutes of data
       percent_historic <- round(((latest - flow_daily[[i]]$min) / (flow_daily[[i]]$max - flow_daily[[i]]$min)) * 100, 0)
+      percent_mean <- round(((latest - flow_daily[[i]]$min) / (flow_daily[[i]]$QP50 - flow_daily[[i]]$min)) * 100, 0)
       day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value) #median of 30 minutes
       twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value) #median of 1 hour
       threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value) #median of 1 hour
@@ -317,6 +323,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_flow[i],
                                    "flow" = if (!is.na(latest)) round(latest, 1) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -335,6 +342,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_flow[i],
                                    "flow" = if (!is.na(latest)) round(latest, 1) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -358,6 +366,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_flow[i],
                                    "flow" = if (!is.na(latest)) round(latest, 1) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -386,6 +395,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "name" = names_flow[i],
                                    "flow" = if (!is.na(latest)) round(latest, 1) else NA,
                                    "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                   "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                    "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                    "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                    "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -399,16 +409,16 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       }
     }
     if (past <= 7){
-      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "Last data MST", "Hrs")
+      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "Last data MST", "Hrs")
     }
     if (past > 7 & past <= 14){
-      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "Last data MST", "Hrs")
+      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "Last data MST", "Hrs")
     }
     if (past > 14 & past <= 21){
-      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "Last data MST", "Hrs")
+      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "Last data MST", "Hrs")
     }
     if (past > 21){
-      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "4 week chg", "Last data MST", "Hrs")
+      colnames(flows) <- c("Location", "Name", " Flow (m3/s)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "4 week chg", "Last data MST", "Hrs")
     }
     flows$`Location specific comments` <- NA
     flows <- hablar::rationalize(flows)
@@ -423,6 +433,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       age <- difftime(Sys.time(), last_time, units = "hours")
       latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value) #median of last 30 minutes of data
       percent_historic <- round(((latest - snow_daily[[i]]$min) / (snow_daily[[i]]$max - snow_daily[[i]]$min)) * 100, 0)
+      percent_mean <- round(((latest - snow_daily[[i]]$min) / (snow_daily[[i]]$QP50 - snow_daily[[i]]$min)) * 100, 0)
       day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value) #median of 30 minutes
       twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value) #median of 1 hour
       threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value) #median of 1 hour
@@ -437,6 +448,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                   "name" = names_snow[i],
                                   "SWE" = if (!is.na(latest)) round(latest, 1) else NA,
                                   "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                  "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                   "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                   "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                   "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -455,6 +467,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                   "name" = names_snow[i],
                                   "SWE" = if (!is.na(latest)) round(latest, 1) else NA,
                                   "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                  "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                   "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                   "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                   "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -478,6 +491,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                   "name" = names_snow[i],
                                   "SWE" = if (!is.na(latest)) round(latest, 1) else NA,
                                   "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                  "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                   "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                   "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                   "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -506,6 +520,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                   "name" = names_snow[i],
                                   "SWE" = if (!is.na(latest)) round(latest, 1) else NA,
                                   "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                  "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                   "24" = if (!is.na(day)) round((latest - day), 1) else NA,
                                   "48" = if (!is.na(twoday)) round((latest - twoday), 1) else NA,
                                   "72" = if (!is.na(threeday)) round((latest - threeday), 1) else NA,
@@ -519,16 +534,16 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       }
     }
     if (past <= 7){
-      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "Last data MST", "Hrs")
+      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "Last data MST", "Hrs")
     }
     if (past > 7 & past <= 14){
-      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "Last data MST", "Hrs")
+      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "Last data MST", "Hrs")
     }
     if (past > 14 & past <= 21){
-      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "Last data MST", "Hrs")
+      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "Last data MST", "Hrs")
     }
     if (past > 21){
-      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% historic", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "4 week chg", "Last data MST", "Hrs")
+      colnames(snow) <- c("Location", "Name", "SWE (mm)", "% hist rng", "% hist mean", "24 hr chg", "48 hr chg", "72 hr chg", "1 week chg", "2 week chg", "3 week chg", "4 week chg", "Last data MST", "Hrs")
     }
     snow$`Location specific comments` <- NA
     snow <- hablar::rationalize(snow)
@@ -543,6 +558,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       age <- difftime(Sys.time(), last_time, units = "hours")
       latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value) #median of last 30 minutes of data
       percent_historic <- round(((latest - bridge_daily[[i]]$min) / (bridge_daily[[i]]$max - bridge_daily[[i]]$min)) * 100, 0)
+      percent_mean <- round(((latest - bridge_daily[[i]]$min) / (bridge_daily[[i]]$QP50 - bridge_daily[[i]]$min)) * 100, 0)
       day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value) #median of 30 minutes
       twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value) #median of 1 hour
       threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value) #median of 1 hour
@@ -557,6 +573,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                  "name" = names_bridge[i],
                                  "distance" = if (!is.na(latest)) round(latest, 1) else NA,
                                  "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                 "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                  "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                  "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                  "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -575,6 +592,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                  "name" = names_bridge[i],
                                  "distance" = if (!is.na(latest)) round(latest, 1) else NA,
                                  "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                 "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                  "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                  "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                  "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -598,6 +616,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                  "name" = names_bridge[i],
                                  "distance" = if (!is.na(latest)) round(latest, 1) else NA,
                                  "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                 "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                  "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                  "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                  "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -626,6 +645,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                  "name" = names_bridge[i],
                                  "distance" = if (!is.na(latest)) round(latest, 1) else NA,
                                  "percent" = if (length(percent_historic == 1)) percent_historic else NA,
+                                 "mean" = if (length(percent_mean == 1)) percent_mean else NA,
                                  "24" = if (!is.na(day)) round((latest - day) * 100, 1) else NA,
                                  "48" = if (!is.na(twoday)) round((latest - twoday) * 100, 1) else NA,
                                  "72" = if (!is.na(threeday)) round((latest - threeday) * 100, 1) else NA,
@@ -639,16 +659,16 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       }
     }
     if (past <= 7){
-      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg", "Last data MST", "Hrs")
+      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg", "Last data MST", "Hrs")
     }
     if (past > 7 & past <= 14){
-      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "Last data MST", "Hrs")
+      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "Last data MST", "Hrs")
     }
     if (past > 14 & past <= 21){
-      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "Last data MST", "Hrs")
+      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "Last data MST", "Hrs")
     }
     if (past > 21){
-      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% historic", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "4 week chg (cm)", "Last data MST", "Hrs")
+      colnames(bridge) <- c("Location", "Name", " Distance (m)", "% hist rng", "% hist mean", "24 hr chg (cm)", "48 hr chg (cm)", "72 hr chg (cm)", "1 week chg (cm)", "2 week chg (cm)", "3 week chg (cm)", "4 week chg (cm)", "Last data MST", "Hrs")
     }
     bridge$`Location specific comments` <- NA
     bridge <- hablar::rationalize(bridge)
@@ -661,9 +681,10 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   
   #Make the Excel workbook
   wb <- openxlsx::createWorkbook(creator = "Ghislain de Laplante (via automated process)", title = "Hydrometric Condition Report")
-  head <- data.frame(paste0("Issued at ", substr(Sys.time(), 1, 16)),
+  time <- Sys.time()
+  head <- data.frame(paste0("Issued at ", substr(format(time, tz = "MST"), 1, 16), " MST"),
                      NA,
-                     "Forecaster name: ",
+                     "Forecaster name:",
                      NA,
                      NA,
                      NA,
@@ -673,11 +694,19 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   fodCommentStyle <- openxlsx::createStyle(fgFill = "lightyellow")
   colStyleYellow <- openxlsx::createStyle(bgFill = "yellow")
   colStyleRed <- openxlsx::createStyle(bgFill = "red")
+  
+  # colStyleYellow <- openxlsx::createStyle(border = "TopbottomLeftRight", borderStyle = "thick", borderColour = "yellow")
+  # colStyleRed <- openxlsx::createStyle(border = "TopbottomLeftRight", borderStyle = "thick", borderColour = "red")
+  
   generalCommentStyle <- openxlsx::createStyle(border = "TopBottomLeftRight", fgFill = "lightyellow")
   generalCommentStyle2 <- openxlsx::createStyle(border = "TopBottomLeftRight", textDecoration = "bold", fgFill = "lightyellow", wrapText = TRUE)
   increasingStyle <- openxlsx::createStyle(fontColour = "red3", textDecoration = "bold")
   decreasingStyle <- openxlsx::createStyle(fontColour = "forestgreen", textDecoration = "bold")
   missingDataStyle <- openxlsx::createStyle(bgFill = "grey")
+  #comments
+  delayComment <- openxlsx::createComment("Yellow: > 2 hours. Red: > 4 hours.", author = "Ghislain", visible = FALSE)
+  percHistComment <- openxlsx::createComment("0 = historic min, 100 = historic max. Yellow = >75%, red: >100%.", author = "Ghislain", visible = FALSE)
+  percMeanComment <- openxlsx::createComment("100 = historic mean, 200 = historic max, 0 = historic min. Yellow: >150%, red: >200%.", author = "Ghislain", visible = FALSE)
   for (i in names(tables)[!(names(tables) %in% "precipitation")]){
     openxlsx::addWorksheet(wb, i)
     #Create/format the header
@@ -692,25 +721,32 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     openxlsx::writeData(wb, i, "General comments", startCol = 1, startRow = 3, colNames = FALSE)
     openxlsx::mergeCells(wb, i, cols = 1, rows = c(3,4))
     openxlsx::addStyle(wb, i, style = generalCommentStyle2, cols = 1, rows = c(3,4))
-    openxlsx::mergeCells(wb, i, cols = if (past == 7) c(2:11) else if (past == 14) c(2:12) else if (past == 21) c(2:13) else if (past == 28) c(2:14), rows = c(3,4))
-    openxlsx::addStyle(wb, i, style = generalCommentStyle, cols = if (past == 7) c(2:11) else if (past == 14) c(2:12) else if (past == 21) c(2:13) else if (past == 28) c(2:14), rows = c(3,4), gridExpand = TRUE)
+    openxlsx::mergeCells(wb, i, cols = if (past == 7) c(2:12) else if (past == 14) c(2:13) else if (past == 21) c(2:14) else if (past == 28) c(2:15), rows = c(3,4))
+    openxlsx::addStyle(wb, i, style = generalCommentStyle, cols = if (past == 7) c(2:12) else if (past == 14) c(2:13) else if (past == 21) c(2:14) else if (past == 28) c(2:15), rows = c(3,4), gridExpand = TRUE)
     openxlsx::writeData(wb, i, NA, startCol = 1, startRow = 5, colNames = FALSE)
     #add content
     openxlsx::writeData(wb, i,  tables[[i]], startRow = 6)
     #format for ease of viewing
     openxlsx::freezePane(wb, sheet = i, firstActiveRow = 7, firstActiveCol = 2)
-    openxlsx::setColWidths(wb, i, cols = if (past == 7) c(1:11) else if (past == 14) c(1:12) else if (past == 21) c(1:13) else if (past == 28) c(1:14), widths = if (past == 7) c(10, 30, 10, 10, 12, 12, 12, 12, 15, 4, 60) else if (past == 14) c(10, 30, 10, 10, 12, 12, 12, 12, 12, 15, 4, 60) else if (past == 21) c(10, 30, 10, 10, 12, 12, 12, 12, 12, 12, 15, 4, 60) else if (past == 28) c(10, 30, 10, 10, 12, 12, 12, 12, 12, 12, 12, 15, 4, 60))
-    openxlsx::addStyle(wb, i, headStyle, rows = 6, cols = if (past == 7) c(1:11) else if (past == 14) c(1:12) else if (past == 21) c(1:13) else if (past == 28) c(1:14))
-    openxlsx::addStyle(wb, i, fodCommentStyle, rows = 1:nrow(tables[[i]])+6, cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14)
+    openxlsx::setColWidths(wb, i, cols = if (past == 7) c(1:12) else if (past == 14) c(1:13) else if (past == 21) c(1:14) else if (past == 28) c(1:15), widths = if (past == 7) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 15, 4, 60) else if (past == 14) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 15, 4, 60) else if (past == 21) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 12, 15, 4, 60) else if (past == 28) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 12, 12, 15, 4, 60))
+    openxlsx::addStyle(wb, i, headStyle, rows = 6, cols = if (past == 7) c(1:12) else if (past == 14) c(1:13) else if (past == 21) c(1:14) else if (past == 28) c(1:15))
+    openxlsx::addStyle(wb, i, fodCommentStyle, rows = 1:nrow(tables[[i]])+6, cols = if (past == 7) 12 else if (past == 14) 13 else if (past == 21) 14 else if (past == 28) 15)
+    #Add comments
+    openxlsx::writeComment(wb, sheet = i, col = 4, row = 6, comment = percHistComment)
+    openxlsx::writeComment(wb, sheet = i, col = 5, row = 6, comment = percMeanComment)
+    openxlsx::writeComment(wb, sheet = i, col = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, row = 6, comment = delayComment)
     #Conditional format
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">75", cols = 4, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">100", cols = 4, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">2", cols = if (past == 7) 10 else if (past == 14) 11 else if (past == 21) 12 else if (past == 28) 13, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">4", cols = if (past == 7) 10 else if (past == 14) 11 else if (past == 21) 12 else if (past == 28) 13, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">150", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">200", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
     
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">0", cols = if (past == 7) c(5:8) else if (past == 14) c(5:9) else if (past == 21) c(5:10) else if (past == 28) c(5:11), rows = 1:nrow(tables[[i]])+6, style = increasingStyle)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = "<0", cols = if (past == 7) c(5:8) else if (past == 14) c(5:9) else if (past == 21) c(5:10) else if (past == 28) c(5:11), rows = 1:nrow(tables[[i]])+6, style = decreasingStyle)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = '=""', cols = if (past == 7) c(3, 5:8) else if (past == 14) c(3, 5:9) else if (past == 21) c(3, 5:10) else if (past == 28) c(3, 5:11), rows = 1:nrow(tables[[i]])+6, style = missingDataStyle)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">2", cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">4", cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
+    
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">0", cols = if (past == 7) c(6:9) else if (past == 14) c(6:10) else if (past == 21) c(6:11) else if (past == 28) c(6:12), rows = 1:nrow(tables[[i]])+6, style = increasingStyle)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = "<0", cols = if (past == 7) c(6:9) else if (past == 14) c(6:10) else if (past == 21) c(6:11) else if (past == 28) c(6:12), rows = 1:nrow(tables[[i]])+6, style = decreasingStyle)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = '=""', cols = if (past == 7) c(3, 6:9) else if (past == 14) c(3, 6:10) else if (past == 21) c(3, 6:11) else if (past == 28) c(3, 6:12), rows = 1:nrow(tables[[i]])+6, style = missingDataStyle)
   }
   
   #Add the precipitation table here in future
