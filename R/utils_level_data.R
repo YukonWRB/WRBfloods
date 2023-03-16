@@ -6,7 +6,7 @@
 
 #' Download level data
 #' 
-#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::WSCdata function instead.
+#' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use the function WSCdata instead.
 #' 
 #' @param station_number The WSC station number for which you want data.
 #' @param select_years The year(s) for which you want data.
@@ -18,8 +18,8 @@
 #' @param force_CGVD28 For stations with a datum, should CGVD28 be used even if there is a more recent datum?
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
-#' @export
-#'
+#' @keywords Internal
+#' @noRd
 
 utils_level_data <- function(
     station_number,

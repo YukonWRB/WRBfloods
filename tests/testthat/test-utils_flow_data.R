@@ -81,7 +81,7 @@ test_that("throws a warning message if no recent data exists but historical does
 
 test_that("throws a warning when data requested does not exist", {
   year <- lubridate::year(Sys.Date()-577)-1
-  expect_warning(utils_flow_data("09EA004", year), "No data exists for the years you requested. Only historical data was returned. Note that the historical data range is from .*")
+  expect_error(utils_flow_data("09EA004", year))
 })
 
 test_that("throws an error when data requested does not exist and requested years are prior to data availability", {

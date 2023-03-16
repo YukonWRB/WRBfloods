@@ -20,7 +20,7 @@ basinPrecip(
 \arguments{
 \item{location}{The location above which you wish to calculate precipitation. Specify either a WSC or WSC-like station ID (e.g. \code{"09AB004"}) for which there is a corresponding entry in the shapefile pointed to by drainage_loc, or coordinates in signed decimal degrees in form latitude, longitude (\code{"60.1234 -139.1234"}; note the space, negative sign, and lack of comma). See details for more info if specifying coordinates.}
 
-\item{start}{The start of the time period over which to accumulate precipitation. Use format \code{"yyyy-mm-dd hh:mm"} (character vector) in local time, or a POSIXct object (e.g. Sys.time()-60\emph{60}24 for one day in the past). See details if requesting earlier than 30 days prior to now.}
+\item{start}{The start of the time period over which to accumulate precipitation. Use format \code{"yyyy-mm-dd hh:mm"} (character vector) in local time, or a POSIXct object (e.g. \code{Sys.time()-60*60*24} for one day in the past). See details if requesting earlier than 30 days prior to now.}
 
 \item{end}{The end of the time period over which to accumulate precipitation. Other details as per \code{start}}
 
@@ -32,7 +32,7 @@ basinPrecip(
 
 \item{hrdps_loc}{The directory (folder) where forecast precipitation rasters are to be downloaded. A folder will be created for the specific parameter (in this case, precipitation) or selected if already existing.}
 
-\item{drainage_loc}{The directory where drainage polygons are located, in a single shapefile named drainage_polygons. See Notes for more info.}
+\item{drainage_loc}{The shapefile drainage polygons.See Notes for more info.}
 
 \item{spatial_loc}{The directory in which spatial data (as shapefiles) is kept for making maps nicer. Will recognize the following shapefile names (case sensitive): waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. See additional notes.}
 
@@ -42,7 +42,7 @@ basinPrecip(
 The accumulated precipitation in mm of water within the drainage specified or immediately surrounding the point specified in \code{location} printed to the console and (optionally) a map of precipitation printed to the console. A list is also generated containing statistics and the optional plot; to save this plot to disc use either png() or dev.print(), or use the graphical device export functionality.
 }
 \description{
-Calculates accumulated precipitation above defined drainages or immediately surrounding a specified point. If possible, make sure to specify a location in hrdpa_loc and hrdps_loc to speed things up!
+Calculates accumulated precipitation above defined drainages or immediately surrounding a specified point. If possible, make sure to specify a location in parameters hrdpa_loc and hrdps_loc to speed things up!
 }
 \details{
 If specifying \code{location} as coordinates rather than a WSC station (or non WSC station, see note below), the numeric result will be of precipitation in the 2.5 km2 cell on which the point falls. Map output, if requested, will be for the smallest available drainage polygon containing that point.
@@ -51,7 +51,7 @@ Raster images of precipitation are only kept by ECCC for 30 days. If specifying 
 
 Rasters must be downloaded for each 6-hour period between \code{start} and \code{end}. It is therefore strongly suggested that you designate and use a folder for this purpose. \code{WRBtools::getHRDPA} is called for downloading and clipping rasters.
 
-Drainage polygons pointed to by \code{drainage_loc} are best created with function \code{WRBtools::WSC_drainages} and must be named drainage_polygons.xxx. The drainage polygon IDs (in WSC format, i.e. 10EA001) must be listed in the attribute table under column StationNum and the name under column NameNom. To deal with non-WSC data sources it is possible to have non-WSC polygons here as well. In order for this function to recognize these as non-WSC drainages please respect the following: a) strings should be made of two digits, two letters, and three digits (same as WSC); b) The starting digits must NOT be in the sequence from 01 to 12 as these are taken by the WSC; c) duplicate entries are not allowed.
+Drainage polygons pointed to by \code{drainage_loc} are best created with \code{\link[WRBtools:WSC_drainages]{WRBtools::WSC_drainages()}} and must be named drainage_polygons.xxx. The drainage polygon IDs (in WSC format, i.e. 10EA001) must be listed in the attribute table under column StationNum and the name under column NameNom. To deal with non-WSC data sources it is possible to have non-WSC polygons here as well. In order for this function to recognize these as non-WSC drainages please respect the following: a) strings should be made of two digits, two letters, and three digits (same as WSC); b) The starting digits must NOT be in the sequence from 01 to 12 as these are taken by the WSC; c) duplicate entries are not allowed.
 
-Additional spatial data pointed to by \code{spatial_loc} must be in shapefiles with the following names recognized: waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. Keep in mind that large shapefiles can be lengthy for R to graphically represent. To ease this limitation, the watercourses file is left out when the drainage extent is greater than 30 000 km2; by that size, major water courses are expected to be represented by polygons.
+Additional spatial data pointed to by \code{spatial_loc} must be in shapefiles with the following names recognized: waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. Keep in mind that large shapefiles can be lengthy for R to graphically represent. To ease this limitation, the watercourses file is left out when the drainage extent is greater than 30 000 km2; by that size, major water courses are expected to be represented by polygons in the waterbodies layer.
 }

@@ -1,12 +1,12 @@
 Package: WRBfloods
 Title: WRB's flood report functions
-Version: 1.6.0-1
+Version: 1.8.1-0
 Authors@R: 
     person("Ghislain", "de Laplante", , "ghislaindel@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5093-9185"))
 Description: This package exists to facilitate the generation of flood
     reports by the Yukon Water Resources Branch.
-License: AGPL (>= 3)
+License: AGPL (>= 3) + file LICENSE
 Depends: 
     R (>= 2.10),
     tidyhydat.ws
@@ -27,6 +27,7 @@ Imports:
     lubridate,
     magrittr,
     methods,
+    openxlsx,
     pdftools,
     plyr,
     purrr,
@@ -38,7 +39,6 @@ Imports:
     rmarkdown,
     rvest,
     scales,
-    RSQLite,
     sf,
     spatstat.utils,
     stats,
@@ -63,4 +63,4 @@ Remotes:
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3

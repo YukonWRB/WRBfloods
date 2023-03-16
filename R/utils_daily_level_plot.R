@@ -12,7 +12,8 @@
 #' @param complete_df data.frame containing historical data from the start of records to the last year to be plotted.
 #'
 #' @return A plot for the station requested with return intervals, if it exists in the data file data$level_returns.
-#' @export
+#' @keywords Internal
+#' @noRd
 
 utils_daily_level_plot <- function(
     station_number,
@@ -57,14 +58,11 @@ utils_daily_level_plot <- function(
     ggplot2::scale_x_date(date_breaks = "1 months", labels = scales::date_format("%b")) +
     ggplot2::coord_cartesian(xlim = c(as.Date(paste0(graph_year, "-01-01")), as.Date(paste0(graph_year, "-12-31")))) +
     ggplot2::theme_classic() +
-    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.8), legend.text = ggplot2::element_text(size = 8))+
-    
+    ggplot2::theme(legend.position = "right", legend.justification = c(0,0.9), legend.text = ggplot2::element_text(size = 8))+
     ggplot2::geom_ribbon(ggplot2::aes(ymin = Min, ymax = Max, fill = "Minimum - Maximum"), na.rm = T) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = QP25, ymax = QP75, fill = "25th-75th Percentile"), na.rm = T) +
-    
     ggplot2::geom_point(ggplot2::aes(colour = as.factor(Year_Real)), shape=19, size = point_size, na.rm = T) +
-    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), size = line_size, na.rm = T) +
-    
+    ggplot2::geom_line(ggplot2::aes(colour = as.factor(Year_Real)), linewidth = line_size, na.rm = T) +
     ggplot2::scale_colour_manual(name = "Levels (daily mean)", labels = rev(unique(level_years$Year_Real)[1:legend_length]), values = colours[1:legend_length], na.translate = FALSE, breaks=rev(unique(level_years$Year_Real)[1:legend_length])) +
     ggplot2::scale_fill_manual(name = "Historical Range (daily mean)", values = c("Minimum - Maximum" = "gray85", "25th-75th Percentile" = "gray65"))  
   
@@ -86,10 +84,7 @@ utils_daily_level_plot <- function(
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[6,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[5,4]), linetype="dashed", color = "black") +
         ggplot2::geom_hline(yintercept=as.numeric(levelFreq[4,4]), linetype="dashed", color = "black") +
-
-        
         ggplot2::annotate("text", x=as.Date(paste0(graph_year,"-03-01"), "%Y-%m-%d"), y=c(as.numeric(levelFreq[10,4]), as.numeric(levelFreq[9,4]), as.numeric(levelFreq[8,4]), as.numeric(levelFreq[7,4]), as.numeric(levelFreq[6,4]), as.numeric(levelFreq[5,4]), as.numeric(levelFreq[4,4])), label= c("two year return", "five year return", "ten year return", "twenty year return", "fifty year return", "one hundred year return", "two hundred year return"), size=2.6, vjust=-.2)
-      
     } else if (returns %in% c("table") & station_number %in% data$level_returns$ID == TRUE){
       type <- "table"
       levelConvert <- if (force_CGVD28 == FALSE) as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)) else if (force_CGVD28 == TRUE) as.numeric(utils::head(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
@@ -151,7 +146,7 @@ utils_daily_level_plot <- function(
 
   #Add some information below the legend
   spread <- max-min
-  line1 <- paste0("        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
+  line1 <- paste0("\n         \n         \n        Historical range based\n        on years ", stats_range[1], " to ", stats_range[2], "." )
  
  if (type == "calc"){
    line2 <- "        \n        \n        Return periods are calculated\n        using May-Sept data with\n        no human verification.\n        For informational purposes only."

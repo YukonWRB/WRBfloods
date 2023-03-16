@@ -6,7 +6,7 @@
 
 #' Download flow data
 #' 
-#' Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use WRBfloods::WSCdata function instead.
+#' Utility function to download water flow data from WSC online databases. If you are looking for data in an easy to use format please use function WSCdata instead.
 #'
 #' @param station_number The WSC station number for which you want data.
 #' @param select_years The year(s) for which you want data.
@@ -17,8 +17,8 @@
 #' @param rate_days Number days for which to calculate a rate of change, applied only to high-resolution data (historical daily means data is quick to calculate and all days are automatically calculated). Defaults to "all" which calculates rates for all 18 months of past high-resolution flow data; specify a smaller number of days as an integer to lessen processing time.
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
-#' @export
-#'
+#' @keywords Internal
+#' @noRd
 
 utils_flow_data <- function(
 	station_number,
@@ -168,13 +168,7 @@ utils_flow_data <- function(
 	  single_year <- single_year[,c(1, 13, 3:11, 2, 12)]
 	  flow_years <- dplyr::bind_rows(flow_years, single_year)
 	}
-	
-	
-	
-	
-	
-	
-	
+
 	#If loop below modifies recent_flow if high_res is TRUE
 	if (high_res == TRUE & max(select_years) >= lubridate::year(Sys.Date() - 577)){ # Create a few columns here depending on other options
 	  recent_flow <- recent_flow %>% dplyr::mutate(dayofyear = ifelse(lubridate::year(.data$Date) %in% leap_list,
@@ -240,7 +234,6 @@ utils_flow_data <- function(
 	    } 
 	  }
 	}
-
 	
 	flowData <- list(all_historical = flow_df, requested_years = flow_years, recent_flow = recent_flow)
 	return(flowData)

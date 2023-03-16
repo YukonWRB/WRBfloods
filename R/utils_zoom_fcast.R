@@ -14,8 +14,9 @@
 #' @param point_size Self explanatory.
 #'
 #' @return A plot for the station requested and for the duration requested.
-#' @export
-#'
+#' @keywords Internal
+#' @noRd
+
 
 utils_fcast_flow_plot <- function(
     station_number,
@@ -260,8 +261,8 @@ utils_fcast_flow_plot <- function(
 #' @param point_size Self explanatory.
 #'
 #' @return A plot for the station requested and for the duration requested.
-#' @export
-#'
+#' @keywords Internal
+#' @noRd
 
 utils_fcast_level_plot <- function(
     station_number,

@@ -73,9 +73,9 @@ This report provides current conditions, outlook, and technical data.
 
 ```{r intro text, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
-  cat("  \nWater levels in the Southern Lakes are driven by a combination of snowmelt, summer precipitation and glacier melt. Winter 2021-22 snow conditions suggested that water levels would be higher than average this summer. Weather conditions through the summer will determine the peak water level in the Southern Lakes, which typically occurs in late summer in response to peak glacial runoff and precipitation events.  \n  \nThis report provides an overview of current conditions.")
+  cat("  \nWater levels in the Southern Lakes are driven by a combination of snowmelt, summer precipitation and glacier melt. Weather conditions through the summer will determine the peak water level in the Southern Lakes, which typically occurs in late summer in response to peak glacial runoff and precipitation events.  \n  \nThis report provides an overview of current conditions.")
 } else {
-  cat("  \nRecord-setting spring snowpack across many Yukon watersheds had created high potential for flooding near streams and some lakes driven by snowmelt this spring and early summer. Now that the bulk of last winter's snow has melted flooding potential shifts to larger lake systems, particularly those receiving glacial meltwater such as the Southern Lakes.  \n  \nThis report provides an overview of current conditions at selected stations across the territory. More detailed reports are also issued periodically for regions experiencing high or rapidly rising water levels and flows.")
+  cat("  \nThis report provides an overview of current conditions at selected stations across the territory. Advisories are issued for regions experiencing high or rapidly rising water levels and flows.")
 }
 ```
 
@@ -607,53 +607,55 @@ if (rate == TRUE & report_type %in% c("Both", "Level", "both", "level")){
   
   cat("  \n# Summary of water levels and trajectories")
   
-  info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 20)]
-  
   if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
-
-# Populate vectors with distance to 2021 and 2007 peaks    
+    info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10)]
+    # Populate vectors with distance to 2021 and 2007 peaks    
     distpeak2007 <- vector()
     distpeak2021 <- vector()
-
     for (i in stations){
       if (length(levelDataList[[i]]) == 3){ #if the list element isn't properly filled, don't run
         df <- fasstr::calc_annual_peaks(levelDataList[[i]][[1]], values = Level, start_year=2000, ignore_missing = TRUE)
         if (length(dplyr::filter(df, Year == 2007)$Max_1_Day) != 0){
           distpeak2007[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(df, Year == 2007)$Max_1_Day) * 100, 1)
         } else { distpeak2007[i] <- NA}
-        
         if (length(dplyr::filter(df, Year == 2021)$Max_1_Day) != 0){
           distpeak2021[i] <- round((dplyr::filter(info, ID == i)$Level_m - dplyr::filter(df, Year == 2021)$Max_1_Day) * 100, 1)
         } else { distpeak2021[i] <- NA}
-
       } else {
         distpeak2007[i] <- NA
         distpeak2021[i] <- NA
       }
     }
+  } else {
+    if (!is.null(level_returns)){
+      info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 12, 19)]
+    } else {
+      info <- dplyr::bind_rows(levelInfo)[c(2, 5, 6, 8, 10, 12)]
+    }
   }
   
-  
-  Trajectory <- vector()
   for (i in 1:nrow(info)){
-    Trajectory[i] <- paste0(ifelse(info$X24_hr_change_cm[i] > 0, "Rising", "Dropping"), " at ", ifelse(abs(info$X24_hr_change_cm[i]) > abs(info$X24_hr_change_cm[i] - info$X48_hr_change_cm[i]), "increasing", "decreasing"), " rate")
+    info$Trajectory[i] <- paste0(ifelse(info$X24_hr_change_cm[i] > 0, "Rising", "Dropping"), " at ", ifelse(abs(info$X24_hr_change_cm[i]) > abs(info$X24_hr_change_cm[i] - info$X48_hr_change_cm[i]), "increasing", "decreasing"), " rate")
   }
   
-  rateTable <- dplyr::bind_cols(stationInfo[,1], info[, c(2:4)], Trajectory=Trajectory)
-  colnames(rateTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)*", "24 hr change (cm)", "Trajectory")
-  rateTable$`24 hr change (cm)` <- round(rateTable$`24 hr change (cm)`, 1)
   
   if (report_name %in% c("Southern Lakes", "Southern lakes", "southern lakes")){
+    rateTable <- dplyr::bind_cols(stationInfo[,1], info[, c(2:4, 6)])
+    rateTable$X24_hr_change_cm <- round(rateTable$X24_hr_change_cm, 1)
     rateTable$`Difference from 2007 peak (cm)` <- distpeak2007
     rateTable$`Difference from 2021 peak (cm)` <- distpeak2021
-    
-    print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
-    
-  } else {print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
+    colnames(rateTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)*", "24 hr change (cm)", "Trajectory", "Difference from 2007 peak (cm)", "Difference from 2021 peak (cm)")
+  } else {
+    rateTable <- dplyr::bind_cols(stationInfo[,1], info[, c(2:4, 6:8)])
+    rateTable$X24_hr_change_cm <- round(rateTable$X24_hr_change_cm, 1)
+    rateTable$X72_hr_change_cm <- round(rateTable$X72_hr_change_cm, 1)
+    colnames(rateTable) <- c("Station name (number)", "Current level (m)", "Current level (masl)*", "24 hr change (cm)", "72 hr change (cm)", "Current return period", "Trajectory")
   }
-    
-    if (force_CGVD28 == TRUE){
-      cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
+  
+  print(knitr::kable(rateTable, digits=2, align = "lccccccc"))
+  
+  if (force_CGVD28 == TRUE){
+    cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Geodetic Survey of Canada Datum, which is assumed by Water Survey of Canada to refer to Canadian Geodetic Vertical Datum 1928 (CGVD28, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration of the datum used. More recent datums are published for each of these stations on the Water Survey of Canada website. This report uses CGVD28 to match elevations reported by the Yukon Energy Corporation for Marsh Lake.")
     } else {
       cat("*masl = metres above sea level  \n  \n**Notes:**  \nCurrent water levels are presented relative to the local datum (column 2) and relative to the Canadian Geodetic Vertical Datum 2013 (CGVD2013, column 3). The local datum is an arbitrary elevation used at each hydrometric station and reported by the Water Survey of Canada at [wateroffice.ec.gc.ca](https://wateroffice.ec.gc.ca/). Local datum values can be compared at one station across years but not across stations, while masl elevations can be compared across stations and years with consideration to the datum used. Older (deprecated) vertical datums are published for each station on the Water Survey of Canada website. Datum information is provided in a table of station information at the end of this document.")
     }
@@ -834,7 +836,7 @@ for(i in stations) {
   n <- which(stations==i)
   station_info <- tidyhydat::hy_stations(i)
   if(is.na(station_info$STATION_NUMBER[1])==FALSE){ #if the station is in the database, continue!
-    tryCatch ( {
+    tryCatch ({
       cat("  \n# ", stringr::str_to_title(station_info$STATION_NAME)," (station ", i,")  \n")
       
       if (report_type %in% c("Both", "Level", "both", "level")){
@@ -846,75 +848,23 @@ for(i in stations) {
                                               force_CGVD28 = force_CGVD28,
                                               returns = level_returns,
                                               complete_df = levelDataList[[n]][[1]])
-          
           if (plot_titles == TRUE){
             levelPlot <- levelPlot +
               ggplot2::labs(title=paste0("Station ", i, ": ", stringr::str_to_title(tidyhydat::hy_stations(i)[,2]))) +
               ggplot2::theme(plot.title=ggplot2::element_text(hjust=0.05, size=14))
           }
-          
           print(levelPlot)
           cat("  \n")
           
-          
-          
           if (level_zoom == TRUE){ #Plot zoomed-in level data
             cat("  \n### Level (last", zoom_days, " days) \n")
-            
-            #Lines below can be used to incorporate MESH outputs to lakes, once the files are available from Mohamed.
-            # if (i %in% names(MESH) & i %in% names(CLEVER)){
-            #   #Add in the MESH and CLEVER data, then nudge it to match WSC at forecast time.
-            #   
-            #   last_value <- utils::tail(levelDataList[[n]][[3]], n=1)
-            #   dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
-            #   nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
-            #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range compasses two points
-            #   MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
-            #   
-            #   #CLEVER seems to be well adjusted so far! If that changes the adjustement should take place here.
-            #   
-            #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   zoom <- dplyr::full_join(zoom, CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   
-            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
-            #                                          level_years = levelDataList[[n]][[2]],
-            #                                          zoom_data = zoom,
-            #                                          zoom_days = zoom_days)
-            #   
-            # } else if (i %in% names(MESH)){
-            #   #Add in the MESH data, nudge it to match WSC at forecast time.
-            #   last_value <- utils::tail(levelDataList[[n]][[3]], n=1)
-            #   dttm_range <- seq.POSIXt(last_value$Date-60*30, last_value$Date+60*30, by="5 min") #Make a range because the points do not line up perfectly
-            #   nrst_MESH <- MESH[[i]][MESH[[i]]$datetime %in% dttm_range,] #Get the model prediction closest to that time
-            #   diff <- mean(nrst_MESH$MESH_prediction) - last_value$Level #Use the mean of MESH prediction in case the range encompass two points
-            #   MESH[[i]]$MESH_prediction <- MESH[[i]]$MESH_prediction - diff #Adjust the data
-            #   
-            #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], MESH[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   
-            #   
-            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
-            #                                          level_years = levelDataList[[n]][[2]],
-            #                                          zoom_data = zoom,
-            #                                          zoom_days = zoom_days)
-            #   
-            # } else if (i %in% names(CLEVER)) {
-            #   #Add in CLEVER data, nudge it to match wSC at forecast time.
-            #   zoom <- dplyr::full_join(levelDataList[[n]][[3]], CLEVER[[i]], by = c("Date" = "datetime", "DateOnly" = "DateOnly"))
-            #   
-            #   zoomLevelPlot <- utils_fcast_level_plot(station_number = i,
-            #                                          level_years = levelDataList[[n]][[2]],
-            #                                          zoom_data = zoom,
-            #                                          zoom_days = zoom_days)
-            #   
-            # } else { #if no MESH or CLEVER, just give a regular plot
-              zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
-                                                     level_years = levelDataList[[n]][[2]],
-                                                     zoom_data = levelDataList[[n]][[3]],
-                                                     zoom_days = zoom_days,
-                                                     force_CGVD28 = force_CGVD28,
-                                                     returns = level_returns,
-                                                     complete_df = levelDataList[[n]][[1]])
-            #}
+            zoomLevelPlot <- utils_zoom_level_plot(station_number = i,
+                                                   level_years = levelDataList[[n]][[2]],
+                                                   zoom_data = levelDataList[[n]][[3]],
+                                                   zoom_days = zoom_days,
+                                                   force_CGVD28 = force_CGVD28,
+                                                   returns = level_returns,
+                                                   complete_df = levelDataList[[n]][[1]])
             
             if (plot_titles == TRUE){
               zoomLevelPlot <- zoomLevelPlot +
