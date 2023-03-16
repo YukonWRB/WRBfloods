@@ -28,29 +28,29 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   } else {
     stop("You pointed to a database file that does not exist. Check your file path.")
   } 
-  if (level_locations == "default"){
+  if (level_locations[1] == "default"){
     level_locations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD003", "09BC001", "09BC002", "09AE002", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
-  } else if (level_locations == "all"){
+  } else if (level_locations[1] == "all"){
     level_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter = 'level' AND type = 'continuous'")[,1]
   }
-  if (flow_locations == "default"){
+  if (flow_locations[1] == "default"){
     flow_locations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD003", "09BC001", "09BC002", "09AE002", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
-  } else if (flow_locations == "all"){
+  } else if (flow_locations[1] == "all"){
     flow_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter = 'flow' AND type = 'continuous'")[,1]
   }
-  if (snow_locations == "default"){
+  if (snow_locations[1] == "default"){
     snow_locations <- c("09AA-M1", "09BA-M7", "09DB-M1", "09EA-M1", "10AD-M2", "29AB-M3")
-  } else if (snow_locations == "all"){
+  } else if (snow_locations[1] == "all"){
     snow_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter = 'SWE' AND type = 'continuous'")[,1]
   }
-  if (bridge_locations == "default"){
+  if (bridge_locations[1] == "default"){
     bridge_locations <- c("09AH005", "29AB010", "29AB011", "29AE007", "29AH001")
-  } else if (bridge_locations == "all"){
+  } else if (bridge_locations[1] == "all"){
     bridge_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter = 'distance' AND type = 'continuous'")[,1]
   }
-  if (precip_locations == "default"){
-    precip_locations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD003", "09BC001", "09BC002", "09AE002", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
-  } else if (precip_locations == "all"){
+  if (precip_locations[1] == "default"){
+    precip_locations <- c("08AA003", "08AA010", "08AB001", "09AA001", "09AA004", "09AA013", "09AB001", "09AB010", "09AC001", "09AE002", "09AH001", "09AH004", "09BC001", "09BC002", "09CA002", "09DC005", "09DC006", "09EA003", "09EB001", "09FC001", "09FD002", "10AA001", "10AD002", "10MA002")
+  } else if (precip_locations[1] == "all"){
     precip_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter IN ('level', 'flow') AND type = 'continuous'")[,1]
     precip_locations <- unique(precip_locations)
   }
@@ -76,6 +76,48 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   
   
   #Get the data
+  tables <- list()
+  if (!is.null(precip_locations)){ #This one is special: get the data and make the table at the same time, before other data as this is the time consuming step. This keeps the more important data more recent. Others get the data here then process it later on.
+    precip <- data.frame()
+    for (i in precip_locations){
+      name <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))))
+      tryCatch({
+        poly <- WRBtools::DB_browse_spatial(type = "polygon", location = "all_locations", description = "all_drainage_basins")
+        lastWeek <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*7, end = Sys.time(), silent = TRUE, map = FALSE)
+        lastThree <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*3, end = Sys.time(), silent = TRUE, map = FALSE)
+        lastTwo <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*2, end = Sys.time(), silent = TRUE, map = FALSE)
+        lastOne <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*1, end = Sys.time(), silent = TRUE, map = FALSE)
+        next24 <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time(), end = Sys.time() + 60*60*24, silent = TRUE, map = FALSE)
+        next48 <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time(), end = Sys.time() + 60*60*48, silent = TRUE, map = FALSE)
+        
+        precip <- rbind(precip,
+                        data.frame("loc" = i,
+                                   "name" = name,
+                                   "lastWeek" = round(lastWeek$mean_precip, 1),
+                                   "lastThree" = round(lastThree$mean_precip, 1),
+                                   "lastTwo" = round(lastTwo$mean_precip, 1),
+                                   "lastOne" = round(lastOne$mean_precip, 1),
+                                   "next24" = round(next24$mean_precip, 1),
+                                   "next48"= round(next48$mean_precip, 1)))
+      }, error = function(e) {
+        precip <<- rbind(precip,
+                         data.frame("loc" = i,
+                                    "name" = name,
+                                    "lastWeek" = "failed",
+                                    "lastThree" = "failed",
+                                    "lastTwo" = "failed",
+                                    "lastOne" = "failed",
+                                    "next24" = "failed",
+                                    "next48"= "failed"))
+      })
+    }
+    colnames(precip) <- c("Location", "Name", "past 7 days (mm)", "past 3 days (mm)", "past 2 days (mm)", "past 24 hrs (mm)", "next 24 hrs (mm)", "next 48 hrs (mm)")
+    precip$`Location specific comments` <- NA
+    precip <- hablar::rationalize(precip)
+    if (nrow(precip) > 0){
+      tables$precipitation <- precip
+    }
+  }
   if (!is.null(level_locations)){
     level_daily <- list()
     level_rt <- list()
@@ -167,19 +209,11 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
         names_bridge[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))))
       }
     }
-    if (!is.null(precip_locations)){
-      names_precip <- NULL
-      for (i in precip_locations){
-        names_precip[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))))
-      }
-    }
   }  #End of data acquisition
 
   
   
-  #Make the tables
-  tables <- list()
-  
+  #Make the remaining tables
   if (length(level_rt) > 0){ #generate level table
     levels <- data.frame()
     for (i in names(level_rt)){
@@ -680,46 +714,6 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     bridge <- hablar::rationalize(bridge)
     tables$bridge <- bridge
   }
-  
-  
-  if (!is.null(precip_locations)){ #Generate the precipitation table
-    precip <- data.frame()
-    for (i in precip_locations){
-      tryCatch({
-        poly <- WRBtools::DB_browse_spatial(type = "polygon", location = "all_locations", description = "all_drainage_basins")
-        lastWeek <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*7, end = Sys.time(), silent = TRUE)
-        lastThree <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*3, end = Sys.time(), silent = TRUE)
-        lastTwo <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*2, end = Sys.time(), silent = TRUE)
-        lastOne <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*1, end = Sys.time(), silent = TRUE)
-        next24 <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time(), end = Sys.time() + 60*60*24, silent = TRUE)
-        next48 <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time(), end = Sys.time() + 60*60*48, silent = TRUE)
-        
-        precip <- rbind(precip,
-                        data.frame("loc" = i,
-                                   "name" = names_precip[i],
-                                   "lastWeek" = round(lastWeek$mean_precip, 1),
-                                   "lastThree" = round(lastThree$mean_precip, 1),
-                                   "lastTwo" = round(lastTwo$mean_precip, 1),
-                                   "lastOne" = round(lastOne$mean_precip, 1),
-                                   "next24" = round(next24$mean_precip, 1),
-                                   "next48"= round(next48$mean_precip, 1)))
-      }, error = function(e) {
-        precip <<- rbind(precip,
-                       data.frame("loc" = i,
-                                  "name" = names_precip[i],
-                                  "lastWeek" = "failed",
-                                  "lastThree" = "failed",
-                                  "lastTwo" = "failed",
-                                  "lastOne" = "failed",
-                                  "next24" = "failed",
-                                  "next48"= "failed"))
-      })
-    }
-    colnames(precip) <- c("Location", "Name", "past 7 days (mm)", "past 3 days (mm)", "past 2 days (mm)", "past 24 hrs (mm)", "next 24 hrs (mm)", "next 48 hrs (mm)")
-    precip$`Location specific comments` <- NA
-    precip <- hablar::rationalize(precip)
-    tables$precipitation <- precip
-  }
 
   #Make the Excel workbook
   wb <- openxlsx::createWorkbook(creator = "Ghislain de Laplante (via automated process)", title = "Hydrometric Condition Report")
@@ -745,7 +739,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   delayComment <- openxlsx::createComment("Yellow: > 2 hours. Red: > 4 hours.", author = "Ghislain", visible = FALSE)
   percHistComment <- openxlsx::createComment("0 = historic min, 100 = historic max. Yellow = >75%, red: >100%.", author = "Ghislain", visible = FALSE)
   percMeanComment <- openxlsx::createComment("Current level / hist. mean (excl. current yr). 100 = historic mean. Yellow: >125%, Red: >150%.", author = "Ghislain", visible = FALSE)
-  percMeanAdjComment <- openxlsx::createComment("Adjusted to historic min. due to arbitrary 0 point. 100 = historic mean, 0 = historic min. Yellow: >150%, Red: >200%.", author = "Ghislain", visible = FALSE)
+  percMeanAdjComment <- openxlsx::createComment("Adjusted to historic min due to arbitrary 0 point. 100 = historic mean, 0 = historic min. Yellow: >150%, Red: >200%.", author = "Ghislain", visible = FALSE)
   
   for (i in names(tables)[!(names(tables) %in% "precipitation")]){
     openxlsx::addWorksheet(wb, i)
@@ -778,8 +772,8 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     #Conditional format
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">75", cols = 4, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">100", cols = 4, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">150", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">200", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = if (i == "levels") ">150" else ">125", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = if (i == "levels") ">200" else ">150", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
     #conditional format for age of last data
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">2", cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">4", cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
@@ -805,15 +799,39 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     openxlsx::addStyle(wb, "precipitation", style = generalCommentStyle2, cols = 1, rows = c(3,4))
     openxlsx::mergeCells(wb, "precipitation", cols = c(2:9), rows = c(3,4))
     openxlsx::addStyle(wb, "precipitation", style = generalCommentStyle, cols = c(2:9), rows = c(3,4), gridExpand = TRUE)
-    openxlsx::writeData(wb, "precipitation", NA, startCol = 1, startRow = 5, colNames = FALSE) #empty row before the data
+    openxlsx::writeData(wb, "precipitation", NA, startCol = 1, startRow = 5, colNames = FALSE) #empty row before comment
+    openxlsx::writeData(wb, "precipitation", "Mean precip estimates upstream of locations are derived from HRDPA (reanalysis) and HRDPS (forecast) products. Beware: combination of liquid + solid precip.", startCol = 1, startRow = 6, colNames = FALSE)
+    openxlsx::mergeCells(wb, "precipitation", cols = c(1:9), rows = 6)
+    openxlsx::writeData(wb, "precipitation", NA, startCol = 1, startRow = 7, colNames = FALSE) #empty row after comment)
     #add content
-    openxlsx::writeData(wb, "precipitation",  tables[["precipitation"]], startRow = 6)
+    openxlsx::writeData(wb, "precipitation",  tables[["precipitation"]], startRow = 8)
     #format for ease of viewing
-    openxlsx::freezePane(wb, sheet = "precipitation", firstActiveRow = 7, firstActiveCol = 2)
+    openxlsx::freezePane(wb, sheet = "precipitation", firstActiveRow = 9, firstActiveCol = 2)
     openxlsx::setColWidths(wb, "precipitation", cols = c(1:9), widths = c(10, 30, 14, 14, 14, 14, 14, 14, 80))
-    openxlsx::addStyle(wb, "precipitation", headStyle, rows = 6, cols = c(1:9))
-    openxlsx::addStyle(wb, "precipitation", fodCommentStyle, rows = 1:nrow(tables[["precipitation"]])+6, cols = 9)
+    openxlsx::addStyle(wb, "precipitation", headStyle, rows = 8, cols = c(1:9))
+    openxlsx::addStyle(wb, "precipitation", fodCommentStyle, rows = 1:nrow(tables[["precipitation"]])+8, cols = 9)
     #Conditional format
+    precipYellowStyle <- openxlsx::createStyle(fontColour = "yellow", textDecoration = "bold", border = "TopBottomLeftRight", borderColour = "yellow", borderStyle = "medium")
+    precipRedStyle <- openxlsx::createStyle(fontColour = "red", textDecoration = "bold", border = "TopBottomLeftRight", borderColour = "red", borderStyle = "medium")
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">10", cols = c(6,7), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipYellowStyle) #24 hrs precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">20", cols = c(6,7), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipRedStyle) #24 hrs precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">15", cols = c(5, 8), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipYellowStyle) #48 hrs precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">25", cols = c(5, 8), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipRedStyle) #48 hrs precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">20", cols = 4, rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipYellowStyle) #past 3 day precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">30", cols = 4, rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipRedStyle) #past 3 day precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">40", cols = 3, rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipYellowStyle) #past week precip
+    openxlsx::conditionalFormatting(wb, "precipitation", rule = ">60", cols = 3, rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipRedStyle) #past week precip
+    #Add comments
+    dayComment <- openxlsx::createComment("Yellow: > 10mm, Red: > 20mm", author = "Ghislain", visible = FALSE)
+    twoDayComment <- openxlsx::createComment("Yellow: > 15mm, Red: > 25mm", author = "Ghislain", visible = FALSE)
+    threeDayComment <- openxlsx::createComment("Yellow: > 20mm, Red: > 30mm", author = "Ghislain", visible = FALSE)
+    weekComment <- openxlsx::createComment("Yellow: > 40mm, Red: > 60mm", author = "Ghislain", visible = FALSE)
+    openxlsx::writeComment(wb, sheet = "precipitation", col = 6, row = 8, comment = dayComment)
+    openxlsx::writeComment(wb, sheet = "precipitation", col = 7, row = 8, comment = dayComment)
+    openxlsx::writeComment(wb, sheet = "precipitation", col = 5, row = 8, comment = twoDayComment)
+    openxlsx::writeComment(wb, sheet = "precipitation", col = 8, row = 8, comment = twoDayComment)
+    openxlsx::writeComment(wb, sheet = "precipitation", col = 4, row = 8, comment = threeDayComment)
+    openxlsx::writeComment(wb, sheet = "precipitation", col = 3, row = 8, comment = weekComment)
   }
   openxlsx::saveWorkbook(wb, paste0(save_path, "/HydrometricReport_", Sys.Date(), ".xlsx"), overwrite = TRUE)
 }
