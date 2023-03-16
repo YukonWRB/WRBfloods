@@ -811,8 +811,8 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     openxlsx::addStyle(wb, "precipitation", headStyle, rows = 8, cols = c(1:9))
     openxlsx::addStyle(wb, "precipitation", fodCommentStyle, rows = 1:nrow(tables[["precipitation"]])+8, cols = 9)
     #Conditional format
-    precipYellowStyle <- openxlsx::createStyle(fontColour = "yellow", textDecoration = "bold", border = "TopBottomLeftRight", borderColour = "yellow", borderStyle = "medium")
-    precipRedStyle <- openxlsx::createStyle(fontColour = "red", textDecoration = "bold", border = "TopBottomLeftRight", borderColour = "red", borderStyle = "medium")
+    precipYellowStyle <- openxlsx::createStyle(fontColour = "black", textDecoration = "bold", border = "TopBottomLeftRight", borderColour = "goldenrod1", borderStyle = "thick")
+    precipRedStyle <- openxlsx::createStyle(fontColour = "black", textDecoration = "bold", border = "TopBottomLeftRight", borderColour = "red2", borderStyle = "thick")
     openxlsx::conditionalFormatting(wb, "precipitation", rule = ">10", cols = c(6,7), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipYellowStyle) #24 hrs precip
     openxlsx::conditionalFormatting(wb, "precipitation", rule = ">20", cols = c(6,7), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipRedStyle) #24 hrs precip
     openxlsx::conditionalFormatting(wb, "precipitation", rule = ">15", cols = c(5, 8), rows = 1:nrow(tables[["precipitation"]]) + 8, style = precipYellowStyle) #48 hrs precip
