@@ -1,6 +1,6 @@
 #' Accumulated precipitation
 #' 
-#' Calculates accumulated precipitation above defined drainages or immediately surrounding a specified point. If possible, make sure to specify a location in hrdpa_loc and hrdps_loc to speed things up!
+#' Calculates accumulated precipitation above defined drainages or immediately surrounding a specified point. If possible, make sure to specify a location in parameters hrdpa_loc and hrdps_loc to speed things up!
 #' 
 #' If specifying `location` as coordinates rather than a WSC station (or non WSC station, see note below), the numeric result will be of precipitation in the 2.5 km2 cell on which the point falls. Map output, if requested, will be for the smallest available drainage polygon containing that point.
 #' 
@@ -8,25 +8,23 @@
 #' 
 #' Rasters must be downloaded for each 6-hour period between `start` and `end`. It is therefore strongly suggested that you designate and use a folder for this purpose. `WRBtools::getHRDPA` is called for downloading and clipping rasters.
 #' 
-#' Drainage polygons pointed to by `drainage_loc` are best created with function `WRBtools::WSC_drainages` and must be named drainage_polygons.xxx. The drainage polygon IDs (in WSC format, i.e. 10EA001) must be listed in the attribute table under column StationNum and the name under column NameNom. To deal with non-WSC data sources it is possible to have non-WSC polygons here as well. In order for this function to recognize these as non-WSC drainages please respect the following: a) strings should be made of two digits, two letters, and three digits (same as WSC); b) The starting digits must NOT be in the sequence from 01 to 12 as these are taken by the WSC; c) duplicate entries are not allowed.
+#' Drainage polygons pointed to by `drainage_loc` are best created with [WRBtools::WSC_drainages()] and must be named drainage_polygons.xxx. The drainage polygon IDs (in WSC format, i.e. 10EA001) must be listed in the attribute table under column StationNum and the name under column NameNom. To deal with non-WSC data sources it is possible to have non-WSC polygons here as well. In order for this function to recognize these as non-WSC drainages please respect the following: a) strings should be made of two digits, two letters, and three digits (same as WSC); b) The starting digits must NOT be in the sequence from 01 to 12 as these are taken by the WSC; c) duplicate entries are not allowed.
 #' 
 #' Additional spatial data pointed to by `spatial_loc` must be in shapefiles with the following names recognized: waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. Keep in mind that large shapefiles can be lengthy for R to graphically represent. To ease this limitation, the watercourses file is left out when the drainage extent is greater than 30 000 km2; by that size, major water courses are expected to be represented by polygons in the waterbodies layer.
 #' 
 #' @param location The location above which you wish to calculate precipitation. Specify either a WSC or WSC-like station ID (e.g. `"09AB004"`) for which there is a corresponding entry in the shapefile pointed to by drainage_loc, or coordinates in signed decimal degrees in form latitude, longitude (`"60.1234 -139.1234"`; note the space, negative sign, and lack of comma). See details for more info if specifying coordinates.
-#' @param start The start of the time period over which to accumulate precipitation. Use format `"yyyy-mm-dd hh:mm"` (character vector) in local time, or a POSIXct object (e.g. Sys.time()-60*60*24 for one day in the past). See details if requesting earlier than 30 days prior to now.
+#' @param start The start of the time period over which to accumulate precipitation. Use format `"yyyy-mm-dd hh:mm"` (character vector) in local time, or a POSIXct object (e.g. `Sys.time()-60*60*24` for one day in the past). See details if requesting earlier than 30 days prior to now.
 #' @param end The end of the time period over which to accumulate precipitation. Other details as per `start`
 #' @param map Should a map be output to the console? See details for more info.
 #' @param org_defaults This parameter can override the default file locations for rasters, drainages, and spatial files. As of now, only available for "YWRB" (Yukon Water Resources Branch) or NULL. Specifying any of hrdpa_loc, hrdps_loc, drainage_loc, and/or spatial_loc directories will override the organization default for that/those parameters.
 #' @param hrdpa_loc The directory (folder) where past precipitation rasters are to be downloaded. Suggested use is to specify a repository where all such rasters are saved to speed processing time and reduce data usage. If using the default NULL, rasters will not persist beyond your current R session.
 #' @param hrdps_loc The directory (folder) where forecast precipitation rasters are to be downloaded. A folder will be created for the specific parameter (in this case, precipitation) or selected if already existing.
-#' @param drainage_loc The directory where drainage polygons are located, in a single shapefile named drainage_polygons. See Notes for more info.
+#' @param drainage_loc The shapefile drainage polygons.See Notes for more info.
 #' @param spatial_loc The directory in which spatial data (as shapefiles) is kept for making maps nicer. Will recognize the following shapefile names (case sensitive): waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. See additional notes.
 #' @param silent If TRUE, no output is printed to the console.
 #'
 #' @return The accumulated precipitation in mm of water within the drainage specified or immediately surrounding the point specified in `location` printed to the console and (optionally) a map of precipitation printed to the console. A list is also generated containing statistics and the optional plot; to save this plot to disc use either png() or dev.print(), or use the graphical device export functionality.
 #' @export
-#'
-#'
 
 #TODO: problem with extents not matching. reproduce by first calling a map for somewhere in YT, then in Ontario. will get Error:[sds] extents do not match, which means that the DL and/or file selection process didn't work properly
 #IDEA: Allow multiple plots to be fetched, or a time-lapse of plots (better). Allow setting increments and number of plots.
@@ -55,7 +53,7 @@ basinPrecip <- function(location,
       hrdps_loc <- "//env-fs/env-data/corp/water/Common_GW_SW/Data/HRDPS"
     }
     if (is.null(drainage_loc)){
-      drainage_loc <- "//env-fs/env-data/corp/water/Common_GW_SW/Data/basins"
+      drainage_loc <- "//env-fs/env-data/corp/water/Common_GW_SW/Data/basins/drainage_polygons.shp"
     }
     if (is.null(spatial_loc)){
       spatial_loc <- "//env-fs/env-data/corp/water/Common_GW_SW/Data/r_map_layers"
@@ -75,14 +73,14 @@ basinPrecip <- function(location,
       location <- terra::vect(location, geom = c("long", "lat"))
       type <- "longlat"
     }, error = function(e) {
-      stop("Please check your input for `location`. It looks like you're trying to input decimal degrees, so please ensure that the latitude and longitude are only numbers separated by a comma. If you're trying to input a WSC station please use a standard WSC ID.")
+      stop("Please check your input for `location`. It looks like you're trying to input decimal degrees, so please ensure that the latitude and longitude are only numbers separated by a comma. If you're trying to input a WSC station please use a standard WSC or WSC-like ID.")
     })
   } else if (grepl("[0-9]{2}[A-Za-z]{2}[0-9]{3}", location)){
     type <- "WSC"
   } else {crayon::red(stop("Your input for `location` could not be coerced to decimal degrees or to a standard WSC or WSC-like station ID. Please review the help file for proper format and try again."))}
   
   #Load the drainages
-  drainages <- terra::vect(paste0(drainage_loc, "/drainage_polygons.shp"))
+  drainages <- terra::vect(drainage_loc)
   if (type == "WSC"){
       station_check_polygon <- location %in% drainages$StationNum
       if (!station_check_polygon){
@@ -106,8 +104,7 @@ basinPrecip <- function(location,
     within <- as.data.frame(polygons[which(within)])$PREABBR
   }
   
-  #Determine the sequence of rasters from start to end and if the clip is adequate. If not, call WRBtools::getHRDPA to fill the gap.
-  
+  #Determine the sequence of rasters from start to end and if the clip is adequate. If not, call WRBtools::getHRDPA or getHRDPS to fill the gap.
   start <- as.POSIXct(start)
   end <- as.POSIXct(end)
   attr(start, "tzone") <- "UTC"
@@ -278,13 +275,13 @@ basinPrecip <- function(location,
   actual_times_hrdps <- NULL
   if (hrdpa == FALSE){ #only hrdps need to be downloaded, times are in the future
     hrdps <- TRUE
-    WRBtools::getHRDPS(clip = NULL, save_path = hrdps_loc, param = "APCP_SFC_0") #This will not run through if the files are already present
-    available_hrdps <- data.frame(files = list.files(paste0(hrdps_loc, "/APCP_SFC_0"), full.names=TRUE))
+    WRBtools::getHRDPS(clip = NULL, save_path = hrdps_loc, param = "APCP_Sfc") #This will not run through if the files are already present
+    available_hrdps <- data.frame(files = list.files(paste0(hrdps_loc, "/APCP_Sfc"), pattern = ".*.tiff$", full.names=TRUE))
     available_hrdps <- available_hrdps %>%
-      dplyr::mutate(from = stringr::str_extract(.data$files, "[0-9]{10}"),
-                    time = as.numeric(substr(stringr::str_extract(.data$files, "[0-9]{2}.tiff"), 1, 2))
+      dplyr::mutate(from = paste0(stringr::str_extract(.data$files, "[0-9]{8}"), stringr::str_extract(.data$files, "T[0-9]{2}Z")),
+                    time = as.numeric(substr(sub(".*Z_", "", .data$files), 1,2))
       )
-    available_hrdps$from <- as.POSIXct(available_hrdps$from, format = "%Y%m%d%H", tz="UTC")
+    available_hrdps$from <- as.POSIXct(available_hrdps$from, format = "%Y%m%dT%HZ", tz="UTC")
     available_hrdps <- available_hrdps[!is.na(available_hrdps$from),]
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
     past_precip <- available_hrdps[available_hrdps$to == start_hrdps,] #this is subtracted from the total hrdps to match with the requested start time
@@ -296,15 +293,14 @@ basinPrecip <- function(location,
     forecast_precip <- terra::rast(end_precip$files) - terra::rast(past_precip$files)
     forecast_precip <- terra::project(forecast_precip, "+proj=longlat +EPSG:3347")
     names(forecast_precip) <- "precip"
-    
   } else if (hrdpa == TRUE & end > (Sys.time()-60*60*6)) { #There might be a need for some hrdps to fill in to the requested end time. Determine the difference between the actual end time and requested end time, fill in with hrdps if necessary
-    WRBtools::getHRDPS(clip = NULL, save_path = hrdps_loc, param = "APCP_SFC_0") #This will not run through if the files are already present
-    available_hrdps <- data.frame(files = list.files(paste0(hrdps_loc, "/APCP_SFC_0"), full.names=TRUE))
+    WRBtools::getHRDPS(clip = NULL, save_path = hrdps_loc, param = "APCP_Sfc") #This will not run through if the files are already present
+    available_hrdps <- data.frame(files = list.files(paste0(hrdps_loc, "/APCP_Sfc"), pattern = ".*.tiff$", full.names=TRUE))
     available_hrdps <- available_hrdps %>%
-      dplyr::mutate(from = stringr::str_extract(.data$files, "[0-9]{10}"),
-                    time = as.numeric(substr(stringr::str_extract(.data$files, "[0-9]{2}.tiff"), 1, 2))
+      dplyr::mutate(from = paste0(stringr::str_extract(.data$files, "[0-9]{8}"), stringr::str_extract(.data$files, "T[0-9]{2}Z")),
+                    time = as.numeric(substr(sub(".*Z_", "", .data$files), 1,2))
       )
-    available_hrdps$from <- as.POSIXct(available_hrdps$from, format = "%Y%m%d%H", tz="UTC")
+    available_hrdps$from <- as.POSIXct(available_hrdps$from, format = "%Y%m%dT%HZ", tz="UTC")
     available_hrdps <- available_hrdps[!is.na(available_hrdps$from),]
     available_hrdps$to <- available_hrdps$from + available_hrdps$time*60*60
     if (actual_times_hrdpa[2] %in% available_hrdps$from) { #if TRUE, the hrdps is suitable to use without special considerations
