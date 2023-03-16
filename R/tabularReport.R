@@ -8,7 +8,7 @@
 #' @param flow_locations List of flow locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory. "all" fetches all flow reporting locations in the DB. NULL will not create the table.
 #' @param snow_locations List of snow pillow locations to include in the report, as a character vector. "default" includes all of the WRB snow pillows as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.
 #' @param bridge_locations List of bridge freeboard radar locations to include in the report, as a character vector. "default" includes all of the radars as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.
-#' @param precip_locations List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information). NULL will not create the table.
+#' @param precip_locations List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information). NULL will not create the table. WARNING: this portion of the script is slow. Setting this parameter to "all" could take about an hour to get all information together.
 #' @param past The number of days in the past for which you want data. Will be rounded to yield table columns covering at least one week, at most 4 weeks. 24, 28, and 72 hour change columns are always rendered.
 #' @param save_path The path where you wish to save the Excel workbook.
 #'
@@ -18,9 +18,8 @@
 
 #TODO: Sites with no data should still show up\
 #TODO: Add precipitation using WRBtools::basinPrecip function. First, that function has to be made to work with the database and scheduled to pull data to the db. Then, basinPrecip should default to looking for precip rasters in the DB.
-#TODO: conditional formatting for bridge table needs to be the *opposite* of other tables, since more freeboard = good!
 
-tabularReport <- function(database = "default", level_locations = "all", flow_locations = "all", snow_locations = "all", bridge_locations = "all", precip_locations = "all", past = 28, save_path = "choose") {
+tabularReport <- function(database = "default", level_locations = "all", flow_locations = "all", snow_locations = "all", bridge_locations = "all", precip_locations = "default", past = 28, save_path = "choose") {
   
   #check the database exists and establish connection
   if (file.exists(database) | database == "default"){
@@ -52,7 +51,8 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   if (precip_locations == "default"){
     precip_locations <- c("09AH001", "09AH004", "09EA003", "09EB001", "09DC006", "09FD003", "09BC001", "09BC002", "09AE002", "10AA001", "09AB001", "09AB004", "09AB010", "09AA004", "09AA017")
   } else if (precip_locations == "all"){
-    precip_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter IN ('level', 'flow') AND type = 'continuous'")
+    precip_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter IN ('level', 'flow') AND type = 'continuous'")[,1]
+    precip_locations <- unique(precip_locations)
   }
   
   if (save_path == "choose") {
@@ -165,6 +165,12 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       }
       if (nrow(rt) > 0 | nrow(daily) >0){
         names_bridge[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))))
+      }
+    }
+    if (!is.null(precip_locations)){
+      names_precip <- NULL
+      for (i in precip_locations){
+        names_precip[i] <- stringr::str_to_title(unique(DBI::dbGetQuery(database, paste0("SELECT name FROM locations WHERE location = '", i, "'"))))
       }
     }
   }  #End of data acquisition
@@ -308,7 +314,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       age <- difftime(Sys.time(), last_time, units = "hours")
       latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value) #median of last 30 minutes of data
       percent_historic <- round(((latest - flow_daily[[i]]$min) / (flow_daily[[i]]$max - flow_daily[[i]]$min)) * 100, 0)
-      percent_mean <- round(((latest - flow_daily[[i]]$min) / (flow_daily[[i]]$QP50 - flow_daily[[i]]$min)) * 100, 0)
+      percent_mean <- round(latest/flow_daily[[i]]$QP50 * 100, 0)
       day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value) #median of 30 minutes
       twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value) #median of 1 hour
       threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value) #median of 1 hour
@@ -433,7 +439,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
       age <- difftime(Sys.time(), last_time, units = "hours")
       latest <- stats::median(rt[rt$datetime_UTC <= last_time & rt$datetime_UTC >= last_time - 60*30 , ]$value) #median of last 30 minutes of data
       percent_historic <- round(((latest - snow_daily[[i]]$min) / (snow_daily[[i]]$max - snow_daily[[i]]$min)) * 100, 0)
-      percent_mean <- round(((latest - snow_daily[[i]]$min) / (snow_daily[[i]]$QP50 - snow_daily[[i]]$min)) * 100, 0)
+      percent_mean <- round(latest/snow_daily[[i]]$QP50 * 100, 0)
       day <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*24 & rt$datetime_UTC >= last_time - 60*60*24.5 , ]$value) #median of 30 minutes
       twoday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*47.5 & rt$datetime_UTC >= last_time - 60*60*48.5 , ]$value) #median of 1 hour
       threeday <- stats::median(rt[rt$datetime_UTC <= last_time - 60*60*71.5 & rt$datetime_UTC >= last_time - 60*60*72.5 , ]$value) #median of 1 hour
@@ -675,10 +681,46 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     tables$bridge <- bridge
   }
   
-  # if (!is.null(precip_locations)){
-  #   
-  # }
   
+  if (!is.null(precip_locations)){ #Generate the precipitation table
+    precip <- data.frame()
+    for (i in precip_locations){
+      tryCatch({
+        poly <- WRBtools::DB_browse_spatial(type = "polygon", location = "all_locations", description = "all_drainage_basins")
+        lastWeek <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*7, end = Sys.time(), silent = TRUE)
+        lastThree <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*3, end = Sys.time(), silent = TRUE)
+        lastTwo <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*2, end = Sys.time(), silent = TRUE)
+        lastOne <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time()-60*60*24*1, end = Sys.time(), silent = TRUE)
+        next24 <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time(), end = Sys.time() + 60*60*24, silent = TRUE)
+        next48 <- basinPrecip(location = i, drainage_loc = poly$file_path, start = Sys.time(), end = Sys.time() + 60*60*48, silent = TRUE)
+        
+        precip <- rbind(precip,
+                        data.frame("loc" = i,
+                                   "name" = names_precip[i],
+                                   "lastWeek" = round(lastWeek$mean_precip, 1),
+                                   "lastThree" = round(lastThree$mean_precip, 1),
+                                   "lastTwo" = round(lastTwo$mean_precip, 1),
+                                   "lastOne" = round(lastOne$mean_precip, 1),
+                                   "next24" = round(next24$mean_precip, 1),
+                                   "next48"= round(next48$mean_precip, 1)))
+      }, error = function(e) {
+        precip <<- rbind(precip,
+                       data.frame("loc" = i,
+                                  "name" = names_precip[i],
+                                  "lastWeek" = "failed",
+                                  "lastThree" = "failed",
+                                  "lastTwo" = "failed",
+                                  "lastOne" = "failed",
+                                  "next24" = "failed",
+                                  "next48"= "failed"))
+      })
+    }
+    colnames(precip) <- c("Location", "Name", "past 7 days (mm)", "past 3 days (mm)", "past 2 days (mm)", "past 24 hrs (mm)", "next 24 hrs (mm)", "next 48 hrs (mm)")
+    precip$`Location specific comments` <- NA
+    precip <- hablar::rationalize(precip)
+    tables$precipitation <- precip
+  }
+
   #Make the Excel workbook
   wb <- openxlsx::createWorkbook(creator = "Ghislain de Laplante (via automated process)", title = "Hydrometric Condition Report")
   time <- Sys.time()
@@ -694,10 +736,6 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   fodCommentStyle <- openxlsx::createStyle(fgFill = "lightyellow")
   colStyleYellow <- openxlsx::createStyle(bgFill = "yellow")
   colStyleRed <- openxlsx::createStyle(bgFill = "red")
-  
-  # colStyleYellow <- openxlsx::createStyle(border = "TopbottomLeftRight", borderStyle = "thick", borderColour = "yellow")
-  # colStyleRed <- openxlsx::createStyle(border = "TopbottomLeftRight", borderStyle = "thick", borderColour = "red")
-  
   generalCommentStyle <- openxlsx::createStyle(border = "TopBottomLeftRight", fgFill = "lightyellow")
   generalCommentStyle2 <- openxlsx::createStyle(border = "TopBottomLeftRight", textDecoration = "bold", fgFill = "lightyellow", wrapText = TRUE)
   increasingStyle <- openxlsx::createStyle(fontColour = "red3", textDecoration = "bold")
@@ -706,7 +744,9 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   #comments
   delayComment <- openxlsx::createComment("Yellow: > 2 hours. Red: > 4 hours.", author = "Ghislain", visible = FALSE)
   percHistComment <- openxlsx::createComment("0 = historic min, 100 = historic max. Yellow = >75%, red: >100%.", author = "Ghislain", visible = FALSE)
-  percMeanComment <- openxlsx::createComment("100 = historic mean, 200 = historic max, 0 = historic min. Yellow: >150%, red: >200%.", author = "Ghislain", visible = FALSE)
+  percMeanComment <- openxlsx::createComment("Current level / hist. mean (excl. current yr). 100 = historic mean. Yellow: >125%, Red: >150%.", author = "Ghislain", visible = FALSE)
+  percMeanAdjComment <- openxlsx::createComment("Adjusted to historic min. due to arbitrary 0 point. 100 = historic mean, 0 = historic min. Yellow: >150%, Red: >200%.", author = "Ghislain", visible = FALSE)
+  
   for (i in names(tables)[!(names(tables) %in% "precipitation")]){
     openxlsx::addWorksheet(wb, i)
     #Create/format the header
@@ -723,33 +763,57 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     openxlsx::addStyle(wb, i, style = generalCommentStyle2, cols = 1, rows = c(3,4))
     openxlsx::mergeCells(wb, i, cols = if (past == 7) c(2:12) else if (past == 14) c(2:13) else if (past == 21) c(2:14) else if (past == 28) c(2:15), rows = c(3,4))
     openxlsx::addStyle(wb, i, style = generalCommentStyle, cols = if (past == 7) c(2:12) else if (past == 14) c(2:13) else if (past == 21) c(2:14) else if (past == 28) c(2:15), rows = c(3,4), gridExpand = TRUE)
-    openxlsx::writeData(wb, i, NA, startCol = 1, startRow = 5, colNames = FALSE)
+    openxlsx::writeData(wb, i, NA, startCol = 1, startRow = 5, colNames = FALSE) #empty row before the data
     #add content
     openxlsx::writeData(wb, i,  tables[[i]], startRow = 6)
     #format for ease of viewing
     openxlsx::freezePane(wb, sheet = i, firstActiveRow = 7, firstActiveCol = 2)
-    openxlsx::setColWidths(wb, i, cols = if (past == 7) c(1:12) else if (past == 14) c(1:13) else if (past == 21) c(1:14) else if (past == 28) c(1:15), widths = if (past == 7) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 15, 4, 60) else if (past == 14) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 15, 4, 60) else if (past == 21) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 12, 15, 4, 60) else if (past == 28) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 12, 12, 15, 4, 60))
+    openxlsx::setColWidths(wb, i, cols = if (past == 7) c(1:12) else if (past == 14) c(1:13) else if (past == 21) c(1:14) else if (past == 28) c(1:15), widths = if (past == 7) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 15, 4, 80) else if (past == 14) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 15, 4, 80) else if (past == 21) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 12, 15, 4, 80) else if (past == 28) c(10, 30, 10, 10, 10, 12, 12, 12, 12, 12, 12, 12, 15, 4, 80))
     openxlsx::addStyle(wb, i, headStyle, rows = 6, cols = if (past == 7) c(1:12) else if (past == 14) c(1:13) else if (past == 21) c(1:14) else if (past == 28) c(1:15))
     openxlsx::addStyle(wb, i, fodCommentStyle, rows = 1:nrow(tables[[i]])+6, cols = if (past == 7) 12 else if (past == 14) 13 else if (past == 21) 14 else if (past == 28) 15)
     #Add comments
     openxlsx::writeComment(wb, sheet = i, col = 4, row = 6, comment = percHistComment)
-    openxlsx::writeComment(wb, sheet = i, col = 5, row = 6, comment = percMeanComment)
+    openxlsx::writeComment(wb, sheet = i, col = 5, row = 6, comment = if (i == "levels") percMeanAdjComment else percMeanComment)
     openxlsx::writeComment(wb, sheet = i, col = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, row = 6, comment = delayComment)
     #Conditional format
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">75", cols = 4, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">100", cols = 4, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">150", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">200", cols = 5, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
-    
+    #conditional format for age of last data
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">2", cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, rows = 1:nrow(tables[[i]])+6, style = colStyleYellow)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = ">4", cols = if (past == 7) 11 else if (past == 14) 12 else if (past == 21) 13 else if (past == 28) 14, rows = 1:nrow(tables[[i]])+6, style = colStyleRed)
-    
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = ">0", cols = if (past == 7) c(6:9) else if (past == 14) c(6:10) else if (past == 21) c(6:11) else if (past == 28) c(6:12), rows = 1:nrow(tables[[i]])+6, style = increasingStyle)
-    openxlsx::conditionalFormatting(wb, sheet = i, rule = "<0", cols = if (past == 7) c(6:9) else if (past == 14) c(6:10) else if (past == 21) c(6:11) else if (past == 28) c(6:12), rows = 1:nrow(tables[[i]])+6, style = decreasingStyle)
+    #Conditional format for increasing/decreasing (!bridge radars are inverse)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = if (i == "bridge") "<0" else ">0", cols = if (past == 7) c(6:9) else if (past == 14) c(6:10) else if (past == 21) c(6:11) else if (past == 28) c(6:12), rows = 1:nrow(tables[[i]])+6, style = increasingStyle)
+    openxlsx::conditionalFormatting(wb, sheet = i, rule = if (i == "bridge") ">0" else "<0", cols = if (past == 7) c(6:9) else if (past == 14) c(6:10) else if (past == 21) c(6:11) else if (past == 28) c(6:12), rows = 1:nrow(tables[[i]])+6, style = decreasingStyle)
     openxlsx::conditionalFormatting(wb, sheet = i, rule = '=""', cols = if (past == 7) c(3, 6:9) else if (past == 14) c(3, 6:10) else if (past == 21) c(3, 6:11) else if (past == 28) c(3, 6:12), rows = 1:nrow(tables[[i]])+6, style = missingDataStyle)
   }
   
-  #Add the precipitation table here in future
-  
+  if ("precipitation" %in% names(tables)){
+    openxlsx::addWorksheet(wb, "precipitation")
+    #Create/format the header
+    openxlsx::writeData(wb, "precipitation", head, startCol = 1, startRow = 1, colNames = FALSE)
+    openxlsx::writeData(wb, "precipitation", NA, startCol = 1, startRow = 2, colNames = FALSE)
+    openxlsx::mergeCells(wb, "precipitation", cols = c(1:2), rows = 1)
+    openxlsx::mergeCells(wb, "precipitation", cols = c(3:4), rows = 1)
+    openxlsx::mergeCells(wb, "precipitation", cols = c(5:6), rows = 1)
+    openxlsx::mergeCells(wb, "precipitation", cols = c(7:9), rows = 1)
+    openxlsx::addStyle(wb, "precipitation", style = fodNameStyle, rows = 1, cols = c(5:6))
+    #add a line for general comments
+    openxlsx::writeData(wb, "precipitation", "General comments", startCol = 1, startRow = 3, colNames = FALSE)
+    openxlsx::mergeCells(wb, "precipitation", cols = 1, rows = c(3,4))
+    openxlsx::addStyle(wb, "precipitation", style = generalCommentStyle2, cols = 1, rows = c(3,4))
+    openxlsx::mergeCells(wb, "precipitation", cols = c(2:9), rows = c(3,4))
+    openxlsx::addStyle(wb, "precipitation", style = generalCommentStyle, cols = c(2:9), rows = c(3,4), gridExpand = TRUE)
+    openxlsx::writeData(wb, "precipitation", NA, startCol = 1, startRow = 5, colNames = FALSE) #empty row before the data
+    #add content
+    openxlsx::writeData(wb, "precipitation",  tables[["precipitation"]], startRow = 6)
+    #format for ease of viewing
+    openxlsx::freezePane(wb, sheet = "precipitation", firstActiveRow = 7, firstActiveCol = 2)
+    openxlsx::setColWidths(wb, "precipitation", cols = c(1:9), widths = c(10, 30, 14, 14, 14, 14, 14, 14, 80))
+    openxlsx::addStyle(wb, "precipitation", headStyle, rows = 6, cols = c(1:9))
+    openxlsx::addStyle(wb, "precipitation", fodCommentStyle, rows = 1:nrow(tables[["precipitation"]])+6, cols = 9)
+    #Conditional format
+  }
   openxlsx::saveWorkbook(wb, paste0(save_path, "/HydrometricReport_", Sys.Date(), ".xlsx"), overwrite = TRUE)
 }

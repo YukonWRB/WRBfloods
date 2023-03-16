@@ -10,7 +10,7 @@ tabularReport(
   flow_locations = "all",
   snow_locations = "all",
   bridge_locations = "all",
-  precip_locations = "all",
+  precip_locations = "default",
   past = 28,
   save_path = "choose"
 )
@@ -26,7 +26,7 @@ tabularReport(
 
 \item{bridge_locations}{List of bridge freeboard radar locations to include in the report, as a character vector. "default" includes all of the radars as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.}
 
-\item{precip_locations}{List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information). NULL will not create the table.}
+\item{precip_locations}{List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information). NULL will not create the table. WARNING: this portion of the script is slow. Setting this parameter to "all" could take about an hour to get all information together.}
 
 \item{past}{The number of days in the past for which you want data. Will be rounded to yield table columns covering at least one week, at most 4 weeks. 24, 28, and 72 hour change columns are always rendered.}
 
