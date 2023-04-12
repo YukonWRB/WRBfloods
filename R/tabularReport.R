@@ -49,7 +49,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     bridge_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter = 'distance' AND type = 'continuous'")[,1]
   }
   if (precip_locations[1] == "default"){
-    precip_locations <- c("08AA003", "08AA010", "08AB001", "09AA001", "09AA004", "09AA013", "09AB001", "09AB010", "09AC001", "09AE002", "09AH001", "09AH004", "09BC001", "09BC002", "09CA002", "09DC005", "09DC006", "09EA003", "09EB001", "09FC001", "09FD002", "10AA001", "10AD002", "10MA002")
+    precip_locations <- c("08AA003", "08AA010", "08AB001", "09AA001", "09AA004", "09AA013", "09AB001", "09AB010", "09AC001", "09AE002", "09AH001", "09AH004", "09BC001", "09BC002", "09CA002", "09DC005", "09DC006", "09EA003", "09EB001", "09FC001", "09FD002", "10AA001", "10AD002", "10MA002", "10BE001")
   } else if (precip_locations[1] == "all"){
     precip_locations <- DBI::dbGetQuery(database, "SELECT location FROM timeseries WHERE parameter IN ('level', 'flow') AND type = 'continuous'")[,1]
     precip_locations <- unique(precip_locations)
