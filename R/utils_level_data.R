@@ -4,7 +4,7 @@
 # Ryan Connon (ryan_connon@gov.nt.ca; 867-767-9234 x 53127)
 # Water Resources, Government of the Northwest Territories
 
-#' Download level data
+#' Pull level data from local database or download
 #' 
 #' Utility function to download water level data from WSC online databases. If you are looking for data in an easy to use format please use the function WSCdata instead.
 #' 
@@ -57,7 +57,7 @@ utils_level_data <- function(
   #Truncate all to the last requested year. Only these years are used for calculating stats.
   level_historic <- level_historic[level_historic$Date < paste0(max(select_years), "-12-31"),]
   
-  datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1)))#Check if there is a datum on record - any datum
+  datum_na <- is.na(as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))) #Check if there is a datum on record - any datum
   if (datum_na == FALSE){
     if (force_CGVD28 == FALSE){
     datum <- as.numeric(utils::tail(tidyhydat::hy_stn_datum_conv(station_number)[,4], n=1))
