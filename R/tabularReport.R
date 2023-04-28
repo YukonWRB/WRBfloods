@@ -10,8 +10,8 @@
 #' @param bridge_locations List of bridge freeboard radar locations to include in the report, as a character vector. "default" includes all of the radars as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.
 #' @param precip_locations List of flow/level locations for which to report precipitation. "default" is a pre-determined list of locations, "all" is all locations for which there is a drainage polygon (which may be more or less than the number of stations reporting level or flow information). NULL will not create the table. WARNING: this portion of the script is slow. Setting this parameter to "all" could take about an hour to get all information together.
 #' @param past The number of days in the past for which you want data. Will be rounded to yield table columns covering at least one week, at most 4 weeks. 24, 28, and 72 hour change columns are always rendered.
-#' @param save_path The path where you wish to save the Excel workbook.
-#' @param archive_path The path where old workbooks are saved. "Default" looks for a folder named "Archive" in the 'save_path', "choose" allows interactive choosing. Since this function puts each day's workbook in a folder named after the current date, will look for folders with date names (yyyy-mm-dd format), and workbook with the default name format of HydrometricReport_yyyy-mm-dd. If you're diverging from the default, please point to the folder containing each day's folder, not to a specific day's folder.
+#' @param save_path The path where you wish to save the Excel workbook. A folder will be created for each day's report.
+#' @param archive_path The path to yesterday's file, if you wish to include yesterday's comments in this report. Full path, including exension .xlsx. Function expects a workbook exactly as produced by this function, plus of course the observer comments.
 #'
 #' @return An Excel workbook containing the report with one tab per timeseries type.
 #' @export
@@ -20,7 +20,7 @@
 #TODO: Sites with no data should still show up\
 #TODO: Add precipitation using WRBtools::basinPrecip function. First, that function has to be made to work with the database and scheduled to pull data to the db. Then, basinPrecip should default to looking for precip rasters in the DB.
 
-tabularReport <- function(database = "default", level_locations = "all", flow_locations = "all", snow_locations = "all", bridge_locations = "all", precip_locations = "default", past = 28, save_path = "choose", archive_path = "default") {
+tabularReport <- function(database = "default", level_locations = "all", flow_locations = "all", snow_locations = "all", bridge_locations = "all", precip_locations = "default", past = 28, save_path = "choose", archive_path = "choose") {
   
   #check the database exists and establish connection
   if (file.exists(database) | database == "default"){
@@ -61,8 +61,8 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))
   }
   if (archive_path == "choose"){
-    print("Select the path to the archive folder (refer to function help).")
-    save_path <- as.character(utils::choose.dir(caption="Select Archive Folder"))
+    print("Select the path to yesterday's file (refer to function help).")
+    archive_path <- as.character(utils::choose.files(caption="Select Yesterday's File"), multi = FALSE)
   }
   
   #Set the days for which to generate tables
@@ -80,21 +80,16 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   }
   
   #Load yesterday's workbook
-  if (archive_path == "default") {
-    yesterday_path <- paste0(save_path, "/Archive/", Sys.Date()-1, "/HydrometricReport_", Sys.Date()-1, ".xlsx")
-  } else {
-    yesterday_path <- paste0(archive_path, "/", Sys.Date()-1, "/HydrometricReport_", Sys.Date()-1, ".xlsx")
-  }
   tryCatch({
-    yesterday_workbook <- loadWorkbook(yesterday_path)
+    yesterday_workbook <- openxlsx::loadWorkbook(archive_path)
     yesterday <- list(yesterday_general = NULL, yesterday_locs = NULL)
     for (i in names(yesterday_workbook)){
       if (i != "precipitation"){
-        yesterday[["yesterday_general"]][[i]] <- read.xlsx(yesterday_workbook, sheet = i, rows = 3, cols = 2, colNames = FALSE)
-        yesterday[["yesterday_locs"]][[i]] <- read.xlsx(yesterday_workbook, sheet = i, startRow = 7)
+        yesterday[["yesterday_general"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, rows = 3, cols = 2, colNames = FALSE)
+        yesterday[["yesterday_locs"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, startRow = 7)
       } else {
-        yesterday[["yesterday_general"]][[i]] <- read.xlsx(yesterday_workbook, sheet = i, rows = 3, cols = 2, colNames = FALSE)
-        yesterday[["yesterday_locs"]][[i]] <- read.xlsx(yesterday_workbook, sheet = i, startRow = 9)
+        yesterday[["yesterday_general"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, rows = 3, cols = 2, colNames = FALSE)
+        yesterday[["yesterday_locs"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, startRow = 9)
       }
       
     }
@@ -131,19 +126,19 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
                                    "next24" = round(next24$mean_precip, 1),
                                    "next48"= round(next48$mean_precip, 1),
                                    "location_comments" = NA,
-                                   "yesterday_comments" = yesterday_comment_precip))
+                                   "yesterday_comments" = if (length(yesterday_comment_precip) < 1 | is.null(yesterday_comment_precip)) NA else yesterday_comment_precip))
       }, error = function(e) {
         precip <<- rbind(precip,
                          data.frame("loc" = i,
                                     "name" = name,
-                                    "lastWeek" = "failed",
-                                    "lastThree" = "failed",
-                                    "lastTwo" = "failed",
-                                    "lastOne" = "failed",
-                                    "next24" = "failed",
-                                    "next48"= "failed",
-                                    "location_comments" = NA,
-                                    "yesterday_comments" = yesterday_comment_precip))
+                                    "lastWeek" = NA,
+                                    "lastThree" = NA,
+                                    "lastTwo" = NA,
+                                    "lastOne" = NA,
+                                    "next24" = NA,
+                                    "next48"= NA,
+                                    "location_comments" = "Failed to fetch precipitation for this station.",
+                                    "yesterday_comments" = if (length(yesterday_comment_precip) < 1 | is.null(yesterday_comment_precip)) NA else yesterday_comment_precip))
       })
     }
     colnames(precip) <- c("Location", "Name", "past 7 days (mm)", "past 3 days (mm)", "past 2 days (mm)", "past 24 hrs (mm)", "next 24 hrs (mm)", "next 48 hrs (mm)", "Location specific comments", "Yesterday's comments")

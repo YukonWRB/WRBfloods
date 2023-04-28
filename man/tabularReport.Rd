@@ -12,7 +12,8 @@ tabularReport(
   bridge_locations = "all",
   precip_locations = "default",
   past = 28,
-  save_path = "choose"
+  save_path = "choose",
+  archive_path = "choose"
 )
 }
 \arguments{
@@ -30,7 +31,9 @@ tabularReport(
 
 \item{past}{The number of days in the past for which you want data. Will be rounded to yield table columns covering at least one week, at most 4 weeks. 24, 28, and 72 hour change columns are always rendered.}
 
-\item{save_path}{The path where you wish to save the Excel workbook.}
+\item{save_path}{The path where you wish to save the Excel workbook. A folder will be created for each day's report.}
+
+\item{archive_path}{The path to yesterday's file, if you wish to include yesterday's comments in this report. Full path, including exension .xlsx. Function expects a workbook exactly as produced by this function, plus of course the observer comments.}
 }
 \value{
 An Excel workbook containing the report with one tab per timeseries type.
