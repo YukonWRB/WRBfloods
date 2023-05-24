@@ -3,7 +3,7 @@
 #' Creates a report of hydrometric, snow pack, and precipitation conditions in Excel format, each table on a separate tab. List of stations/locations can be user-defined if desired. Connection is established using WRBtools::hydroConnect, so ensure that WRBtools is up to date if the database type has changed. 
 #' Note that data can only be as recent as the last incorporation to the database. If you need the most up to date data possible, run WRBdatabase::hydro_update_hourly first.
 #'
-#' @param database  Specify the path to the local hydromet database here, which must be created and maintained by the WRBdatabase package. Passed to WRBtools::hydroConnect to establish connection.
+#' @param database  Specify the path to the local hydromet database here, which must be created and maintained by the WRBdatabase package. Passed to [WRBtools::hydroConnect()] to establish connection.
 #' @param level_locations List of water level locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory, "all" fetches all level reporting locations in the DB. NULL will not create the table.
 #' @param flow_locations List of flow locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory. "all" fetches all flow reporting locations in the DB. NULL will not create the table.
 #' @param snow_locations List of snow pillow locations to include in the report, as a character vector. "default" includes all of the WRB snow pillows as of Feb 2023, "all" fetches all snow pillow locations in the DB. NULL will not create the table.
@@ -79,17 +79,17 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     past <- 28
   }
   
-  #Load yesterday's workbook
+  #Load yesterday's workbook -----------------
   tryCatch({
     yesterday_workbook <- openxlsx::loadWorkbook(archive_path)
     yesterday <- list(yesterday_general = NULL, yesterday_locs = NULL)
     for (i in names(yesterday_workbook)){
       if (i != "precipitation"){
         yesterday[["yesterday_general"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, rows = 3, cols = 2, colNames = FALSE)
-        yesterday[["yesterday_locs"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, startRow = 7)
+        yesterday[["yesterday_locs"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, startRow = 6)
       } else {
         yesterday[["yesterday_general"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, rows = 3, cols = 2, colNames = FALSE)
-        yesterday[["yesterday_locs"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, startRow = 9)
+        yesterday[["yesterday_locs"]][[i]] <- openxlsx::read.xlsx(yesterday_workbook, sheet = i, startRow = 8)
       }
       
     }
@@ -100,7 +100,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
   })
   
   
-  #Get the data
+  #Get the data -------------------------
   tables <- list()
   if (!is.null(precip_locations)){ #This one is special: get the data and make the table at the same time, before other data as this is the time consuming step. This keeps the more important data more recent. Others get the data then process it later on.
     precip <- data.frame()
@@ -243,7 +243,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
 
   
   
-  #Make the remaining tables
+  #Make the remaining tables ----------------
   if (length(level_rt) > 0){ #generate level table
     levels <- data.frame()
     for (i in names(level_rt)){
@@ -778,7 +778,7 @@ tabularReport <- function(database = "default", level_locations = "all", flow_lo
     tables$bridges <- bridges
   }
 
-  #Make the Excel workbook
+  #Make the Excel workbook ---------------------------
   wb <- openxlsx::createWorkbook(creator = "Ghislain de Laplante (via automated process)", title = "Hydrometric Condition Report")
   time <- Sys.time()
   head <- data.frame(paste0("Issued at ", substr(format(time, tz = "MST"), 1, 16), " MST"),

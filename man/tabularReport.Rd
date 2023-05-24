@@ -17,7 +17,7 @@ tabularReport(
 )
 }
 \arguments{
-\item{database}{Specify the path to the local hydromet database here, which must be created and maintained by the WRBdatabase package. Passed to WRBtools::hydroConnect to establish connection.}
+\item{database}{Specify the path to the local hydromet database here, which must be created and maintained by the WRBdatabase package. Passed to \code{\link[WRBtools:hydroConnect]{WRBtools::hydroConnect()}} to establish connection.}
 
 \item{level_locations}{List of water level locations to include in the report, as a character vector. "default" is a pre-determined list of locations across the territory, "all" fetches all level reporting locations in the DB. NULL will not create the table.}
 
