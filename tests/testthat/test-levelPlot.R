@@ -1,4 +1,5 @@
 #Tests on full year plots
+
 test_that("expected plots are created with auto returns", {
   dir <- paste0(tempdir(), "/levelPlot")
   dir.create(dir)

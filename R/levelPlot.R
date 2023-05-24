@@ -1,8 +1,14 @@
 #' Level plots of WSC data
 #' 
-#' Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user.
+#' @description
+#' `r lifecycle::badge('deprecated')`
 #' 
-#' To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+#' Development of this function has ceased and it is slated for retirement. Please use [WRBtools::hydrometPlot()] whenever possible. See details for more info.
+#' 
+#' Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user. To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
+#' 
+#' @details
+#'This function is retained for legacy purposes, and due to its ability to pull data directly from the the Water Survey of Canada instead of using the local database, to select the CGVD28 datum, and to smooth the transition of other legacy functions to using the new plotting function.
 #'
 #' @param station The WSC station for which you wish to generate a plot as a character vector of length 1.
 #' @param years The year(s) you wish to plot. Maximum of 10 years specified in a numeric vector.
@@ -28,9 +34,10 @@ levelPlot <- function(station,
                       forecast="none", 
                       returns="auto", 
                       force_CGVD28 = FALSE, 
-                      save_path="none"
+                      save_path = "none"
                       ) 
 {
+  lifecycle::deprecate_warn(when = "1.8.2.1", what = "levelPlot()", with = "WRBtools::hydrometPlot()", always = TRUE)
   
   oldw <- getOption("warn") #get the initial warning state
   options(warn = -1) #disable warnings so that ggplot doesn't give a whole pile of them
