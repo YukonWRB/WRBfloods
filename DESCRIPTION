@@ -1,6 +1,6 @@
 Package: WRBfloods
 Title: WRB's flood report functions
-Version: 1.8.2.0
+Version: 2.0.1-0
 Authors@R: 
     person("Ghislain", "de Laplante", , "ghislaindel@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5093-9185"))
@@ -17,6 +17,7 @@ Imports:
     fasstr,
     foreign,
     ggplot2,
+    golem,
     graphics,
     grid,
     grDevices,
@@ -52,9 +53,13 @@ Imports:
     xml2,
     cli,
     terra,
-    WRBtools
+    WRBtools,
+    lifecycle
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    shiny,
+    shinyWidgets,
+    DT
 VignetteBuilder: 
     knitr
 Remotes:
