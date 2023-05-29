@@ -6,6 +6,7 @@
 #' @noRd
 app_server <- function(input, output, session) {
   
+  #Initial tasks ----------------
   #Render some text
   output$plot_years_note <- renderText("For ranges covering December-January, select the December year(s)")
   output$standby <- renderText("<b>Standby...<b>")
@@ -25,7 +26,9 @@ app_server <- function(input, output, session) {
   plotContainer <- reactiveValues()
   runCheck <- reactiveValues(precip = FALSE,
                              plots = FALSE)
+  output$time_adj_note <- renderText("Note: times in the past will be adjusted to the nearest 6 hours, times in future to the nearest hour.")
   
+  #Tasks related to first selection/selection of which page to view ------------------
   #Load some necessary information if the user is trying the get precipitation maps/data
   observeEvent(input$first_selection, {
     if (input$first_selection == "View precipitation maps + data"){
@@ -59,6 +62,8 @@ app_server <- function(input, output, session) {
     }
   })
   
+  
+  #observeEvents related to precipitation data/maps -----------------------
   #Change the actionButton for rendering a map/data depending on which option the user chooses
   observeEvent(input$show_map, {
     if (input$show_map){
@@ -78,33 +83,48 @@ app_server <- function(input, output, session) {
   
   # Render the precipitation map and/or precip data. Make a file available for download via the download button.
   observeEvent(input$precip_go, {
-    updateActionButton(session, "precip_go", label = "Standby...")
-    shinyjs::show("standby")
-    start <- input$precip_start
-    end <- input$precip_end
-    precip_res <- basinPrecip(input$precip_loc_code, start = start, end = end, map = if (input$show_map) TRUE else FALSE)
-    if (input$show_map){
-      output$precip_map <- renderPlot(precip_res$plot)
-      shinyjs::show("export_precip_map")
+    #Check if inputs are filled in
+    if (input$precip_loc_code %in% precip$poly_names_codes$codes){
+      precip$location_code <- input$precip_loc_code
+      updateActionButton(session, "precip_go", label = "Standby...")
+      shinyjs::show("standby")
+      start <- input$precip_start
+      start <- start + 7*60*60
+      attr(start, "tzone") <- "UTC"
+      end <- input$precip_end
+      end <- end + 7*60*60
+      attr(end, "tzone") <- "UTC"
+      precip_res <- basinPrecip(input$precip_loc_code, start = start, end = end, map = if (input$show_map) TRUE else FALSE)
+      if (input$show_map){
+        output$precip_map <- renderPlot(precip_res$plot)
+        shinyjs::show("export_precip_map")
+      }
+      shinyjs::hide("standby")
+      updateActionButton(session, "precip_go", "Go!")
+      actual_start <- as.POSIXct(precip_res$total_time_range_UTC[1], tz = "UTC")
+      attr(actual_start, "tzone") <- "MST"
+      actual_end <- as.POSIXct(precip_res$total_time_range_UTC[2], tz = "UTC")
+      attr(actual_end, "tzone") <- "MST"
+      output$results_head <- renderText(paste0("<br><b>Results<b>"))
+      output$start_time <- renderText(paste0("Actual start time: ", actual_start, " MST"))
+      output$end_time <- renderText(paste0("Actual end time: ", actual_end, " MST"))
+      output$mean <- renderText(paste0("Basin mean: ", round(precip_res$mean_precip, 3), " mm"))
+      output$min <- renderText(paste0("Basin min: ", round(precip_res$min, 3), " mm"))
+      output$max <- renderText(paste0("Basin max: ", round(precip_res$max, 3), " mm"))
+      output$watershed_area <- renderText(paste0("Basin area: ", precip$poly_names_codes[precip$poly_names_codes$codes == input$precip_loc_code, "areas"], " km2"))
+      
+      output$export_precip_map <- downloadHandler(
+        filename = function() {paste0("precip abv ", precip$location_code, " from ", precip_res$total_time_range_UTC[1], " to ", precip_res$total_time_range_UTC[2] , ".png")}, 
+        content = function(file) {
+          png(file, width = 1000, height = 700, units = "px") 
+          print(precip_res$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
+          dev.off()})
+    } else {
+      shinyalert::shinyalert("Location code is not valid", type = "error", timer = 4000)
     }
-    shinyjs::hide("standby")
-    updateActionButton(session, "precip_go", "Go!")
-    output$results_head <- renderText(paste0("<br><b>Results<b>"))
-    output$start_time <- renderText(paste0("Actual start time: ", precip_res$total_time_range_UTC[1]))
-    output$end_time <- renderText(paste0("Actual end time: ", precip_res$total_time_range_UTC[2]))
-    output$mean <- renderText(paste0("Basin mean: ", round(precip_res$mean_precip, 3), " mm"))
-    output$min <- renderText(paste0("Basin min: ", round(precip_res$min, 3), " mm"))
-    output$max <- renderText(paste0("Basin max: ", round(precip_res$max, 3), " mm"))
-    output$watershed_area <- renderText(paste0("Basin area: ", precip$poly_names_codes[precip$poly_names_codes$codes == input$precip_loc_code, "areas"], " km2"))
-    
-    output$export_precip_map <- downloadHandler(
-      filename = function() {paste0("precip abv ", input$precip_loc_code, " from ", precip_res$total_time_range_UTC[1], " to ", precip_res$total_time_range_UTC[2] , ".png")}, 
-      content = function(file) {
-        png(file, width = 900, height = 900, units = "px") 
-        print(precip_res$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
-        dev.off()})
   }, ignoreInit = TRUE)
   
+  # observeEvents related to displaying FOD comments -------------------------
   # Display FOD comments and make .csv available for download
   observeEvent(input$FOD_go, {
     #Load workbooks where required
@@ -144,10 +164,18 @@ app_server <- function(input, output, session) {
       for (i in as.character(FOD_seq)) {
         for (j in types){
           if (length(FOD_comments$comments$general[[j]][[i]]) > 0){
+            fod_name <- if(length(FOD_comments$comments$FOD[[j]][[i]]) > 0) FOD_comments$comments$FOD[[j]][[i]] else FOD_comments$comments$FOD[["levels"]][[i]]
+            fod_cmt <- FOD_comments$comments$general[[j]][[i]]
+            if (length(fod_name) == 0){
+              fod_name <- NA_character_
+            }
+            if (length(fod_cmt) == 0){
+              fod_cmt <- NA_character_
+            }
             row <- data.frame("Date" = i,
-                              "Forecaster" = if(length(FOD_comments$comments$FOD[[j]][[i]]) > 0) FOD_comments$comments$FOD[[j]][[i]] else FOD_comments$comments$FOD[["levels"]][[i]],
+                              "Forecaster" = fod_name,
                               "Data sheet source" = j,
-                              "Comment" = FOD_comments$comments$general[[j]][[i]],
+                              "Comment" = fod_cmt,
                               check.names = FALSE
             )
             FOD_comments$tables[["general"]] <- rbind(FOD_comments$tables[["general"]], row)
@@ -183,6 +211,46 @@ app_server <- function(input, output, session) {
     }
     shinyjs::show("export_fod_comments")
   }, ignoreInit = TRUE)
+  
+  
+  # observe and observeEvents related to plotting level/flow/snow --------------------
+  observeEvent(input$plot_data_type, {
+    if (input$plot_data_type == "Discrete"){
+      updateSelectizeInput(session, "plot_param", choices = c("SWE", "Snow depth"))
+      shinyjs::hide("return_periods")
+      shinyjs::hide("return_type")
+      shinyjs::hide("return_months")
+      shinyjs::hide("end_doy")
+      shinyjs::hide("start_doy")
+      shinyjs::hide("plot_years_note")
+      shinyjs::show("discrete_plot_type")
+    } else if (input$plot_data_type == "Continuous"){
+      updateSelectizeInput(session, "plot_param", choices = c("Level", "Flow", "Bridge freeboard", "SWE", "Snow depth"))
+      shinyjs::show("return_periods")
+      shinyjs::show("return_type")
+      shinyjs::show("return_months")
+      shinyjs::show("end_doy")
+      shinyjs::show("start_doy")
+      shinyjs::show("plot_years_note")
+      shinyjs::hide("discrete_plot_type")
+    }
+  })
+  
+  observeEvent(input$plot_param, {
+    if (input$plot_param %in% c("SWE", "Snow depth")){
+      if (input$plot_data_type == "Discrete"){  #NOTE: This is only set to -12-31 and -01-01 because of limitations in how the plotting function handles start/end dates for discrete data. Can be modified once the plotting utility is adapted, if desired.
+        updateDateInput(session, "end_doy", value = paste0(lubridate::year(Sys.Date()), "-12-31"))
+        updateDateInput(session, "start_doy", value = paste0(lubridate::year(Sys.Date()), "-01-01"))
+      } else if (input$plot_data_type == "Continuous") {
+        updateDateInput(session, "start_doy", value = paste0(lubridate::year(Sys.Date())-1, "-09-01"))
+        updateDateInput(session, "end_doy", value = paste0(lubridate::year(Sys.Date()), "-06-01"))
+        updateTextInput(session, "return_months", value = "3,4,5")
+      }
+    } else {
+      updateTextInput(session, "return_months", value = "5,6,7,8,9")
+    }
+    
+  })
   
   #Update user's choices for plots based on selected plot type
   observe(
@@ -225,12 +293,12 @@ app_server <- function(input, output, session) {
     } else if (input$plot_param == "SWE"){
       if (input$plot_data_type == "Continuous"){
         plotContainer$plot_data_type <- "continuous"
-        plotContainer$plot_param <- "sWE"
+        plotContainer$plot_param <- "SWE"
         updateSelectizeInput(session, "plot_loc_name", choices = c("", plotContainer$all_ts[plotContainer$all_ts$parameter == "SWE" & plotContainer$all_ts$type == "continuous", "name"]))
         updateSelectizeInput(session, "plot_loc_code", choices = c("", plotContainer$all_ts[plotContainer$all_ts$parameter == "SWE" & plotContainer$all_ts$type == "continuous", "location"]))
       } else if (input$plot_data_type == "Discrete"){
         plotContainer$plot_data_type <- "discrete"
-        plotContainer$plot_param <- "sWE"
+        plotContainer$plot_param <- "SWE"
         updateSelectizeInput(session, "plot_loc_name", choices = c("", plotContainer$all_ts[plotContainer$all_ts$parameter == "SWE" & plotContainer$all_ts$type == "discrete", "name"]))
         updateSelectizeInput(session, "plot_loc_code", choices = c("", plotContainer$all_ts[plotContainer$all_ts$parameter == "SWE" & plotContainer$all_ts$type == "discrete", "location"])) 
       }
@@ -256,7 +324,7 @@ app_server <- function(input, output, session) {
       shinyjs::hide("apply_datum")
       updateCheckboxInput(session, "apply_datum", value = FALSE)
     }
-  })
+  }, ignoreInit = TRUE)
   
   #Cross-updating of plot selection location name or code
   observeEvent(input$plot_loc_code, {
@@ -271,6 +339,7 @@ app_server <- function(input, output, session) {
       }
     }
   }, ignoreInit = TRUE)
+  
   observeEvent(input$plot_loc_name, {
     updateSelectizeInput(session, "plot_loc_code", selected = plotContainer$all_ts[plotContainer$all_ts$name == input$plot_loc_name, "location"])
   }, ignoreInit = TRUE)
@@ -285,7 +354,7 @@ app_server <- function(input, output, session) {
     } else if (input$return_periods == "from table"){
       plotContainer$returns <- "table"
     }
-  })
+  }) #Do not ignoInit = TRUE otherwise will not be populated
   
   observeEvent(input$return_periods, {
     if (input$return_periods == "none"){
@@ -293,24 +362,41 @@ app_server <- function(input, output, session) {
     } else {
       shinyjs::show("return_type")
     }
-  })
+  }, ignoreInit = TRUE)
   
   observeEvent(input$return_months, {
     plotContainer$return_months <- as.numeric(unlist(strsplit(input$return_months,",")))
-  })
+  }) #Do not ignoInit = TRUE otherwise will not be populated
+  
+  observeEvent(input$discrete_plot_type, {
+    if (input$discrete_plot_type == "Box plot"){
+      plotContainer$discrete_plot_type <- "boxplot"
+    } else if (input$discrete_plot_type == "Violin plot")
+      plotContainer$discrete_plot_type <- "violin"
+  }) #Do not ignoInit = TRUE otherwise will not be populated
   
   observeEvent(input$plot_go, {
-    plotContainer$plot <- WRBtools::hydrometPlot(location = input$plot_loc_code, parameter = plotContainer$plot_param, type = plotContainer$plot_data_type, startDay = input$start_doy, endDay = input$end_doy, years = input$plot_years, datum = input$apply_datum, returns = plotContainer$returns, return_type = input$return_type, return_months = plotContainer$return_months)
+    tryCatch({
+      if (plotContainer$plot_data_type == "continuous"){
+        print(input$plot_years)
+        print(plotContainer$returns)
+        print(input$return_type)
+        print(plotContainer$return_months)
+        plotContainer$plot <- WRBplots::hydrometContinuous(location = input$plot_loc_code, parameter = plotContainer$plot_param, startDay = input$start_doy, endDay = input$end_doy, years = input$plot_years, datum = input$apply_datum, returns = plotContainer$returns, return_type = input$return_type, return_months = plotContainer$return_months, plot_scale = 1.4)
+      } else if (plotContainer$plot_data_type == "discrete"){
+        plotContainer$plot <- WRBplots::hydrometDiscrete(location = input$plot_loc_code, parameter = plotContainer$plot_param, years = input$plot_years, plot_type = plotContainer$discrete_plot_type, plot_scale = 1.4)
+      }
     output$hydro_plot <- renderPlot(plotContainer$plot)
     shinyjs::show("export_hydro_plot")
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$export_hydro_plot, {
     output$export_hydro_plot <- downloadHandler(
-      filename = function() {paste0(input$plot_loc_code, "_", pplotContainer$plot_param, "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz="MST")), lubridate::minute(as.POSIXct(format(Sys.time()), tz="MST")), ".png")}, 
+      filename = function() {paste0(input$plot_loc_code, "_", plotContainer$plot_param, "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz="MST")), lubridate::minute(as.POSIXct(format(Sys.time()), tz="MST")), ".png")}, 
       content = function(file) {
-        png(file, width = 900, height = 900, units = "px") 
+        png(file, width = 900, height = 700, units = "px") 
         print(plotContainer$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
         dev.off()})
-  })
+    }, error = function(e){
+      shinyalert::shinyalert("Error in rendering plot", "Try again with a different set of input parameters", type = "error")
+    })
+    
+  }, ignoreInit = TRUE)
 }

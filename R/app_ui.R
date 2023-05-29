@@ -60,6 +60,7 @@ app_ui <- function(request) {
           shinyWidgets::airDatepickerInput("precip_end", "End date/time MST", value = as.POSIXct(round(.POSIXct(Sys.time(), tz = "MST"), "hours")), timepicker = TRUE, maxDate = Sys.Date()+3, startView = Sys.Date(), update_on = "close", timepickerOpts = shinyWidgets::timepickerOptions(hoursStep = 1, minutesStep = 30, timeFormat = "HH:mm"), todayButton = TRUE),
           checkboxInput("show_map", "Render map?"),
           actionButton("precip_go", "Calculate precip"),
+          textOutput("time_adj_note"),
           htmlOutput("results_head"),
           textOutput("start_time"),
           textOutput("end_time"),
@@ -70,15 +71,15 @@ app_ui <- function(request) {
         ),
         mainPanel(
           htmlOutput("standby"),
-          plotOutput("precip_map", height = "800px"),
+          plotOutput("precip_map", height = "700px"),
           downloadButton("export_precip_map", "Export as png")
         )
       ),
       conditionalPanel(
         condition = "input.first_selection == 'View hydromet plots + data'",
         sidebarPanel(
-          selectizeInput("plot_param", label = "Plotting parameter", choices = c("Level", "Flow", "Bridge freeboard", "SWE", "Snow depth")),
           shinyWidgets::radioGroupButtons("plot_data_type", "Data type", choices = c("Continuous", "Discrete"), selected = "Continuous"),
+          selectizeInput("plot_param", label = "Plotting parameter", choices = c("Level", "Flow", "Bridge freeboard", "SWE", "Snow depth")),
           selectizeInput("plot_loc_code", "Select location by code", choices = ""),
           selectizeInput("plot_loc_name", "Select location by name", choices = ""),
           dateInput("start_doy", "Start day-of-year", value = paste0(lubridate::year(Sys.Date()), "-01-01")),
@@ -86,6 +87,7 @@ app_ui <- function(request) {
           textOutput("plot_years_note"),
           shinyWidgets::pickerInput("plot_years", "Select years to plot", choices = "", multiple = TRUE, options = list("max-options" = 10,
                                                                                                                         "max-options-text" = "Cannot plot more than 10 lines")),
+          shinyWidgets::pickerInput("discrete_plot_type", "Select plot type", choices = c("Violin plot", "Box plot"), selected = "Violin plot"),
           selectizeInput("return_periods", "Plot return periods?", choices = c("none", "auto select", "calculate", "from table"), selected = "auto select"),
           shinyWidgets::pickerInput("return_type", "Select return type", choices = c("Min", "Max"), selected = "Max"),
           textInput("return_months", "Months for return calculation (comma delimited)", value = "5,6,7,8,9"),
@@ -93,7 +95,7 @@ app_ui <- function(request) {
           actionButton("plot_go", "Render plot")
         ),
         mainPanel(
-          plotOutput("hydro_plot", height = "700px"),
+          plotOutput("hydro_plot", height = "600px"),
           downloadButton("export_hydro_plot", "Export as png")
         )
       )
