@@ -8,6 +8,14 @@
 \description{
 This package exists to facilitate the generation of flood reports by the Yukon Water Resources Branch.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/YukonWRB/WRBfloods}
+  \item Report bugs at \url{https://github.com/YukonWRB/WRBfloods/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Ghislain de Laplante \email{ghislaindel@gmail.com} (\href{https://orcid.org/0000-0002-5093-9185}{ORCID})
 

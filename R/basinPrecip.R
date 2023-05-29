@@ -114,7 +114,7 @@ basinPrecip <- function(location,
     stop("The start time you specified is *after* the end time. R is not a time travel machine, please try again.")
   }
   
-  if (start > Sys.time()-60*60*1.2) { #if TRUE, the start is prior to any issued HRDPA so is the end. Only a sequence for forecast will be generated.
+  if (start > Sys.time()-60*60*1.2) { #if TRUE, the start is prior to any issued HRDPA and so is the end. Only a sequence for forecast will be generated.
     hrdpa <- FALSE
     actual_times_hrdpa <- NULL
     if (end > (Sys.time() + 60*60*44)){
@@ -145,7 +145,7 @@ basinPrecip <- function(location,
     )
     
     last_available_01 <- max(dplyr::filter(available, .data$cutoff == "0100")$valid)
-    if (min(sequence_hrdpa) < last_available_01){ #TRUE means that there is at least one HRDPA available online or that there is one locally, so fetch it. Otherwise, no HRDPA is available yet and only HRDPS forecast will be used.
+    if (min(sequence_hrdpa) <= last_available_01){ #TRUE means that there is at least one HRDPA available online or that there is one locally, so fetch it. Otherwise, no HRDPA is available yet and only HRDPS forecast will be used.
       
       if (!is.null(hrdpa_loc)){ #Get the list of available files locally, if hrdpa_loc != NULL
         if(!dir.exists(hrdpa_loc)) { #Does the directory exist? If no, do you want to make it?
@@ -499,22 +499,22 @@ basinPrecip <- function(location,
     if (terra::expanse(watershed) < 30000000000){
       terra::plot(streams, lwd=0.08, col = "blue", border = NULL, alpha = 0.5, add=T)
     }
-    terra::plot(waterbodies, col = "blue", border = "blue", alpha = 0.1, lwd=0.0000000001, add=T)
+    terra::plot(waterbodies, col = "blue", border = "blue", alpha = 0.1, lwd=0.001, add=T)
     terra::points(communities, cex = 1.5)
     terra::lines(borders, lwd = 2, lty = "twodash")
     terra::text(communities, labels = communities$PLACE_NAME, pos=4, offset = 1, font=2, cex=0.9)
     if (type == "longlat"){
       terra::text(location, labels = paste0(requested_point[1], ", ", requested_point[2]), col = "black", pos=4, offset = 1, font=2)
     }
-    graphics::mtext(paste0("Precipitation as mm of water equivalent from ", actual_times[1], " to ", actual_times[2], " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 1)
+    graphics::mtext(paste0("Precipitation as mm of water equivalent from ", actual_times[1], " to ", actual_times[2], " UTC  \nWatershed: ", watershed$StationNum, ", ", stringr::str_to_title(watershed$NameNom), " "), side = 3, adj = 0.5)
 
     plot <- grDevices::recordPlot()
     
-    #TODO: look at using tidyterra for ggplot plotting.
-    # ggplot2::ggplot() +
-    #   geom_spatraster(data = cropped_precip_rast) +
-    #   geom_spatvector(data = watershed) +
-    #   geom_spatvector(data = roads)
+    # Code save to turn this into a leaflet app (much more rapid, zoomable, etc)
+    # terra::plet(cropped_precip_rast, tiles = "Streets") %>%
+    #   lines(waterbodies, alpha = 0.5, fill = "blue", col = "blue") %>%
+    #   lines(streams, col = "blue", alpha = 0.5) %>%
+    #   lines(watershed, col = "darkred")
 
   } else {
     watershed <- location
