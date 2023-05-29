@@ -44,7 +44,7 @@ A .png file of the plot requested (if a save path has been selected), plus the p
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 
-Development of this function has ceased and it is slated for retirement. Please use \code{\link[WRBtools:hydrometPlot]{WRBtools::hydrometPlot()}} whenever possible. See details for more info.
+Development of this function has ceased and it is slated for retirement. Please use \code{\link[WRBplots:hydrometContinuous]{WRBplots::hydrometContinuous()}} whenever possible. See details for more info.
 
 Generates plots of water levels from Water Survey of Canada stations, with up to 10 years specified by the user. To generate zoomed-in plots with real-time data you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 }

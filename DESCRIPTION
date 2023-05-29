@@ -12,6 +12,7 @@ Depends:
     tidyhydat.ws
 Imports: 
     crayon,
+    config,
     dplyr,
     DBI,
     fasstr,

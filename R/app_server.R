@@ -116,9 +116,9 @@ app_server <- function(input, output, session) {
       output$export_precip_map <- downloadHandler(
         filename = function() {paste0("precip abv ", precip$location_code, " from ", precip_res$total_time_range_UTC[1], " to ", precip_res$total_time_range_UTC[2] , ".png")}, 
         content = function(file) {
-          png(file, width = 1000, height = 700, units = "px") 
+          grDevices::png(file, width = 1000, height = 700, units = "px") 
           print(precip_res$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
-          dev.off()})
+          grDevices::dev.off()})
     } else {
       shinyalert::shinyalert("Location code is not valid", type = "error", timer = 4000)
     }
@@ -130,31 +130,33 @@ app_server <- function(input, output, session) {
     #Load workbooks where required
     FOD_seq <- seq.Date(from = input$comment_start_date, to = input$comment_end_date, by = "day")
     for (j in as.character(FOD_seq)){
-      if (!(j %in% FOD_comments$dates)){ #don't look if it's already loaded
-        if (j != Sys.Date()){
-          workbook <- openxlsx::loadWorkbook(paste0("//env-fs/env-data/corp/water/Hydrology/03_Reporting/Conditions/tabular_internal_reports/Archive/", j, "/HydrometricReport_", j, ".xlsx"))
-        } else {
-          workbook <- openxlsx::loadWorkbook(paste0("//env-fs/env-data/corp/water/Hydrology/03_Reporting/Conditions/tabular_internal_reports/", j, "/HydrometricReport_", j, ".xlsx"))
-        }
-        for (k in names(workbook)){
-          if (k %in% c("bridges", "bridge")){
-            sheet_name <- "bridges"
+      tryCatch({ # to handle if the file doesn't exist or otherwise can't be read
+        if (!(j %in% FOD_comments$dates)){ #don't look if it's already loaded
+          if (j != Sys.Date()){
+            workbook <- openxlsx::loadWorkbook(paste0("//env-fs/env-data/corp/water/Hydrology/03_Reporting/Conditions/tabular_internal_reports/Archive/", j, "/HydrometricReport_", j, ".xlsx"))
           } else {
-            sheet_name <- k
+            workbook <- openxlsx::loadWorkbook(paste0("//env-fs/env-data/corp/water/Hydrology/03_Reporting/Conditions/tabular_internal_reports/", j, "/HydrometricReport_", j, ".xlsx"))
           }
-          if (k != "precipitation"){
-            FOD_comments$comments[["FOD"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 1, cols = 5, colNames = FALSE))
-            FOD_comments$comments[["general"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 3, cols = 2, colNames = FALSE))
-            FOD_comments$comments[["specific"]][[sheet_name]][[j]] <- openxlsx::read.xlsx(workbook, sheet = k, startRow = 6)
-            
-          } else {
-            FOD_comments$comments[["FOD"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 1, cols = 5, colNames = FALSE))
-            FOD_comments$comments[["general"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 3, cols = 2, colNames = FALSE))
-            FOD_comments$comments[["specific"]][[sheet_name]][[j]] <- openxlsx::read.xlsx(workbook, sheet = k, startRow = 8)
+          for (k in names(workbook)){
+            if (k %in% c("bridges", "bridge")){
+              sheet_name <- "bridges"
+            } else {
+              sheet_name <- k
+            }
+            if (k != "precipitation"){
+              FOD_comments$comments[["FOD"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 1, cols = 5, colNames = FALSE))
+              FOD_comments$comments[["general"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 3, cols = 2, colNames = FALSE))
+              FOD_comments$comments[["specific"]][[sheet_name]][[j]] <- openxlsx::read.xlsx(workbook, sheet = k, startRow = 6)
+              
+            } else {
+              FOD_comments$comments[["FOD"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 1, cols = 5, colNames = FALSE))
+              FOD_comments$comments[["general"]][[sheet_name]][[j]] <- as.character(openxlsx::read.xlsx(workbook, sheet = k, rows = 3, cols = 2, colNames = FALSE))
+              FOD_comments$comments[["specific"]][[sheet_name]][[j]] <- openxlsx::read.xlsx(workbook, sheet = k, startRow = 8)
+            }
           }
+          FOD_comments$dates <- c(FOD_comments$dates, j)
         }
-        FOD_comments$dates <- c(FOD_comments$dates, j)
-      }
+      }, error = function(e) {})
     }
     
     #Make and render the appropriate table
@@ -185,29 +187,32 @@ app_server <- function(input, output, session) {
       output$FOD_table <- DT::renderDataTable(FOD_comments$tables[["general"]], rownames = FALSE)
       output$export_fod_comments <- downloadHandler(
         filename = function() {paste0("general comments ", input$comment_start_date, " to ", input$comment_end_date , ".csv")}, 
-        content = function(file) {write.csv(FOD_comments$tables[["general"]], file, row.names = FALSE)})
-    } else {
+        content = function(file) {utils::write.csv(FOD_comments$tables[["general"]], file, row.names = FALSE)})
+    } else { #location-specific comments are requested
       for (i in as.character(FOD_seq)) {
         for (j in types){
-          for (k in 1:nrow(FOD_comments$comments$specific[[j]][[i]])){
-            row <- FOD_comments$comments$specific[[j]][[i]][k , ]
-            if (!is.na(row$Location.specific.comments)[1]){
-              append_row <- data.frame("Date" = i,
-                                "Forecaster" = if(length(FOD_comments$comments$FOD[[j]][[i]]) > 0) FOD_comments$comments$FOD[[j]][[i]] else FOD_comments$comments$FOD[["levels"]][[i]],
-                                "Location" = FOD_comments$comments$specific[[j]][[i]][k,"Location"],
-                                "Data sheet source" = j,
-                                "Location name" = FOD_comments$comments$specific[[j]][[i]][k,"Name"],
-                                "Comment" = FOD_comments$comments$specific[[j]][[i]][k,"Location.specific.comments"],
-                                check.names = FALSE)
-              FOD_comments$tables[["specific"]] <- rbind(FOD_comments$tables[["specific"]], append_row)
+          tryCatch({
+            for (k in 1:nrow(FOD_comments$comments$specific[[j]][[i]])){
+              row <- FOD_comments$comments$specific[[j]][[i]][k , ]
+              if (!is.na(row$Location.specific.comments)[1]){
+                append_row <- data.frame("Date" = i,
+                                         "Forecaster" = if(length(FOD_comments$comments$FOD[[j]][[i]]) > 0) FOD_comments$comments$FOD[[j]][[i]] else FOD_comments$comments$FOD[["levels"]][[i]],
+                                         "Location" = FOD_comments$comments$specific[[j]][[i]][k,"Location"],
+                                         "Data sheet source" = j,
+                                         "Location name" = FOD_comments$comments$specific[[j]][[i]][k,"Name"],
+                                         "Comment" = FOD_comments$comments$specific[[j]][[i]][k,"Location.specific.comments"],
+                                         check.names = FALSE)
+                FOD_comments$tables[["specific"]] <- rbind(FOD_comments$tables[["specific"]], append_row)
+              }
             }
-          }
+          }, error = function(e) {})
+          
         }
       }
       output$FOD_table <- DT::renderDataTable(FOD_comments$tables[["specific"]], rownames = FALSE)
       output$export_fod_comments <- downloadHandler(
         filename = function() {paste0("station specific comments ", input$comment_start_date, " to ", input$comment_end_date , ".csv")}, 
-        content = function(file) {write.csv(FOD_comments$tables[["specific"]], file, row.names = FALSE)})
+        content = function(file) {utils::write.csv(FOD_comments$tables[["specific"]], file, row.names = FALSE)})
     }
     shinyjs::show("export_fod_comments")
   }, ignoreInit = TRUE)
@@ -378,10 +383,6 @@ app_server <- function(input, output, session) {
   observeEvent(input$plot_go, {
     tryCatch({
       if (plotContainer$plot_data_type == "continuous"){
-        print(input$plot_years)
-        print(plotContainer$returns)
-        print(input$return_type)
-        print(plotContainer$return_months)
         plotContainer$plot <- WRBplots::hydrometContinuous(location = input$plot_loc_code, parameter = plotContainer$plot_param, startDay = input$start_doy, endDay = input$end_doy, years = input$plot_years, datum = input$apply_datum, returns = plotContainer$returns, return_type = input$return_type, return_months = plotContainer$return_months, plot_scale = 1.4)
       } else if (plotContainer$plot_data_type == "discrete"){
         plotContainer$plot <- WRBplots::hydrometDiscrete(location = input$plot_loc_code, parameter = plotContainer$plot_param, years = input$plot_years, plot_type = plotContainer$discrete_plot_type, plot_scale = 1.4)
@@ -391,9 +392,9 @@ app_server <- function(input, output, session) {
     output$export_hydro_plot <- downloadHandler(
       filename = function() {paste0(input$plot_loc_code, "_", plotContainer$plot_param, "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz="MST")), lubridate::minute(as.POSIXct(format(Sys.time()), tz="MST")), ".png")}, 
       content = function(file) {
-        png(file, width = 900, height = 700, units = "px") 
+        grDevices::png(file, width = 900, height = 700, units = "px") 
         print(plotContainer$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
-        dev.off()})
+        grDevices::dev.off()})
     }, error = function(e){
       shinyalert::shinyalert("Error in rendering plot", "Try again with a different set of input parameters", type = "error")
     })
