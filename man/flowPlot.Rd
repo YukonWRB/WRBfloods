@@ -41,7 +41,7 @@ A .png file of the plot requested (if a save path has been selected), plus the p
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 
-Development of this function has ceased. Please use \code{\link[WRBtools:hydrometPlot]{WRBtools::hydrometPlot()}} whenever possible. See details for more info.
+Development of this function has ceased. Please use \code{\link[WRBplots:hydrometContinuous]{WRBplots::hydrometContinuous()}} whenever possible. See details for more info.
 
 Generates plots of water flows from Water Survey of Canada stations, with up to 10 years of data specified by the user. Return periods can be added (with a few options), and a plot title is optional. To generate zoomed-in plots with real-time data you MUST have your HYDAT credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
 }
