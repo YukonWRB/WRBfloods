@@ -116,9 +116,9 @@ app_server <- function(input, output, session) {
       output$export_precip_map <- downloadHandler(
         filename = function() {paste0("precip abv ", precip$location_code, " from ", precip_res$total_time_range_UTC[1], " to ", precip_res$total_time_range_UTC[2] , ".png")}, 
         content = function(file) {
-          png(file, width = 1000, height = 700, units = "px") 
+          grDevices::png(file, width = 1000, height = 700, units = "px") 
           print(precip_res$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
-          dev.off()})
+          grDevices::dev.off()})
     } else {
       shinyalert::shinyalert("Location code is not valid", type = "error", timer = 4000)
     }
@@ -187,7 +187,7 @@ app_server <- function(input, output, session) {
       output$FOD_table <- DT::renderDataTable(FOD_comments$tables[["general"]], rownames = FALSE)
       output$export_fod_comments <- downloadHandler(
         filename = function() {paste0("general comments ", input$comment_start_date, " to ", input$comment_end_date , ".csv")}, 
-        content = function(file) {write.csv(FOD_comments$tables[["general"]], file, row.names = FALSE)})
+        content = function(file) {utils::write.csv(FOD_comments$tables[["general"]], file, row.names = FALSE)})
     } else { #location-specific comments are requested
       for (i in as.character(FOD_seq)) {
         for (j in types){
@@ -212,7 +212,7 @@ app_server <- function(input, output, session) {
       output$FOD_table <- DT::renderDataTable(FOD_comments$tables[["specific"]], rownames = FALSE)
       output$export_fod_comments <- downloadHandler(
         filename = function() {paste0("station specific comments ", input$comment_start_date, " to ", input$comment_end_date , ".csv")}, 
-        content = function(file) {write.csv(FOD_comments$tables[["specific"]], file, row.names = FALSE)})
+        content = function(file) {utils::write.csv(FOD_comments$tables[["specific"]], file, row.names = FALSE)})
     }
     shinyjs::show("export_fod_comments")
   }, ignoreInit = TRUE)
@@ -392,9 +392,9 @@ app_server <- function(input, output, session) {
     output$export_hydro_plot <- downloadHandler(
       filename = function() {paste0(input$plot_loc_code, "_", plotContainer$plot_param, "_", lubridate::hour(as.POSIXct(format(Sys.time()), tz="MST")), lubridate::minute(as.POSIXct(format(Sys.time()), tz="MST")), ".png")}, 
       content = function(file) {
-        png(file, width = 900, height = 700, units = "px") 
+        grDevices::png(file, width = 900, height = 700, units = "px") 
         print(plotContainer$plot)  #WARNING do not remove this print call, it is not here for debugging purposes
-        dev.off()})
+        grDevices::dev.off()})
     }, error = function(e){
       shinyalert::shinyalert("Error in rendering plot", "Try again with a different set of input parameters", type = "error")
     })
