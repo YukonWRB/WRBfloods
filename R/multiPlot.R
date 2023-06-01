@@ -18,6 +18,9 @@
 
 multiPlot <- function(stations, type, days=30, title=NULL, save_path="choose") {
   
+  library(tidyhydat.ws) #library calls should not usually be in a package... but this doesn't work without it!
+  on.exit(detach("package:tidyhydat.ws", unload = TRUE))
+  
   if (save_path == "choose") {
     print("Select the path to the folder where you want this report saved.")
     save_path <- as.character(utils::choose.dir(caption="Select Save Folder"))

@@ -36,9 +36,9 @@ waterData(
 A list with an element for each station requested, each element consisting of three data.frames: one of all historical daily data, one with the years requested, and one with realtime information for the years requested.
 }
 \description{
-Gets level or flow data from WSC or WRB locations. By default will attempt to use the WRB hydromet database, and if that fails (or is specified otherwise) will download information from the WSC. WRB information is only available when using the hydromet database.
-}
-\details{
-Important: it's preferable to get flow/level data from the local database created with WRBdatabase in most cases. However, if you need to get WSC data outside of the database then this function will also do the trick.
-Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Outputs for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
+Gets level or flow data from WSC locations directly from the Water Survey of Canada. Important: it's usually preferable to get flow/level data from the local database created with WRBdatabase in most cases, using \code{\link[WRBtools:DB_get_ts]{WRBtools::DB_get_ts()}}.
+
+Neatly packages the output from two hidden utility functions into a list with an element for each station requested. Outputs for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
 }

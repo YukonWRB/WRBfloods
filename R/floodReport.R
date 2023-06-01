@@ -1,19 +1,18 @@
 #' Level and Flow condition reporting utility - internal
+#' 
+#' @description
+#' `r lifecycle::badge('stable')`
 #'
-#' This function generates condition reports for preset or user-specified Water
-#' Survey of Canada stations. In addition to water level and flow, precipitation
-#' data, still images, and weather forecasts are incorporated. The output is a
-#' Microsoft Word document on a Yukon Government template.
+#' This function generates condition reports for preset or user-specified Water Survey of Canada stations. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
+#' 
+#' This function fetches data directly from the Water Survey of Canada and does not use the local hydrometric database created/maintained by the WRBdatabase package.
 #'
-#'
+#' @details
 #' To download real-time WSC data, you MUST have your hydat credentials loaded
 #' into your .Renviron profile as values pairs of WS_USRNM=”your_username” and
 #' WS_PWD=”your_password”.
 #'
-#' To download WSC images, you MUST have your ECCC credentials loaded into your
-#' .Renviron profile as value pairs of ECCCUSER="your_username" and
-#' ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word
-#' document for more information.
+#' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
 #'
 #' @param report_name The name of the report you wish to generate. One of "Dawson", "Southern Lakes", Carmacks", "Ross/Pelly", "Mayo/Stewart", "Liard/Watson Lake", "Teslin", "Old Crow", "Aishihik", "Alsek", or "Territory". Most minor spelling variations should work. Leave as NULL (default) if specifying stations under custom_report_stations.
 #' @param custom_report_stations A user-specified list of stations for which to generate a report. Defaults to NULL to operate on the report_name parameter instead. Input must be a character vector of station IDs, as in c("station1", "station2"). Reminder: you can create a character vector from a column of a data.frame, and you can reference an environment object instead of typing in the vector!

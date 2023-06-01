@@ -1,0 +1,45 @@
+---
+title: "WRBfloods User Guide"
+author: "Ghislain de Laplante"
+date: "2023-05-31"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{WRBfloods}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(WRBfloods)
+```
+
+Important note regarding this vignette: if you are reading this in an HTML, Word or PDF document from the package folder on the G drive and wish to update the document, please do so via the vignette R Markdown document and re-publish/overwrite the document. The R Markdown document should be the ultimate source of truth regarding this R package and associated Shiny application. Instructions on how to do so are provided in the vignette Markdown document.
+
+This vignette may also come to contain R code and links to other documentation. For best performance and to ensure that all links function, it is recommended to view this vignette from within R Studio. You can view all package vignettes with 'vignette(package = "WRBfloods")' or this particular vignette with 'vignette(topic = "WRBfloods_guide")'. Note however that vignettes may not have been installed, depending on the method you used to install the package.
+
+```{r vignette building comments, eval=FALSE, include=FALSE}
+# You should be modifying this vignette from the .Rmd document in the /vignettes folder, NOT the .RMD in the /doc folder.
+# To have this vignette updated on the G drive, uncomment and run the following code *after* re-building the vignette using devtools::build_vignettes()
+# file.copy(from = paste0(dirname(getwd()), "/doc/WRBcalibrates_guide.html"), to = "//env-fs/env-data/corp/water/Common_GW_SW/R-packages/WRBcalibrates/WRBcalibrates user guide.html", overwrite = TRUE)
+```
+
+# Introduction
+
+The idea behind this package lies in automated RMarkdown reports shared with the Yukon Water Resources Branch by our colleagues at the Northwest Territories Government. At the onset our intent was to build a simple tool to augment our situation awareness of water level and flow conditions; this quickly evolved into a set of tools to generate public and private facing reports, as well as more basic tools to create standardized graphs, retrieve MESH and CLEVER forecast information, as well as retrieve and process Water Survey of Canada data. The "workhorse" functions of this package are labelled with the utils- prefix and are not intended for direct use; rather, they form the building blocks of the RMarkdown reports, of the data-fetching functions, and of the plotting functions.
+
+Development on this package began in the summer of 2022 and is expected to continue in anticipation of the 2023 high-water season.
+
+
+# Getting started with the WRBfloods package
+
+## Installing the package
+
+The latest version of the package can be installed from the GitHub repository YukonWRB/WRBfloods. Previous versions are kept in the Water Resources Branch G drive, in Common_GW_SW/R-packages/WRBfloods.
+
+## Updating package dependencies
+
+This package depends on (too) many other packages to execute its code. Please ensure that any packages required for the function of WRBfloods are up to date when you install, re-install, or update WRBfloods. Note that not all packages can be updated from an active RStudio session, and that you may need to perform updates using the basic R interface; at the same time you should ensure that your version of R is up to date. A convenient package exists to perform both of these tasks at once: the [installr](https://www.rdocumentation.org/packages/installr/versions/0.23.2) package.

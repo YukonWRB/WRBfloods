@@ -1,12 +1,14 @@
 #' Freshet condition reporting utility - public
 #' 
+#' @description
+#' `r lifecycle::badge('stable')`
+#' 
 #' This function generates condition reports for preset or user-specified Water Survey of Canada stations, in a format intended for public consumption. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
 #' 
+#' This function fetches data directly from the Water Survey of Canada and does not use the local hydrometric database created/maintained by the WRBdatabase package.
 #' 
 #' Parts of this report fetch password-protected information:
-#' 
 #' To download real-time WSC data, you MUST have your hydat credentials loaded into your .Renviron profile as values pairs of WS_USRNM=”your_username” and WS_PWD=”your_password”.
-#' 
 #' To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
 #' 
 #'

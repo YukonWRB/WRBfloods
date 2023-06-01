@@ -1,9 +1,11 @@
 #' Return flow or level data
 #' 
-#' Gets level or flow data from WSC or WRB locations. By default will attempt to use the WRB hydromet database, and if that fails (or is specified otherwise) will download information from the WSC. WRB information is only available when using the hydromet database.
+#' @description
+#' `r lifecycle::badge('stable')`
 #' 
-#' Important: it's preferable to get flow/level data from the local database created with WRBdatabase in most cases. However, if you need to get WSC data outside of the database then this function will also do the trick. 
-#' Neatly packages the output from utils_flow_data and utils_level_data into a list with an element for each station requested. Outputs for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
+#' Gets level or flow data from WSC locations directly from the Water Survey of Canada. Important: it's usually preferable to get flow/level data from the local database created with WRBdatabase in most cases, using [WRBtools::DB_get_ts()].
+#' 
+#' Neatly packages the output from two hidden utility functions into a list with an element for each station requested. Outputs for each station are three data.frames: one of all-time historical data, one with the years requested in an easy to plot format, and one with the last 18 months of 5-minute data. Statistics are calculated for all data.frames.
 #'
 #' @param stations The stations for which you want to download data. If any of these do not exist in the database (and if you have specified a path for the database) then raw information will be downloaded from the WSC.
 #' @param level_flow Do you want data for levels, flows, or both? Choose from "Level", "Flow", or "Both". Levels will be in the most recent datum available.

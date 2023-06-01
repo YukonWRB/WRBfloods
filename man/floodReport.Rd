@@ -63,18 +63,16 @@ floodReport(
 A flood report containing flow and water level information in Microsoft Word format.
 }
 \description{
-This function generates condition reports for preset or user-specified Water
-Survey of Canada stations. In addition to water level and flow, precipitation
-data, still images, and weather forecasts are incorporated. The output is a
-Microsoft Word document on a Yukon Government template.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
+This function generates condition reports for preset or user-specified Water Survey of Canada stations. In addition to water level and flow, precipitation data, still images, and weather forecasts are incorporated. The output is a Microsoft Word document on a Yukon Government template.
+
+This function fetches data directly from the Water Survey of Canada and does not use the local hydrometric database created/maintained by the WRBdatabase package.
 }
 \details{
 To download real-time WSC data, you MUST have your hydat credentials loaded
 into your .Renviron profile as values pairs of WS_USRNM=”your_username” and
 WS_PWD=”your_password”.
 
-To download WSC images, you MUST have your ECCC credentials loaded into your
-.Renviron profile as value pairs of ECCCUSER="your_username" and
-ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word
-document for more information.
+To download WSC images, you MUST have your ECCC credentials loaded into your .Renviron profile as value pairs of ECCCUSER="your_username" and ECCCPASS="your_password".  Refer to the R and GitHub for the WRB word document for more information.
 }
