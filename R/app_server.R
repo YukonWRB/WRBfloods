@@ -1,9 +1,10 @@
-#' The application server-side
+#' The hydroApp server-side
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @noRd
+
 app_server <- function(input, output, session) {
   
   #Initial tasks ----------------
@@ -163,6 +164,7 @@ app_server <- function(input, output, session) {
     types <- if(input$comment_data_type == "All") c("levels", "flows", "snow", "bridges", "precipitation") else if (input$comment_data_type == "Water levels") "levels" else if (input$comment_data_type == "Water flows") "flows" else if (input$comment_data_type == "Snow pillows") "snow" else if (input$comment_data_type == "Bridge freeboard") "bridges" else if (input$comment_data_type == "Precipitation") "precipitation" 
     
     if (input$comment_type == "General comments"){
+      FOD_comments$tables[["general"]] <- data.frame()
       for (i in as.character(FOD_seq)) {
         for (j in types){
           if (length(FOD_comments$comments$general[[j]][[i]]) > 0){
@@ -189,6 +191,7 @@ app_server <- function(input, output, session) {
         filename = function() {paste0("general comments ", input$comment_start_date, " to ", input$comment_end_date , ".csv")}, 
         content = function(file) {utils::write.csv(FOD_comments$tables[["general"]], file, row.names = FALSE)})
     } else { #location-specific comments are requested
+      FOD_comments$tables[["specific"]] <- data.frame()
       for (i in as.character(FOD_seq)) {
         for (j in types){
           tryCatch({

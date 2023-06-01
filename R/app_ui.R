@@ -1,10 +1,12 @@
-#' The application User-Interface
+#' The hydroApp User-Interface
 #'
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
 #' @noRd
+
 app_ui <- function(request) {
+  
   #set up for background colors
   jsCode <- '
     shinyjs.backgroundCol = function(params) {
