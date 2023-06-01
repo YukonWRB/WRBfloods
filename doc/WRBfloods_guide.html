@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Ghislain de Laplante" />
+
+<meta name="date" content="2023-05-31" />
+
+<title>WRBfloods User Guide</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">WRBfloods User Guide</h1>
+<h4 class="author">Ghislain de Laplante</h4>
+<h4 class="date">2023-05-31</h4>
+
+
+
+<p>Important note regarding this vignette: if you are reading this in an
+HTML, Word or PDF document from the package folder on the G drive and
+wish to update the document, please do so via the vignette R Markdown
+document and re-publish/overwrite the document. The R Markdown document
+should be the ultimate source of truth regarding this R package and
+associated Shiny application. Instructions on how to do so are provided
+in the vignette Markdown document.</p>
+<p>This vignette may also come to contain R code and links to other
+documentation. For best performance and to ensure that all links
+function, it is recommended to view this vignette from within R Studio.
+You can view all package vignettes with ‘vignette(package =
+“WRBfloods”)’ or this particular vignette with ‘vignette(topic =
+“WRBfloods_guide”)’. Note however that vignettes may not have been
+installed, depending on the method you used to install the package.</p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The idea behind this package lies in automated RMarkdown reports
+shared with the Yukon Water Resources Branch by our colleagues at the
+Northwest Territories Government. At the onset our intent was to build a
+simple tool to augment our situation awareness of water level and flow
+conditions; this quickly evolved into a set of tools to generate public
+and private facing reports, as well as more basic tools to create
+standardized graphs, retrieve MESH and CLEVER forecast information, as
+well as retrieve and process Water Survey of Canada data. The
+“workhorse” functions of this package are labelled with the utils-
+prefix and are not intended for direct use; rather, they form the
+building blocks of the RMarkdown reports, of the data-fetching
+functions, and of the plotting functions.</p>
+<p>Development on this package began in the summer of 2022 and is
+expected to continue in anticipation of the 2023 high-water season.</p>
+</div>
+<div id="getting-started-with-the-wrbfloods-package" class="section level1">
+<h1>Getting started with the WRBfloods package</h1>
+<div id="installing-the-package" class="section level2">
+<h2>Installing the package</h2>
+<p>The latest version of the package can be installed from the GitHub
+repository YukonWRB/WRBfloods. Previous versions are kept in the Water
+Resources Branch G drive, in Common_GW_SW/R-packages/WRBfloods.</p>
+</div>
+<div id="updating-package-dependencies" class="section level2">
+<h2>Updating package dependencies</h2>
+<p>This package depends on (too) many other packages to execute its
+code. Please ensure that any packages required for the function of
+WRBfloods are up to date when you install, re-install, or update
+WRBfloods. Note that not all packages can be updated from an active
+RStudio session, and that you may need to perform updates using the
+basic R interface; at the same time you should ensure that your version
+of R is up to date. A convenient package exists to perform both of these
+tasks at once: the <a href="https://www.rdocumentation.org/packages/installr/versions/0.23.2">installr</a>
+package.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

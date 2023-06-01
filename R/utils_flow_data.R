@@ -18,22 +18,24 @@
 
 #' @return A list containing three elements: a data.frame of all historical data, a data.frame containing data for the years requested with min, max, and percentiles calculated, and a data.frame containing high-resolution data if the requested years encompass the previous 18 months. To facilitate plotting, the data.frame with requested years (list element 2) has a column of "fake" dates where each year of data has dates as if they were in the most recent year requested; the true year is contained in the Year_Real column.
 #' @keywords Internal
-#' @import tidyhydat.ws
 #' @noRd
 
 utils_flow_data <- function(
-	station_number,
-	select_years,
-	high_res = TRUE,
-	filter = TRUE,
-	recent_prctile = FALSE,
-	rate = FALSE,
-	rate_days = "all"
-){
+    station_number,
+    select_years,
+    high_res = TRUE,
+    filter = TRUE,
+    recent_prctile = FALSE,
+    rate = FALSE,
+    rate_days = "all"
+)
+{
+  library(tidyhydat.ws) #library calls should not usually be in a package... but this doesn't work without it!
+  on.exit(detach("package:tidyhydat.ws", unload = TRUE))
   
-	select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
-	
-	if (max(select_years) <= lubridate::year(Sys.Date()-577)) {high_res <- FALSE} #reset high_res if no high_res data is available
+  select_years <- as.numeric(select_years) #In case it somehow got fed through as a character vector
+  
+  if (max(select_years) <= lubridate::year(Sys.Date()-577)) {high_res <- FALSE} #reset high_res if no high_res data is available
   
 	leap_list <- (seq(1800, 2100, by = 4))  # Create list of all leap years
 	
