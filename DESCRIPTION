@@ -9,7 +9,6 @@ Description: This package exists to facilitate the generation of flood
 License: AGPL (>= 3) + file LICENSE
 Depends: 
     R (>= 2.10),
-    tidyhydat.ws
 Imports: 
     crayon,
     config,
@@ -43,6 +42,7 @@ Imports:
     stats,
     stringr,
     tidyhydat,
+    tidyhydat.ws,
     tidyquant,
     tidyr,
     tidyselect,
