@@ -1,0 +1,319 @@
+---
+title: "Snow_bulletin"
+#output: html_document
+output: 
+  word_document:
+      reference_docx: style_template.docx
+date: "2023-06-12"
+params:
+  year: 2022
+---
+
+```{r setup, include=FALSE}
+#TODO: Seems to be using an old version of WRBplots. Do not know how to fix this. Have updated WRBplots by running "devtools::install_github(“YukonWRB/WRBplots”,  build_vignettes = TRUE)", but didn't change anything. It might actually be using the most recent version, ill have to do some more comparisons
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r Functions, echo=FALSE}
+# Function to create lake level snow bulletin plots
+snowbullWater <- function(location, parameter, years) {
+  # This next line does not work when kniting, but does work when looking at flow_returns internal data. I think it will only work once the data has been added to the main branch. Have added an if statement to deal with this error.
+  flood <- WRBfloods:::data$flow_level_flood
+  plot <-
+    WRBplots::hydrometContinuous(
+      location = location,
+      parameter = parameter,
+      startDay = paste0(years, "-10-01"),
+      endDay = paste0(as.character(as.numeric(years) + 1), '-09-30'),
+      years = years,
+      returns = "none"
+    ) 
+  if (exists('flood') & !is.null(flood)) {
+   plot <- plot +
+      ggplot2::geom_hline(
+        yintercept = dplyr::filter(flood, ID == station_id)$Flood_level_asl,
+        linetype = "dashed",
+        color = "red",
+        size = 1
+      )
+  } else {
+    plot <- plot
+  }
+  return(plot)
+}
+
+``` 
+
+## Upper Yukon river basin (Southern lakes / Whitehorse)
+```{r UpperYukonRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
+## A1 Wolf Creek
+# Set station ID
+station_id <- "29AB-M3"
+# Plot SWE
+WRBplots::hydrometContinuous(
+  location = station_id,
+  parameter = "SWE",
+  startDay = "2022-09-01",
+  endDay = '2023-07-01',
+  years = 2022,
+  returns = "none"
+)
+## A2 Tagish
+# Set station ID
+station_id <- "09AA-M1"
+# Plot SWE
+WRBplots::hydrometContinuous(
+  location = station_id,
+  parameter = "SWE",
+  startDay = "2022-09-01",
+  endDay = '2023-07-01',
+  years = 2022,
+  returns = "none"
+)
+
+``` 
+
+```{r MonthlyPrecip, echo=FALSE}
+# # C
+# ##TODO 
+#   # Deal with missing data
+#   # Aggregate to monthly data
+#   # Deal with time. Downloaded data is in UTC.
+#   # Calculate min, max and avg for Oct-April
+#   # Deal with multiple stations for single location. Hardcode stations to use?
+#   # 
+# 
+# WRBtools::getWeather(
+#   station = "2101303",
+#   start = "2013-01-01",
+#   end = "2021-12-31",
+#   interval = 'day',
+#   save_path = "C:/Users/estewart/Documents/R/Projects"
+# )
+# file <- list.files(path = "C:/Users/estewart/Documents/R/Projects",
+#                    pattern = "ECCC_station")
+# test <-
+#   read.csv(paste0("C:/Users/estewart/Documents/R/Projects/", file))
+# # select only columns and months of interest
+# test <- test %>%
+#   dplyr::select(
+#     station_id,
+#     lat,
+#     lon,
+#     elev,
+#     climate_id,
+#     date,
+#     year,
+#     month,
+#     day,
+#     total_precip,
+#     total_precip_flag
+#   ) %>%
+#   dplyr::filter(month %in% c(1, 2, 3, 4, 10, 11, 12))
+# # Find and remove year-month with more than x missing data points
+#   # Create a year-month column
+#   test$yearmonth <- paste0(test$year, "-", test$month)
+#   # Aggregate count of M over month
+#   missing_counts <- table(test$yearmonth[test$total_precip_flag == "M"])
+#   
+#   func <- function(tab){
+#     length(which(tab$total_precip_flag=="M"))
+#   }
+#   test2 <- aggregate(test, by=list(test$yearmonth), func, test)
+#  length(which(test$total_precip_flag=="M"))
+``` 
+
+```{r MarshLake, echo=FALSE}
+# E1
+# Set station ID
+station_id <- "09AB004"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+```{r LakeLaberge, echo=FALSE}
+# E2
+# Set station ID
+station_id <- "09AB010"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Teslin river basin
+```{r TeslinLake, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09AE002"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Central Yukon river basin (Carmacks area)
+```{r Nordenskiold, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09AH004"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Pelly river basin
+```{r PellyRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
+## A Twin Creeks
+# Set station ID
+station_id <- "09BA-M7"
+# Plot SWE
+WRBplots::hydrometContinuous(
+  location = station_id,
+  parameter = "SWE",
+  startDay = "2022-09-01",
+  endDay = '2023-07-01',
+  years = 2022,
+  returns = "none"
+)
+
+``` 
+
+```{r PellyRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09BC001"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Stewart river basin
+```{r StewartRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
+## A Withers Lake
+# Set station ID
+station_id <- "09DB-M1"
+# Plot SWE
+WRBplots::hydrometContinuous(
+  location = station_id,
+  parameter = "SWE",
+  startDay = "2022-09-01",
+  endDay = '2023-07-01',
+  years = 2022,
+  returns = "none"
+)
+
+``` 
+
+```{r StewartRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09DD003"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## White river basin
+```{r WhiteRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09CB001"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Lower Yukon River basin (Dawson area)
+```{r LowerYukonRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
+## A King Solomon Dome
+# Will get error, need to look into it
+# Set station ID
+station_id <- "09AE-SC01"
+# Plot SWE
+WRBplots::hydrometDiscrete(
+  location = station_id,
+  parameter = "SWE",
+  years = 2022
+)
+
+```
+
+```{r YukonRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09CD001"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Porcupine River basin
+```{r PorcupineRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "09FD002"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Peel River basin
+```{r PeelRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "10MA001"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Liard River basin
+```{r LiardRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
+## A Hyland River
+# Set station ID
+station_id <- "10AD-M2"
+# Plot SWE
+WRBplots::hydrometContinuous(
+  location = station_id,
+  parameter = "SWE",
+  startDay = "2022-09-01",
+  endDay = '2023-07-01',
+  years = 2022,
+  returns = "none"
+)
+
+```
+
+```{r LiardRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "10AA001"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
+## Alsek River basin
+```{r AlsekRiver, echo=FALSE}
+# E
+# Set station ID
+station_id <- "08AB001"
+# Plotting
+snowbullWater(location = station_id,
+              parameter = "level",
+              years = 2022)
+``` 
+
