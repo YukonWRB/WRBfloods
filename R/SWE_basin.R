@@ -18,13 +18,13 @@
 
 #TODO: Add the factors table as package data and use that in function
 
-file_loc <- "C:/Users/estewart/Documents/R/Projects"
-year <- 2022
-month <- 5 
-threshold <- 6
-
-swe_basin_summary <-
-  SWE_basin(file_loc, year, month, threshold, csv = TRUE)
+# file_loc <- ""
+# year <- 2022
+# month <- 5 
+# threshold <- 6
+# 
+# swe_basin_summary <-
+#   SWE_basin(file_loc, year, month, threshold, csv = TRUE)
 
 SWE_basin <-
   function(file_loc,
