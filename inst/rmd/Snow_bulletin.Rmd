@@ -19,9 +19,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r Functions, echo=FALSE}
 # Function to create lake level snow bulletin plots
 snowbullWater <- function(location, parameter, years) {
-  # This next line does not work when kniting, but does work when looking at flow_returns internal data. Maybe it will start working once things have been pushed? Should I try pushing? Have added an if statement to deal with this error.
+  # This next line does not work when kniting, but does work when looking at flow_returns internal data. I think it will only work once the data has been added to the main branch. Have added an if statement to deal with this error.
   flood <- WRBfloods:::data$flow_level_flood
-  test <-
+  plot <-
     WRBplots::hydrometContinuous(
       location = location,
       parameter = parameter,
@@ -29,9 +29,9 @@ snowbullWater <- function(location, parameter, years) {
       endDay = paste0(as.character(as.numeric(years) + 1), '-09-30'),
       years = years,
       returns = "none"
-    )
+    ) 
   if (exists('flood') & !is.null(flood)) {
-    test +
+   plot <- plot +
       ggplot2::geom_hline(
         yintercept = dplyr::filter(flood, ID == station_id)$Flood_level_asl,
         linetype = "dashed",
@@ -39,9 +39,9 @@ snowbullWater <- function(location, parameter, years) {
         size = 1
       )
   } else {
-    test
+    plot <- plot
   }
-  return(test)
+  return(plot)
 }
 
 ``` 
