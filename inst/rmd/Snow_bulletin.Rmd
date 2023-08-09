@@ -10,7 +10,8 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#TODO: Seems to be using an old version of WRBplots. Do not know how to fix this. Have updated WRBplots by running "devtools::install_github(“YukonWRB/WRBplots”,  build_vignettes = TRUE)", but didn't change anything. It might actually be using the most recent version, ill have to do some more comparisons
+#TODO: Commit to Github changes to SWE_basin (WRBfloods) and hydrometDiscrete (WRBplots) so I can actually test this
+# Add text to flood line
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -19,7 +20,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r Functions, echo=FALSE}
 # Function to create lake level snow bulletin plots
 snowbullWater <- function(location, parameter, years) {
-  # This next line does not work when kniting, but does work when looking at flow_returns internal data. I think it will only work once the data has been added to the main branch. Have added an if statement to deal with this error.
   flood <- WRBfloods:::data$flow_level_flood
   plot <-
     WRBplots::hydrometContinuous(
@@ -29,22 +29,62 @@ snowbullWater <- function(location, parameter, years) {
       endDay = paste0(as.character(as.numeric(years) + 1), '-09-30'),
       years = years,
       returns = "none"
-    ) 
-  if (exists('flood') & !is.null(flood)) {
-   plot <- plot +
-      ggplot2::geom_hline(
-        yintercept = dplyr::filter(flood, ID == station_id)$Flood_level_asl,
-        linetype = "dashed",
-        color = "red",
-        size = 1
-      )
+    )
+  test <<- plot
+  if (exists('flood') &
+      !is.null(flood) & parameter %in% c("level", "flow")) {
+    if (parameter == "level") {
+      plot <- plot +
+        ggplot2::geom_hline(
+          yintercept = dplyr::filter(flood, ID == station_id)$Flood_level_asl,
+          linetype = "dashed",
+          color = "red",
+          size = 1
+        ) +
+        ggplot2::annotate(
+          "text",
+          x = as.POSIXct(paste0(year, "-04-01")),
+          y = dplyr::filter(flood, ID == station_id)$Flood_level_asl + (max(data$max)-min(data$min))/20,
+          label = "Flood level"
+        )
+    } else {
+      plot <- plot +
+        ggplot2::geom_hline(
+          yintercept = dplyr::filter(flood, ID == station_id)$Flood_flow,
+          linetype = "dashed",
+          color = "red",
+          size = 1
+        )
+    }
+    
   } else {
     plot <- plot
   }
   return(plot)
 }
 
-``` 
+# Function to create basin SWE boxplots (Not currently being used)
+# snowbullSWE <- function(basin, year) {
+#   SWE_basin <- SWE_basins %>% filter(basin==basin)
+#   names(SWE_basin)[names(SWE_basin) == 'yr'] <- 'year'
+#   names(SWE_basin)[names(SWE_basin) == 'swe'] <- 'value'
+#   # run hydrometDiscrete
+#   hydrometDiscrete(location = "09EA-M1", parameter = "SWE", startDay = 1, endDate = 365, tzone = "MST", years = c(year), title = FALSE, plot_type = "boxplot", plot_scale = 1, save_path = NULL, discrete_data = swe_basin)
+#   
+# }
+
+```
+```{r SWEbasins, include=FALSE}
+# Get SWE data for basins (Not currently being used)
+# SWE_basins <- SWE_basin(file_loc <- "C:/Users/estewart/Documents/R/Projects", 
+#                         year <- 2022, 
+#                         month <- c(3, 4, 5), # c(3)
+#                         threshold <- 6, 
+#                         csv = FALSE, 
+#                         summarise = FALSE)
+```
+
+  
 
 ## Upper Yukon river basin (Southern lakes / Whitehorse)
 ```{r UpperYukonRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
@@ -73,6 +113,13 @@ WRBplots::hydrometContinuous(
   returns = "none"
 )
 
+``` 
+
+```{r UpperYukon, echo=FALSE, fig.width=10}
+# B
+# Plotting (Not currently neing used)
+# snowbullSWE(basin = "Upper_Yukon",
+#               year = 2022)
 ``` 
 
 ```{r MonthlyPrecip, echo=FALSE}
@@ -125,7 +172,7 @@ WRBplots::hydrometContinuous(
 #  length(which(test$total_precip_flag=="M"))
 ``` 
 
-```{r MarshLake, echo=FALSE}
+```{r MarshLake, echo=FALSE, fig.width=10}
 # E1
 # Set station ID
 station_id <- "09AB004"
@@ -135,7 +182,7 @@ snowbullWater(location = station_id,
               years = 2022)
 ``` 
 
-```{r LakeLaberge, echo=FALSE}
+```{r LakeLaberge, echo=FALSE, fig.width=10}
 # E2
 # Set station ID
 station_id <- "09AB010"
@@ -146,7 +193,7 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Teslin river basin
-```{r TeslinLake, echo=FALSE}
+```{r TeslinLake, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09AE002"
@@ -157,13 +204,13 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Central Yukon river basin (Carmacks area)
-```{r Nordenskiold, echo=FALSE}
+```{r Nordenskiold, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09AH004"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
@@ -184,13 +231,13 @@ WRBplots::hydrometContinuous(
 
 ``` 
 
-```{r PellyRiver, echo=FALSE}
+```{r PellyRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09BC001"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
@@ -211,24 +258,24 @@ WRBplots::hydrometContinuous(
 
 ``` 
 
-```{r StewartRiver, echo=FALSE}
+```{r StewartRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09DD003"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
 ## White river basin
-```{r WhiteRiver, echo=FALSE}
+```{r WhiteRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09CB001"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
@@ -247,35 +294,35 @@ WRBplots::hydrometDiscrete(
 
 ```
 
-```{r YukonRiver, echo=FALSE}
+```{r YukonRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09CD001"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
 ## Porcupine River basin
-```{r PorcupineRiver, echo=FALSE}
+```{r PorcupineRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "09FD002"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
 ## Peel River basin
-```{r PeelRiver, echo=FALSE}
+```{r PeelRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "10MA001"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
@@ -296,24 +343,24 @@ WRBplots::hydrometContinuous(
 
 ```
 
-```{r LiardRiver, echo=FALSE}
+```{r LiardRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "10AA001"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
 ## Alsek River basin
-```{r AlsekRiver, echo=FALSE}
+```{r AlsekRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
 station_id <- "08AB001"
 # Plotting
 snowbullWater(location = station_id,
-              parameter = "level",
+              parameter = "flow",
               years = 2022)
 ``` 
 
