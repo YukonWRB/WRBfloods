@@ -1,8 +1,8 @@
 #' Calculates snow survey stats for stations
 #'
-#'#' @description
+#' @description
 #' `r lifecycle::badge('stable')`
-#' # The purpose of this script is to summarise the SWE data of each station for a particular year and month and compare to previous years. This information is used for the snow bulletin, specifically the SWE map and the 'Drainage basin and snow course" summary table. It is meant to replace Ellen Ward's code from 2020-04-16, script called swe_compiled.R.
+#' The purpose of this script is to summarise the SWE data of each station for a particular year and month and compare to previous years. This information is used for the snow bulletin, specifically the SWE map and the 'Drainage basin and snow course" summary table. It is meant to replace Ellen Ward's code from 2020-04-16, script called swe_compiled.R.
 
 #' @param year The year of interest. The stats will be calculated based on all years prior to 'year'. 
 #' @param month The month of interest. Options are 3, 4 and 5 for March, April and May, respectively. Historical stats are given for the first day of this month.
@@ -10,6 +10,7 @@
 #'
 #' @return A table and a csv file (if csv = TRUE) with the current snow depth and swe, the swe of the previous year, historical median swe, the swe relative to the median (swe / swe_median), and the number of years with data at that station.
 
+#TODO: (1) Add units and parameter to table (2) Create tests
 
 SWE_station <-
   function(year,
@@ -101,7 +102,6 @@ SWE_station <-
      # append to table
       swe_station_summary[nrow(swe_station_summary) + 1, ] = swe_summary_loc
     }
-    test <<- swe_station_summary
     
     # Set column classes
     swe_station_summary$depth <- as.numeric(swe_station_summary$depth)

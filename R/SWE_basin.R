@@ -13,20 +13,16 @@
 #'
 #' @return A table and a csv file (if csv = TRUE) with either (summarise = FALSE) the swe for all basins, years and months of interest or (summarise = TRUE) the current SWE, historical median, the swe relative to the median (swe / swe_median), historical maximum, historical minimum, and year of maximum and minimum for each basin and month of interest.
 
-
-#TODO: Add the factors table as package data and use that in function. The function can use package data (commented out) once the data has been added to the package in a merge.
-# Change swe column to value column and add parameter column
+#TODO: (2) Create tests
 
 # For testing
-# file_loc <- "C:/Users/estewart/Documents/R/Projects"
 # year <- 2022
 # month <- c(3, 4, 5) # c(3) 
 # threshold <- 6
 
 
 SWE_basin <-
-  function(file_loc,
-           year,
+  function(year,
            month,
            threshold = 7,
            csv = FALSE,
@@ -41,9 +37,9 @@ SWE_basin <-
     colnames(Meas) <- c("location_id", "SWE", "target_date")
     ###### PART 1. Aggregate SWE by basin and year ######
     # 1. Import the Factors table: To use location_numS and Weights for basin-scale SWE estimates:
-    Factors <-
-      openxlsx::read.xlsx(paste0(file_loc, "/Course_Factors.xlsx"))
-    #Factors <- WRBfloods:::Data$snowcourse_factors
+    # Factors <-
+    #   openxlsx::read.xlsx(paste0(file_loc, "/Course_Factors.xlsx"))
+    Factors <- data$snowcourse_factors
     
     # 2. Add Day, Month and Year columns to the Meas dataframe:
     Meas$mon <- lubridate::month(Meas$target_date)
@@ -132,6 +128,7 @@ SWE_basin <-
       }
       swe_basin_year[nrow(swe_basin_year) + 1, ] = swe_basin_year
     }
+    
     # Set column classes
     swe_basin_year$yr <- as.numeric(swe_basin_year$yr)
     swe_basin_year$swe <- as.numeric(swe_basin_year$swe)
@@ -140,6 +137,12 @@ SWE_basin <-
     # Remove years based on percentage of basin stations with measurements
     swe_basin_year <- swe_basin_year %>% dplyr::filter(perc >= threshold)
     swe_basin <- swe_basin_year
+    
+    # Add units and parameter
+    swe_basin$parameter <- rep("SWE", length(swe_basin$basin))
+    swe_basin$units <- rep("mm", length(swe_basin$basin))
+    # rename columns
+    colnames(swe_basin) <- c("location", "year", "month", "value", "perc", "parameter", "units")
     
     ## Calculate max, min and median historical SWE for each basin if summarise = TRUE
     if (summarise == TRUE) {
