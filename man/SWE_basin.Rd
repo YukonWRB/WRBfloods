@@ -4,11 +4,9 @@
 \alias{SWE_basin}
 \title{Calculates snow survey stats for basins}
 \usage{
-SWE_basin(file_loc, year, month, threshold = 7, csv = FALSE, summarise = FALSE)
+SWE_basin(year, month, threshold = 7, csv = FALSE, summarise = FALSE)
 }
 \arguments{
-\item{file_loc}{File location of the Factors table}
-
 \item{year}{The year of interest. If summarise = TRUE, the stats will be calculated based on all years prior to 'year'. If summarise = FALSE, only data from the current year and before are taken.}
 
 \item{month}{The month of interest. Options are 3, 4 and 5 for March, April and May, respectively. Can also give multiple months as a vector. Historical stats are given for the first day of this month.}
@@ -23,7 +21,6 @@ SWE_basin(file_loc, year, month, threshold = 7, csv = FALSE, summarise = FALSE)
 A table and a csv file (if csv = TRUE) with either (summarise = FALSE) the swe for all basins, years and months of interest or (summarise = TRUE) the current SWE, historical median, the swe relative to the median (swe / swe_median), historical maximum, historical minimum, and year of maximum and minimum for each basin and month of interest.
 }
 \description{
-#' @description
-`r lifecycle::badge('stable')`
-# The purpose of this script is to summarise the swe data of each basin for a particular year and month and compare to previous years. It is used for the snow bulletin, specifically the SWE map and the plot B. It is meant to replace Ellen Ward's code from 2020-04-16, r script called swe_compiled_basin.R.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+The purpose of this script is to summarise the swe data of each basin for a particular year and month and compare to previous years. It is used for the snow bulletin, specifically the SWE map and the plot B. It is meant to replace Ellen Ward's code from 2020-04-16, r script called swe_compiled_basin.R.
 }
