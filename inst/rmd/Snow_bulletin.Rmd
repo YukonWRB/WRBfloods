@@ -10,8 +10,6 @@ params:
 ---
 
 ```{r setup, include=FALSE}
-#TODO: Commit to Github changes to SWE_basin (WRBfloods) and hydrometDiscrete (WRBplots) so I can actually test this
-# Add text to flood line
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -31,6 +29,7 @@ snowbullWater <- function(location, parameter, years) {
       returns = "none"
     )
   test <<- plot
+  
   if (exists('flood') &
       !is.null(flood) & parameter %in% c("level", "flow")) {
     if (parameter == "level") {
@@ -43,9 +42,10 @@ snowbullWater <- function(location, parameter, years) {
         ) +
         ggplot2::annotate(
           "text",
-          x = as.POSIXct(paste0(year, "-04-01")),
-          y = dplyr::filter(flood, ID == station_id)$Flood_level_asl + (max(data$max)-min(data$min))/20,
-          label = "Flood level"
+          x = as.POSIXct(paste0(year, "-10-25")),
+          y = dplyr::filter(flood, ID == station_id)$Flood_level_asl + (max(plot$data$max)-min(plot$data$min))/20,
+          label = "Flood level",
+          colour = "red"
         )
     } else {
       plot <- plot +
@@ -54,7 +54,13 @@ snowbullWater <- function(location, parameter, years) {
           linetype = "dashed",
           color = "red",
           size = 1
-        )
+        ) +
+        ggplot2::annotate(
+          "text",
+          x = as.POSIXct(paste0(year, "-10-25")),
+          y = dplyr::filter(flood, ID == station_id)$Flood_flow + (max(plot$data$max)-min(plot$data$min))/20,
+          label = "Flood level",
+          colour = "red")
     }
     
   } else {
@@ -64,24 +70,22 @@ snowbullWater <- function(location, parameter, years) {
 }
 
 # Function to create basin SWE boxplots (Not currently being used)
-# snowbullSWE <- function(basin, year) {
-#   SWE_basin <- SWE_basins %>% filter(basin==basin)
-#   names(SWE_basin)[names(SWE_basin) == 'yr'] <- 'year'
-#   names(SWE_basin)[names(SWE_basin) == 'swe'] <- 'value'
-#   # run hydrometDiscrete
-#   hydrometDiscrete(location = "09EA-M1", parameter = "SWE", startDay = 1, endDate = 365, tzone = "MST", years = c(year), title = FALSE, plot_type = "boxplot", plot_scale = 1, save_path = NULL, discrete_data = swe_basin)
-#   
-# }
+snowbullSWE <- function(loc, basin, year) {
+  #swe_basin <- swe_basins %>% dplyr::filter(basin==basin)
+  swe_basin <- swe_basins[swe_basins$location==basin,]
+  # run hydrometDiscrete
+  WRBplots::hydrometDiscrete(location = loc, parameter = "SWE", startDay = 1, tzone = "MST", years = c(year), title = FALSE, plot_type = "boxplot", plot_scale = 1, save_path = NULL, discrete_data = swe_basin)
+  
+}
 
 ```
 ```{r SWEbasins, include=FALSE}
 # Get SWE data for basins (Not currently being used)
-# SWE_basins <- SWE_basin(file_loc <- "C:/Users/estewart/Documents/R/Projects", 
-#                         year <- 2022, 
-#                         month <- c(3, 4, 5), # c(3)
-#                         threshold <- 6, 
-#                         csv = FALSE, 
-#                         summarise = FALSE)
+swe_basins <- WRBfloods::SWE_basin(year <- 2022,
+                                   month <- c(3, 4, 5), # c(3)
+                                   threshold <- 6,
+                                   csv = FALSE,
+                                   summarise = FALSE)
 ```
 
   
@@ -115,11 +119,11 @@ WRBplots::hydrometContinuous(
 
 ``` 
 
-```{r UpperYukon, echo=FALSE, fig.width=10}
+```{r UpperYukon_basin, echo=FALSE, fig.width=10}
 # B
-# Plotting (Not currently neing used)
-# snowbullSWE(basin = "Upper_Yukon",
-#               year = 2022)
+# Plotting 
+snowbullSWE(loc= "Upper Yukon", basin = "Upper_Yukon",
+            year = 2022)
 ``` 
 
 ```{r MonthlyPrecip, echo=FALSE}
@@ -193,6 +197,13 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Teslin river basin
+```{r TeslinBigSalmon_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting
+snowbullSWE(loc= "Teslin - Big Salmon", basin = "Teslin_Big_Salmon",
+            year = 2022)
+``` 
+
 ```{r TeslinLake, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -204,6 +215,13 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Central Yukon river basin (Carmacks area)
+```{r CentralYukon_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting
+snowbullSWE(loc= "Central Yukon", basin = "Central_Yukon",
+            year = 2022)
+``` 
+
 ```{r Nordenskiold, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -229,6 +247,13 @@ WRBplots::hydrometContinuous(
   returns = "none"
 )
 
+```
+
+```{r Pelly_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Pelly", basin = "Pelly",
+            year = 2022)
 ``` 
 
 ```{r PellyRiver, echo=FALSE, fig.width=10}
@@ -258,6 +283,13 @@ WRBplots::hydrometContinuous(
 
 ``` 
 
+```{r Stewart_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Stewart", basin = "Stewart",
+            year = 2022)
+``` 
+
 ```{r StewartRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -269,6 +301,14 @@ snowbullWater(location = station_id,
 ``` 
 
 ## White river basin
+
+```{r White_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "White", basin = "White",
+            year = 2022)
+``` 
+
 ```{r WhiteRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -282,7 +322,6 @@ snowbullWater(location = station_id,
 ## Lower Yukon River basin (Dawson area)
 ```{r LowerYukonRiver_Snow, echo=FALSE, out.width='.49\\linewidth', fig.width=5, fig.height=3,fig.show='hold',fig.align='center'}
 ## A King Solomon Dome
-# Will get error, need to look into it
 # Set station ID
 station_id <- "09AE-SC01"
 # Plot SWE
@@ -293,6 +332,13 @@ WRBplots::hydrometDiscrete(
 )
 
 ```
+
+```{r LowerYukon_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Lower Yukon", basin = "Lower_Yukon",
+            year = 2022)
+``` 
 
 ```{r YukonRiver, echo=FALSE, fig.width=10}
 # E
@@ -305,6 +351,13 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Porcupine River basin
+```{r Porcupine_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Porcupine", basin = "Porcupine",
+            year = 2022)
+``` 
+
 ```{r PorcupineRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -316,6 +369,13 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Peel River basin
+```{r Peel_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Peel", basin = "Peel",
+            year = 2022)
+``` 
+
 ```{r PeelRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -343,6 +403,13 @@ WRBplots::hydrometContinuous(
 
 ```
 
+```{r Liard_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Liard", basin = "Liard",
+            year = 2022)
+``` 
+
 ```{r LiardRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
@@ -354,6 +421,13 @@ snowbullWater(location = station_id,
 ``` 
 
 ## Alsek River basin
+```{r Alsek_basin, echo=FALSE, fig.width=10}
+# B
+# Plotting 
+snowbullSWE(loc= "Alsek", basin = "Alsek",
+            year = 2022)
+``` 
+
 ```{r AlsekRiver, echo=FALSE, fig.width=10}
 # E
 # Set station ID
