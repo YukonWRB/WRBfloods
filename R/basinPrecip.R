@@ -10,10 +10,10 @@
 #' 
 #' Drainage polygons pointed to by `drainage_loc` are best created with [WRBtools::WSC_drainages()] and must be named drainage_polygons.xxx. The drainage polygon IDs (in WSC format, i.e. 10EA001) must be listed in the attribute table under column StationNum and the name under column NameNom. To deal with non-WSC data sources it is possible to have non-WSC polygons here as well. In order for this function to recognize these as non-WSC drainages please respect the following: a) strings should be made of two digits, two letters, and three digits (same as WSC); b) The starting digits must NOT be in the sequence from 01 to 12 as these are taken by the WSC; c) duplicate entries are not allowed.
 #' 
-#' Additional spatial data pointed to by `spatial_loc` must be in shapefiles with the following names recognized: waterbodies, watercourses, roads, communities, borders (provincial/territorial/international), coastlines. Keep in mind that large shapefiles can be lengthy for R to graphically represent. To ease this limitation, the watercourses file is left out when the drainage extent is greater than 30 000 km2; by that size, major water courses are expected to be represented by polygons in the waterbodies layer.
+#' Additional spatial data pointed to by `spatial_loc` must be in shapefiles with the following names recognized: waterbodies, watercourses, roads, communities, borders, coastlines. Keep in mind that large shapefiles can be lengthy for R to graphically represent. To ease this limitation, the watercourses file is left out when the drainage extent is greater than 30 000 km2; by that size, major water courses are expected to be represented by polygons in the waterbodies layer.
 #' 
 #' @param location The location above which you wish to calculate precipitation. Specify either a WSC or WSC-like station ID (e.g. `"09AB004"`) for which there is a corresponding entry in the shapefile pointed to by drainage_loc, or coordinates in signed decimal degrees in form latitude, longitude (`"60.1234 -139.1234"`; note the space, negative sign, and lack of comma). See details for more info if specifying coordinates.
-#' @param start The start of the time period over which to accumulate precipitation. Use format `"yyyy-mm-dd hh:mm"` (character vector) in local time, or a POSIXct object (e.g. `Sys.time()-60*60*24` for one day in the past). See details if requesting earlier than 30 days prior to now.
+#' @param start The start of the time period over which to accumulate precipitation. Use format `"yyyy-mm-dd hh:mm"` (character vector) in UTC time, or a POSIXct object (e.g. `Sys.time()-60*60*24` for one day in the past). In the case of a POSIXct object, the timezone is converted to UTC without modifying the time. See details if requesting earlier than 30 days prior to now.
 #' @param end The end of the time period over which to accumulate precipitation. Other details as per `start`
 #' @param map Should a map be output to the console? See details for more info.
 #' @param org_defaults This parameter can override the default file locations for rasters, drainages, and spatial files. As of now, only available for "YWRB" (Yukon Water Resources Branch) or NULL. Specifying any of hrdpa_loc, hrdps_loc, drainage_loc, and/or spatial_loc directories will override the organization default for that/those parameters.
@@ -64,7 +64,22 @@ basinPrecip <- function(location,
   if(!inherits(location, "character")){
     stop("Parameter `location` should be specified as a character vector.")
   }
-
+  #Basic checks on start and end
+  if (!(class(start)[1] == "POSIXct")) {
+    if (class(start) == "character") {
+      if (nchar(start) < 15){
+        stop("Check your parameter for start: it should either be a POSIXct object or a character vector of form yyy-mm-dd HH:mm.")
+      }
+    }
+  }
+  if (!(class(end)[1] == "POSIXct")) {
+    if (class(end) == "character") {
+      if (nchar(end) < 15){
+        stop("Check your parameter for end: it should either be a POSIXct object or a character vector of form yyy-mm-dd HH:mm.")
+      }
+    }
+  }
+  
   if (grepl("^[0-9]{2}[\\.]{1}[0-9]*[ ]{1}[-]{1}[0-9]*[\\.]{1}[0-9]*", location)){
     tryCatch({
       location <- as.numeric(unlist(strsplit(location, " ")))
@@ -84,13 +99,14 @@ basinPrecip <- function(location,
   if (type == "WSC"){
       station_check_polygon <- location %in% drainages$StationNum
       if (!station_check_polygon){
-        stop(crayon::red(paste0("You've stumbled upon a station for which there is no corresponding polygon in the shapefile specified in drainage_loc. Try a different station, or use the latitude/longitude of a point just upstream of your station of interest. If this is a WSC station and you know it should have a defined watershed you could use the function WRBtools::WSC_drainages to create the polygons and update the shapefile in drainage_loc. If this is not a WSC station you could use GIS software to define the watershed and add the polygon to the shapefile.")))
+        stop(crayon::red(paste0("You've stumbled upon a station for which there is no corresponding polygon in the shapefile specified in drainage_loc. Try a different station, or use the latitude/longitude of a point just upstream of your station of interest. If this is a WSC station and you know it should have a defined watershed you could use the function WRBtools::WSC_drainages to create the polygons and update the shapefile in drainage_loc. If this is not a WSC station you could use GIS software or function WRBtools::drainageBasin() to define the watershed and add the polygon to the shapefile.")))
       }
     }
   
   #Determine the appropriate clip polygon for the files to minimize space requirements.
   polygons <- terra::vect(WRBtools:::prov_buff)
   polygons <- terra::project(polygons, "+proj=longlat +EPSG:3347")
+
   if (type == "WSC"){
     location <- terra::subset(drainages, drainages$StationNum == location)
     location <- terra::project(location, "+proj=longlat +EPSG:3347")
@@ -181,7 +197,7 @@ basinPrecip <- function(location,
         #Check if have_time and/or have_extent are length 0, if they are, getHRDPA(clip) should get assigned the smallest clip polygon possible.
         if(length(missing_time) > 0){
           if(is.na(have_time$extent[1])){
-            smallest <- as.data.frame(WRBtools:::data$prov_buff[WRBtools:::data$prov_buff$PREABBR %in% within,])
+            smallest <- as.data.frame(prov_buff[prov_buff$PREABBR %in% within,])
             smallest <- smallest[order(smallest$Shape_Area),][1,2]
             
             for (i in 1:length(missing_time)){
@@ -196,7 +212,7 @@ basinPrecip <- function(location,
         
         if (nrow(missing_extent) > 0){
           if (is.na(have_extent$extent[1])){
-            smallest <- as.data.frame(WRBtools:::data$prov_buff[WRBtools:::data$prov_buff$PREABBR %in% within,])
+            smallest <- as.data.frame(prov_buff[prov_buff$PREABBR %in% within,])
             smallest <- smallest[order(smallest$Shape_Area),][1,2]
             
             for (i in 1:length(missing_extent)){
