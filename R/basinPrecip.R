@@ -104,8 +104,9 @@ basinPrecip <- function(location,
     }
   
   #Determine the appropriate clip polygon for the files to minimize space requirements.
-  prov_buff <- terra::vect(WRBtools:::prov_buff)
-  polygons <- terra::project(prov_buff, "+proj=longlat +EPSG:3347")
+  polygons <- terra::vect(WRBtools:::prov_buff)
+  polygons <- terra::project(polygons, "+proj=longlat +EPSG:3347")
+
   if (type == "WSC"){
     location <- terra::subset(drainages, drainages$StationNum == location)
     location <- terra::project(location, "+proj=longlat +EPSG:3347")
@@ -530,6 +531,7 @@ basinPrecip <- function(location,
     #   lines(waterbodies, alpha = 0.5, fill = "blue", col = "blue") %>%
     #   lines(streams, col = "blue", alpha = 0.5) %>%
     #   lines(watershed, col = "darkred")
+    #   ...and what about a ggplotly object instead? Would require switching vectors to sf objects and the raster to a stars object.
 
   } else {
     watershed <- location
