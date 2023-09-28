@@ -7,8 +7,10 @@
 #' @param year The year of interest. The stats will be calculated based on all years prior to 'year'. 
 #' @param month The month of interest. Options are 3, 4 and 5 for March, April and May, respectively. Historical stats are given for the first day of this month.
 #' @param csv TRUE or FALSE. If TRUE, a csv will be created.
+#' @param return_missing TRUE or FALSE. If TRUE, stations with missing data in the year and month of interest are shown in output table with empty 'depth' and 'swe' columns.
 #'
 #' @return A table and a csv file (if csv = TRUE) with the current snow depth and swe, the swe of the previous year, historical median swe, the swe relative to the median (swe / swe_median), and the number of years with data at that station.
+#' @export
 
 #TODO: (1) Add units and parameter to table (2) Create tests
 
@@ -79,7 +81,7 @@ SWE_station <-
        swe_prevyear <- tab[tab$yr==year-1 & tab$parameter=="SWE",]$value
        if (length(swe_prevyear)==0) {swe_prevyear <- NA}
       # Get median swe not including year of interest. Is that right?
-       swe_med <- median(tab[tab$yr!=year & tab$parameter=="SWE",]$value)
+       swe_med <- stats::median(tab[tab$yr!=year & tab$parameter=="SWE",]$value)
        if (length(swe_med)==0) {swe_med <- NA}
        # Get ratio between current year and median
        swe_rat <- swe/swe_med
@@ -113,7 +115,10 @@ SWE_station <-
     
     # Round swe median and ratio
     swe_station_summary$swe_med <- round(swe_station_summary$swe_med, 0)
-    swe_station_summary$swe_rat <- round(swe_station_summary$swe_rat, 1)
+    swe_station_summary$swe_rat <- round(swe_station_summary$swe_rat, 2)
+    
+    # Set swe_rat NaN to NULL
+    swe_station_summary$swe_rat[swe_station_summary$swe_rat == "NaN"] <- NA
     # 
     # swe_station_summary <- swe_station_summary %>%
     #   dplyr::mutate(dplyr::across(
