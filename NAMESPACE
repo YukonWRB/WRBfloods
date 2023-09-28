@@ -2,6 +2,7 @@
 
 export("%>%")
 export(SWE_basin)
+export(SWE_station)
 export(basinPrecip)
 export(bridgeReport)
 export(floodReport)
